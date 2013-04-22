@@ -127,6 +127,7 @@ public class BackBoxGui {
 			pwdDialog.setVisible(false);
 		if (newConfDialog != null)
 			newConfDialog.setVisible(false);
+		preferencesDialog = new PreferencesDialog(this);
 	}
 	
 	private void updatePreview(Iterable<Transaction> transactions) {
@@ -204,11 +205,11 @@ public class BackBoxGui {
 	 */
 	public BackBoxGui() {
 		helper = new BackBoxHelper();
-		preferencesDialog = new PreferencesDialog(this);
-		pwdDialog = new PasswordDialog(this);
-		newConfDialog = new NewConfDialog(this);
 		
 		initialize();
+		
+		pwdDialog = new PasswordDialog(this);
+		newConfDialog = new NewConfDialog(this);
 	}
 
 	/**
