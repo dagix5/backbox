@@ -34,44 +34,45 @@ public class OAuth2Client {
 	private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
 	/** Global instance of the JSON factory. */
-	static final JsonFactory JSON_FACTORY = new JacksonFactory();
+	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+	
+	private static CredentialStore store;
 
 	public static Credential getCredential() throws Exception {
-		VerificationCodeReceiver receiver = null;
-		Credential credential = null;
-		try {
-			CredentialStore store = new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY);
-			credential = createEmptyCredential();
-			if (!store.load(USER_ID, credential)) {
-				receiver = new LocalServerReceiver();
-				String redirectUri = receiver.getRedirectUri();
-				launchInBrowser(null, redirectUri, CLIENT_ID);
-	
-				credential = authorize(receiver, redirectUri);
-			}
-						
-		} finally {
-			if (receiver != null)
-				receiver.stop();
-		}
-		return credential;
-	}
-
-	private static Credential authorize(VerificationCodeReceiver receiver, String redirectUri) throws IOException {
-		String code = receiver.waitForCode();
+		store = new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY);
 		AuthorizationCodeFlow codeFlow = new AuthorizationCodeFlow.Builder(
 				BearerToken.authorizationHeaderAccessMethod(), HTTP_TRANSPORT,
 				JSON_FACTORY, new GenericUrl(TOKEN_SERVER_URL),
 				new ClientParametersAuthentication(CLIENT_ID, CLIENT_SECRET),
 				CLIENT_ID, AUTHORIZATION_SERVER_URL)
-				.setCredentialStore(new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY))
+				.setCredentialStore(store)
 				.setScopes(Arrays.asList("")).build();
-
-		TokenResponse response = codeFlow.newTokenRequest(code)
-				.setRedirectUri(redirectUri).setScopes(Arrays.asList(""))
-				.execute();
-
-		return codeFlow.createAndStoreCredential(response, USER_ID);
+		Credential cred = codeFlow.loadCredential(USER_ID);
+		if (cred == null) {
+			VerificationCodeReceiver receiver = null;
+			try {
+				receiver = new LocalServerReceiver();
+				String redirectUri = receiver.getRedirectUri();
+				launchInBrowser(null, redirectUri, CLIENT_ID);
+				String code = receiver.waitForCode();
+				TokenResponse response = codeFlow.newTokenRequest(code)
+						.setRedirectUri(redirectUri)
+						.setScopes(Arrays.asList("")).execute();
+				cred = codeFlow.createAndStoreCredential(response, USER_ID);
+			} finally {
+				if (receiver != null)
+					receiver.stop();
+			}
+		}
+		return cred;
+	}
+	
+	public static boolean refresh(Credential cred) throws IOException {
+		if (cred.refreshToken() && (store != null)) {
+			store.store(USER_ID, cred);
+			return true;
+		}
+		return false;
 	}
 
 	private static void launchInBrowser(String browser, String redirectUrl, String clientId) throws IOException {
@@ -91,17 +92,6 @@ public class OAuth2Client {
 			System.out.println("Open the following address in your favorite browser:");
 			System.out.println("  " + authorizationUrl);
 		}
-	}
-	
-	private static Credential createEmptyCredential() {
-		Credential access = new Credential.Builder(
-				BearerToken.authorizationHeaderAccessMethod())
-				.setTransport(HTTP_TRANSPORT)
-				.setJsonFactory(JSON_FACTORY)
-				.setTokenServerEncodedUrl(TOKEN_SERVER_URL)
-				.setClientAuthentication(
-						new ClientParametersAuthentication(CLIENT_ID, CLIENT_SECRET)).build();
-		return access;
 	}
 
 }
