@@ -7,6 +7,6 @@ import com.google.api.client.util.Key;
 public class BoxSearchResult {
 	
 	@Key
-	public List<BoxObject> entries;
+	public List<BoxItem> entries;
 
 }
