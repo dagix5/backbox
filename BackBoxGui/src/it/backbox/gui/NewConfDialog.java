@@ -134,6 +134,11 @@ public class NewConfDialog extends JDialog {
 		getRootPane().setDefaultButton(okButton);
 
 		JButton cancelButton = new JButton("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				main.update(false);
+			}
+		});
 		cancelButton.setActionCommand("Cancel");
 		buttonPane.add(cancelButton);
 	}
