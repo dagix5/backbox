@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -203,9 +205,9 @@ public class TransactionManager {
 		completedTasks = 0;
 		getTransactions().clear();
 		//TODO
-		executor = Executors.newCachedThreadPool();
-//		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-//		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
+//		executor = Executors.newCachedThreadPool();
+		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
 	}
 
 }
