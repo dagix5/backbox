@@ -110,7 +110,7 @@ public class BackBoxGui {
 				if (map != null) {
 					for (SimpleEntry<String, File> entry : map) {
 						File f = entry.getValue();
-						model.addRow(new Object[] { f.getFilename(), f.getHash(), Utility.humanReadableByteCount(f.getSize(), true),  f.isEncrypted(), f.isCompressed(), f.isSplitted() });
+						model.addRow(new Object[] { f.getFilename(), f.getHash(), Utility.humanReadableByteCount(f.getSize(), true),  ((f.getChunks() != null) ? f.getChunks().size() : 0)});
 						keys.add(entry.getKey());
 					}
 				}
@@ -338,18 +338,18 @@ public class BackBoxGui {
 			new Object[][] {
 			},
 			new String[] {
-				"Filename", "Hash", "Size"//, "Encrypted", "Compressed", "Splitted"
+				"Filename", "Hash", "Size", "Chunks"
 			}
 		) {
 			private static final long serialVersionUID = 1L;
 			Class[] columnTypes = new Class[] {
-				String.class, String.class, String.class//, Boolean.class, Boolean.class, Boolean.class
+				String.class, String.class, String.class, Integer.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
 			}
 			boolean[] columnEditables = new boolean[] {
-				false, false, false//, false, false, false
+				false, false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
@@ -361,6 +361,8 @@ public class BackBoxGui {
 		table.getColumnModel().getColumn(1).setMinWidth(200);
 		table.getColumnModel().getColumn(2).setPreferredWidth(15);
 		table.getColumnModel().getColumn(2).setMinWidth(5);
+		table.getColumnModel().getColumn(3).setPreferredWidth(15);
+		table.getColumnModel().getColumn(3).setMinWidth(5);
 		
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -495,7 +497,15 @@ public class BackBoxGui {
 			new String[] {
 				"Filename", "Size"
 			}
-		));
+		) {
+			boolean[] columnEditables = new boolean[] {
+				false, false, false, false
+			};
+			public boolean isCellEditable(int row, int column) {
+				return columnEditables[column];
+			}
+		}
+		);
 		tablePreview.getColumnModel().getColumn(0).setPreferredWidth(200);
 		tablePreview.getColumnModel().getColumn(0).setMinWidth(200);
 		tablePreview.getColumnModel().getColumn(1).setPreferredWidth(100);
