@@ -34,7 +34,8 @@ public class TransactionThread implements Runnable {
 			try {
 				currentTask = task;
 				currentTask.run();
-				TransactionManager.getInstance().taskCompleted(currentTask.getWeight());
+				if (currentTask.isCountWeight())
+					TransactionManager.getInstance().taskCompleted(currentTask.getWeight());
 				if (stop)
 					throw new BackBoxException("Interrupted");
 			} catch (Exception e) {

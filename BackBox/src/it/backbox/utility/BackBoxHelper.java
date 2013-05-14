@@ -277,6 +277,7 @@ public class BackBoxHelper {
 		
 		DownloadTask dt = new DownloadTask(downloadPath, file);
 		dt.setWeight(file.getSize());
+		dt.setCountWeight(false);
 		dt.setDescription(file.getFilename());
 		
 		t.addTask(dt);
@@ -329,6 +330,7 @@ public class BackBoxHelper {
 					if (first) {
 						DownloadTask dt = new DownloadTask(restoreFolder, file);
 						dt.setWeight(file.getSize());
+						dt.setCountWeight(false);
 						dt.setDescription(file.getFilename());
 						t.addTask(dt);
 						fileToCopy = file.getFilename();
@@ -419,6 +421,7 @@ public class BackBoxHelper {
 				} else if (!c.getRecords().containsKey(hash) && first) {
 					UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), chunkSize, path);
 					ut.setWeight(c.getFiles().get(hash).get(path).length());
+					ut.setCountWeight(false);
 					ut.setDescription(path);
 					t.addTask(ut);
 					first = false;
