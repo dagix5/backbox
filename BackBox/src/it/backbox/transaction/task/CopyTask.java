@@ -1,9 +1,8 @@
 package it.backbox.transaction.task;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import it.backbox.utility.Utility;
+
+import java.io.File;
 
 public class CopyTask extends Task {
 
@@ -26,9 +25,13 @@ public class CopyTask extends Task {
 
 	@Override
 	public void run() throws Exception {
-		Path source = Paths.get(srcPath);
-		Path dest = Paths.get(destPath);
-		Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING);
+		File dest = new File(destPath);
+		File parent = dest.getParentFile();
+		if((parent != null) && !parent.exists() && !parent.mkdirs()){
+		    throw new IllegalStateException("Couldn't create dir: " + parent);
+		}
+		dest.createNewFile();
+		Utility.copy(new File(srcPath), dest);
 	}
 
 }
