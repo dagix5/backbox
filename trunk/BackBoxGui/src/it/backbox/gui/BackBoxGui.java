@@ -542,6 +542,43 @@ public class BackBoxGui {
 			}
 		});
 		
+		JMenuItem mntmDelete = new JMenuItem("Delete");
+		mntmDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (running) {
+					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						List<Transaction> tt = new ArrayList<Transaction>();
+						try {
+							int[] ii = table.getSelectedRows();
+							for (int i : ii)
+								tt.add(helper.delete(fileKeys.get(table.convertRowIndexToModel(i)), false));
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
+						} finally {
+							updatePreviewTable(tt);
+							pending = ((tt != null) &&	!tt.isEmpty());
+							pendingDone = false;
+							updateStatus();
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
+			}
+		});
+		popupMenu.add(mntmDelete);
+		
 		JPanel panel = new JPanel();
 		frmBackBox.getContentPane().add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new MigLayout("", "[70px][70px][70px][35px][35px][117.00,grow][31.00][70px]", "[20px][282.00][]"));
