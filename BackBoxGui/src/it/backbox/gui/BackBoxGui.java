@@ -229,22 +229,20 @@ public class BackBoxGui {
 		btnClear.setEnabled(connected && !running && pending);
 	}
 	
-	private void showResult(List<Transaction> errors) {
-		if (errors == null)
+	private void showResult(List<Transaction> result) {
+		if (result == null) {
 			JOptionPane.showMessageDialog(frmBackBox, "Transactions still in progress", "Error", JOptionPane.ERROR_MESSAGE);
-		else if (errors.isEmpty())
-			JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
-		else {
-			StringBuilder errDescriptions = new StringBuilder();
-			for (Transaction t : errors) {
-				if (t.getResultDescription().length() > 100)
-					errDescriptions.append(t.getResultDescription().substring(0, 99));
-				else
-					errDescriptions.append(t.getResultDescription());
-				errDescriptions.append("\n");
-			}
-			JOptionPane.showMessageDialog(frmBackBox, "Operation completed with errors: \n" + errDescriptions.toString(), "BackBox", JOptionPane.ERROR_MESSAGE);
+			return;
 		}
+		
+		for (Transaction t : result) {
+			if (t.getResultCode() == Transaction.ESITO_KO) {
+				JOptionPane.showMessageDialog(frmBackBox, "Operation completed with errors", "BackBox", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+		}
+		
+		JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
 	public void setPreferences(String backupFolder, Integer defaultUploadSpeed, int chunksize) {
@@ -907,7 +905,7 @@ public class BackBoxGui {
 						progressBar.setValue(100);
 						List<Transaction> result = tm.getResult();
 						updateTable();
-						showResult(null);
+						showResult(result);
 						showTableResult(result);
 						updateStatus();
 					}
