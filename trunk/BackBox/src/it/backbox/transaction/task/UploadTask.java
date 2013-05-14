@@ -35,6 +35,12 @@ public class UploadTask extends Task {
 		super();
 		setInput(hash, file, chunkSize, relativePath);
 	}
+	
+	public Long getSize() {
+		if (file != null)
+			return file.length();
+		return null;
+	}
 
 	@Override
 	public void run() throws Exception {
