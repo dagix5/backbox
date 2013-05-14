@@ -18,6 +18,7 @@ import it.backbox.transaction.task.UploadTask;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -214,7 +215,13 @@ public class BackBoxHelper {
 	 */
 	public void downloadDB() throws Exception {
 		dbm.closeDB();
-		bm.download(bm.getBoxID(DBManager.DB_NAME), DBManager.DB_NAME);
+		String name = DBManager.DB_NAME + ".new";
+		bm.download(bm.getBoxID(DBManager.DB_NAME), name);
+		File f = new File(name);
+		if (f.exists() && (f.length() > 0))
+			Files.move(Paths.get(name), Paths.get(DBManager.DB_NAME), StandardCopyOption.REPLACE_EXISTING);
+		else
+			throw new BackBoxException("DB file empty");
 	}
 	
 	/**
