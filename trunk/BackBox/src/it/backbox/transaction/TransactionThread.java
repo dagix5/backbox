@@ -4,6 +4,7 @@ import it.backbox.exception.BackBoxException;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,7 +34,10 @@ public class TransactionThread implements Runnable {
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> start");
 			try {
 				currentTask = task;
+				long start = new Date().getTime();
 				currentTask.run();
+				long finish = new Date().getTime();
+				currentTask.setTotalTime(finish - start);
 				if (currentTask.isCountWeight())
 					TransactionManager.getInstance().taskCompleted(currentTask.getWeight());
 				if (stop)
