@@ -15,6 +15,7 @@ import it.backbox.progress.stream.OutputStreamCounter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -131,15 +132,14 @@ public class RestClient {
 				_log.fine("Upload: Token refreshed");
 			} if (e.getStatusCode() == 409) {
 				_log.fine("Upload: 409 Conflict, uploading new version");
-				BoxError error = response.parseAs(BoxError.class);
+				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+				BoxError error = parser.parseAndClose(new StringReader(e.getContent()), BoxError.class);
 				if ((error == null) || (error.context_info == null) || (error.context_info.conflicts == null) || (error.context_info.conflicts.isEmpty()))
-						throw e;
+					throw e;
 				String id = error.context_info.conflicts.get(0).id;
+				String sha = error.context_info.conflicts.get(0).sha1;
 				_log.fine("Upload: 409 Conflict, fileID " + id);
-				uri = baseUriUpload + id + "/content";
-				url = new GenericUrl(uri);
-				request = requestFactory.buildPostRequest(url, mpc);
-				response = request.execute();
+				return upload(name, id, content, folderID, sha);
 			} else
 				throw e;
 			
