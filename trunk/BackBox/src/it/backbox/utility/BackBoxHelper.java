@@ -176,6 +176,17 @@ public class BackBoxHelper {
 	}
 	
 	/**
+	 * Get the configuration
+	 * 
+	 * @return The configration
+	 */
+	public XMLConfiguration getConfiguration() {
+		if (configuration == null)
+			configuration = new XMLConfiguration();
+		return configuration;
+	}
+	
+	/**
 	 * Save the configuration
 	 * 
 	 * @param confFile
@@ -248,20 +259,6 @@ public class BackBoxHelper {
 				ret.add(new SimpleEntry<String, it.backbox.bean.File>(f.getHash(),f));
 		
 		return ret;
-	}
-	
-	/**
-	 * Get the progress percentage of running transactions
-	 * 
-	 * @return Progress percentage
-	 */
-	public int getProgressPercentage() {
-		if (tm.isRunning())
-			if (tm.getAllTasks() > 0)
-				return (int) ((tm.getCompletedTasks() * 100) / tm.getAllTasks());
-			else
-				return 0;
-		return -1;
 	}
 	
 	/**
@@ -474,17 +471,6 @@ public class BackBoxHelper {
 			tm.shutdown();
 		
 		return tt;
-	}
-
-	/**
-	 * Get the configuration
-	 * 
-	 * @return The configration
-	 */
-	public XMLConfiguration getConfiguration() {
-		if (configuration == null)
-			configuration = new XMLConfiguration();
-		return configuration;
 	}
 
 }
