@@ -21,11 +21,18 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -55,8 +62,10 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.configuration.ConfigurationException;
 
 public class BackBoxGui {
+	private static Logger _log = Logger.getLogger("it.backbox");
 
 	protected static final String CONFIG_FILE = "config.xml";
+	protected static final String LOG_FILE = "backbox.log";
 	
 	private JFrame frmBackBox;
 	private JTable table;
@@ -216,6 +225,19 @@ public class BackBoxGui {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		ConsoleHandler ch = new ConsoleHandler();
+		ch.setLevel(Level.ALL);
+		_log.addHandler(ch);
+		try {
+			FileHandler fh = new FileHandler(LOG_FILE, 10240, 3, true);
+			fh.setFormatter(new SimpleFormatter());
+			fh.setLevel(Level.ALL);
+			_log.addHandler(fh);
+		} catch (SecurityException | IOException e2) {
+			GuiUtility.handleException(frmBackBox, "Error open logging file", e2);
+		}
+		_log.setLevel(Level.SEVERE);
+		
 		frmBackBox = new JFrame();
 		frmBackBox.addWindowListener(new WindowAdapter() {
 			@Override
