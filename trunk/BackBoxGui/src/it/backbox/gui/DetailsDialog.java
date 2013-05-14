@@ -59,7 +59,7 @@ public class DetailsDialog extends JDialog {
 			txtResult.setText(tbt.getTransaction().getResultDescription());
 		} else if (tbt.getTransaction().getResultCode() == Transaction.ESITO_OK)
 			lblStatusValue.setText("Success");
-		lblTotalTimeValue.setText(GuiUtility.getTimeString(tbt.getTask().getTotalTime()));
+		lblTotalTimeValue.setText(GuiUtility.getTimeString(tbt.getTask().getTotalTime() / 1000));
 	}
 	
 	/**
