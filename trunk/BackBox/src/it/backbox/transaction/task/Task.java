@@ -6,6 +6,7 @@ public abstract class Task {
 	private String id;
 	private String description;
 	private long weight = 1;
+	private boolean countWeight = true;
 	protected boolean stop = false;
 
 	public Task() {
@@ -34,6 +35,14 @@ public abstract class Task {
 
 	public void setWeight(long weight) {
 		this.weight = weight;
+	}
+
+	public boolean isCountWeight() {
+		return countWeight;
+	}
+
+	public void setCountWeight(boolean countWeight) {
+		this.countWeight = countWeight;
 	}
 	
 	public abstract void run() throws Exception;
