@@ -1,6 +1,7 @@
 package it.backbox.gui;
 
 import it.backbox.bean.File;
+import it.backbox.gui.bean.TableTask;
 import it.backbox.gui.utility.GuiUtility;
 import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
@@ -82,10 +83,12 @@ public class BackBoxGui {
 	private JButton btnClear;
 	private JButton btnStart;
 	private JButton btnStop;
+	private DetailsDialog detailsDialog;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
 	private Map<String, Integer> taskKeys;
+	private List<TableTask> tasksPending;
 	private boolean connected = false;
 	private boolean running = false;
 	private boolean pending = false;
@@ -165,11 +168,19 @@ public class BackBoxGui {
 	private void updatePreviewTable(List<Transaction> transactions) {
 		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		taskKeys = new HashMap<String, Integer>();
+		if (tasksPending == null)
+			tasksPending = new ArrayList<TableTask>();
 		if (transactions != null) {
 			for (Transaction tt : transactions)
 				for (Task t : tt.getTasks()) {
 					model.addRow(new Object[] {tt.getId(), t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t)});
 					taskKeys.put(t.getId(), model.getRowCount() - 1);
+					
+					TableTask tbt = new TableTask();
+					tbt.setTableIndex(model.getRowCount() - 1);
+					tbt.setTransaction(tt);
+					tbt.setTask(t);
+					tasksPending.add(tbt);
 				}
 		}
 		pending = ((transactions != null) && !transactions.isEmpty());
@@ -179,6 +190,8 @@ public class BackBoxGui {
 		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		while(model.getRowCount() > 0)
 			model.removeRow(0);
+		if (tasksPending != null)
+			tasksPending.clear();
 	}
 	
 	private void showTableResult(List<Transaction> transactions) {
@@ -193,6 +206,8 @@ public class BackBoxGui {
 					model.setValueAt("Error", taskKeys.get(t.getId()), 4);
 				else if (tt.getResultCode() == Transaction.ESITO_OK)
 					model.setValueAt("Success", taskKeys.get(t.getId()), 4);
+				tasksPending.get(taskKeys.get(t.getId())).setTask(t);
+				tasksPending.get(taskKeys.get(t.getId())).setTransaction(tt);
 			}
 		}
 	}
@@ -270,6 +285,7 @@ public class BackBoxGui {
 		pwdDialog = new PasswordDialog(this);
 		newConfDialog = new NewConfDialog(this);
 		loadingDialog = new LoadingDialog();
+		detailsDialog = new DetailsDialog();
 	}
 
 	public void showLoading() {
@@ -734,6 +750,41 @@ public class BackBoxGui {
 		scrollPanePreview.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPanePreview.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPanePreview.setViewportBorder(null);
+		
+		final JPopupMenu popupPreviewMenu = new JPopupMenu();
+		GuiUtility.addPopup(tablePreview, popupPreviewMenu);
+		
+		JMenuItem mntmDetails = new JMenuItem("Details");
+		mntmDetails.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (running) {
+					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
+							detailsDialog.updateDetails(tasksPending.get(i));
+							detailsDialog.setLocationRelativeTo(frmBackBox);
+							detailsDialog.setVisible(true);
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error loading details", e1);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
+			}
+		});
+		popupPreviewMenu.add(mntmDetails);
 		
 		final JSpinner currentUploadSpeed = new JSpinner();
 		currentUploadSpeed.addChangeListener(new ChangeListener() {
