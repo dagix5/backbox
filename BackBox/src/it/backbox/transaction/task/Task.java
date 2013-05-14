@@ -1,11 +1,17 @@
 package it.backbox.transaction.task;
 
+import it.backbox.utility.Utility;
+
 public abstract class Task {
 	private String id;
 	private String description;
 	private long weight = 1;
 	protected boolean stop = false;
 
+	public Task() {
+		setId(Utility.genID());
+	}
+	
 	public String getDescription() {
 		return description;
 	}
