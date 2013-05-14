@@ -11,14 +11,11 @@ import it.backbox.utility.BackBoxHelper;
 import it.backbox.utility.Utility;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -503,7 +500,7 @@ public class BackBoxGui {
 		btnStop = new JButton("Stop");
 		
 		final JPopupMenu popupMenu = new JPopupMenu();
-		addPopup(table, popupMenu);
+		GuiUtility.addPopup(table, popupMenu);
 		
 		JMenuItem mntmDownload = new JMenuItem("Download");
 		mntmDownload.addActionListener(new ActionListener() {
@@ -844,33 +841,4 @@ public class BackBoxGui {
 		updateStatus();
 	}
 
-	private static void addPopup(Component component, final JPopupMenu popup) {
-		component.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			public void mouseReleased(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			private void showMenu(MouseEvent e) {
-				int r = window.table.rowAtPoint(e.getPoint());
-	            if (r >= 0 && r < window.table.getRowCount()) {
-	            	window.table.addRowSelectionInterval(r, r);
-	            } else {
-	            	window.table.clearSelection();
-	            }
-
-	            int[] rowindex = window.table.getSelectedRows();
-	            if (rowindex.length == 0)
-	                return;
-	            if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
-	            	popup.show(e.getComponent(), e.getX(), e.getY());
-	            }
-			}
-		});
-	}
 }
