@@ -61,7 +61,8 @@ public class TransactionThread implements Runnable {
 	 * Try to stop the running task
 	 */
 	public void stop() {
-		currentTask.stop();
+		if (currentTask != null)
+			currentTask.stop();
 		stop = true;
 	}
 
