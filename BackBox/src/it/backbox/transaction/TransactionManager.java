@@ -81,7 +81,7 @@ public class TransactionManager {
 			allTasks+=task.getWeight();
 
 		getTransactions().add(t);
-		if (_log.isLoggable(Level.FINE)) _log.fine(t.getDescription() + " added");
+		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " added");
 	}
 	
 	/**
@@ -94,7 +94,7 @@ public class TransactionManager {
 		Runnable tt = new TransactionThread(t);
 		executor.execute(tt);
 		running = true;
-		if (_log.isLoggable(Level.FINE)) _log.fine(t.getDescription() + " transaction thread running");
+		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " transaction thread running");
 	}
 	
 	/**

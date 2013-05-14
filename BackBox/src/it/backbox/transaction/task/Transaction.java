@@ -10,7 +10,7 @@ public class Transaction {
 	private ArrayList<Task> tasks;
 	private short resultCode;
 	private String resultDescription;
-	private String description;
+	private String id;
 
 	public void addTask(Task task, int position) {
 		getTasks().add(position, task);
@@ -46,12 +46,12 @@ public class Transaction {
 		this.resultDescription = resultDescription;
 	}
 
-	public String getDescription() {
-		return description;
+	public String getId() {
+		return id;
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 }
