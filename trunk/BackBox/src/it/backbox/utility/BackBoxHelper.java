@@ -472,5 +472,34 @@ public class BackBoxHelper {
 		
 		return tt;
 	}
+	
+	/**
+	 * Delete a file from backup
+	 * 
+	 * @param key
+	 *            Key of the file to delete
+	 * @param startNow
+	 *            true if start the transaction, false if just create it
+	 * @return The created transaction
+	 * @throws Exception
+	 */
+	public Transaction delete(String key, boolean startNow) throws Exception {
+		it.backbox.bean.File file = dbm.getFileRecord(key);
+		
+		Transaction t = new Transaction();
+		t.setId(file.getHash());
+		
+		DeleteBoxTask dt = new DeleteBoxTask(file);
+		dt.setDescription(file.getFilename());
+		
+		t.addTask(dt);
+		
+		if (startNow) {
+			tm.runTransaction(t);
+			tm.shutdown();
+		} else
+			tm.addTransaction(t);
+		return t;
+	}
 
 }
