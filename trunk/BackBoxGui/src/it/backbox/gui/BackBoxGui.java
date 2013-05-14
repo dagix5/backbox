@@ -491,6 +491,8 @@ public class BackBoxGui {
 		table.getColumnModel().getColumn(3).setPreferredWidth(15);
 		table.getColumnModel().getColumn(3).setMinWidth(5);
 		
+		table.setAutoCreateRowSorter(true);
+		
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -666,6 +668,8 @@ public class BackBoxGui {
 		panel.add(scrollPanePreview, "cell 0 1 8 1,grow");
 		
 		tablePreview = new JTable();
+		tablePreview.setAutoCreateRowSorter(true);
+		tablePreview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tablePreview.setModel(new DefaultTableModel(
 			new Object[][] {
 			},
