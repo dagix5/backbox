@@ -1,7 +1,7 @@
 package it.backbox.transaction.task;
 
 public abstract class Task {
-	private int id;
+	private String id;
 	private String description;
 	private long weight = 1;
 	protected boolean stop = false;
@@ -14,11 +14,11 @@ public abstract class Task {
 		this.description = description;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

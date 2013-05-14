@@ -273,7 +273,7 @@ public class BackBoxHelper {
 		it.backbox.bean.File file = dbm.getFileRecord(key);
 		
 		Transaction t = new Transaction();
-		t.setDescription("Download " + file.getFilename().substring(file.getFilename().lastIndexOf("\\") + 1, file.getFilename().length()));
+		t.setId(file.getHash());
 		
 		DownloadTask dt = new DownloadTask(downloadPath, file);
 		dt.setWeight(file.getSize());
@@ -316,23 +316,26 @@ public class BackBoxHelper {
 		Map<String, Map<String, it.backbox.bean.File>> toDownload = c.getRecordsNotInFiles();
 		for (String hash : toDownload.keySet()) {
 			Transaction t = new Transaction();
-			t.setDescription(hash);
+			t.setId(hash);
 			boolean first = true;
 			String fileToCopy = null;
 			for (String path : toDownload.get(hash).keySet()) {
 				if (c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) {
-					CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), restoreFolder + "\\" + c.getRecords().get(hash).get(path).getFilename()); 
+					CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), restoreFolder + "\\" + c.getRecords().get(hash).get(path).getFilename());
+					ct.setDescription(path);
 					t.addTask(ct);
 				} else if (!c.getFiles().containsKey(hash)) {
+					it.backbox.bean.File file = c.getRecords().get(hash).get(path);
 					if (first) {
-						DownloadTask dt = new DownloadTask(restoreFolder, c.getRecords().get(hash).get(path));
-						dt.setWeight(c.getRecords().get(hash).get(path).getSize());
-						dt.setDescription(c.getRecords().get(hash).get(path).getFilename());
+						DownloadTask dt = new DownloadTask(restoreFolder, file);
+						dt.setWeight(file.getSize());
+						dt.setDescription(file.getFilename());
 						t.addTask(dt);
-						fileToCopy = c.getRecords().get(hash).get(path).getFilename();
+						fileToCopy = file.getFilename();
 						first = false;
 					} else {
-						CopyTask ct = new CopyTask(restoreFolder + "\\" + fileToCopy, restoreFolder + "\\" + c.getRecords().get(hash).get(path).getFilename()); 
+						CopyTask ct = new CopyTask(restoreFolder + "\\" + fileToCopy, restoreFolder + "\\" + file.getFilename());
+						ct.setDescription(path);
 						t.addTask(ct);
 					}
 				}
@@ -355,9 +358,10 @@ public class BackBoxHelper {
 		Map<String, Map<String, File>> toDelete = c.getFilesNotInRecords();
 		for (String hash : toDelete.keySet()) {
 			Transaction t = new Transaction();
-			t.setDescription(hash);
+			t.setId(hash);
 			for (String path : toDelete.get(hash).keySet()) {
 				DeleteTask dt = new DeleteTask(restoreFolder, path, del.getCanonicalPath());
+				dt.setDescription(path);
 				t.addTask(dt);
 			}
 			if (!t.getTasks().isEmpty()) {
@@ -404,7 +408,7 @@ public class BackBoxHelper {
 		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
 		for (String hash : toUpload.keySet()) {
 			Transaction t = new Transaction();
-			t.setDescription(hash);
+			t.setId(hash);
 			boolean first = true;
 			for (String path : toUpload.get(hash).keySet()) {
 				if ((c.getRecords().containsKey(hash) && !c.getRecords().get(hash).containsKey(path)) || 
@@ -432,15 +436,17 @@ public class BackBoxHelper {
 		Map<String, Map<String, it.backbox.bean.File>> toDelete = c.getRecordsNotInFiles();
 		for (String hash : toDelete.keySet()) {
 			Transaction t = new Transaction();
-			t.setDescription(hash);
+			t.setId(hash);
 			boolean first = true;
 			for (String path : toDelete.get(hash).keySet()) {
 				if ((c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) ||
 						(!c.getFiles().containsKey(hash) && !first)) {
 					DeleteDBTask rt = new DeleteDBTask(c.getRecords().get(hash).get(path));
+					rt.setDescription(path);
 					t.addTask(rt);
 				} else if (!c.getFiles().containsKey(hash) && first) {
 					DeleteBoxTask dt = new DeleteBoxTask(c.getRecords().get(hash).get(path));
+					dt.setDescription(path);
 					t.addTask(dt);
 					first = false;
 				}

@@ -39,12 +39,9 @@ public class TransactionThread implements Runnable {
 					throw new BackBoxException("Interrupted");
 			} catch (Exception e) {
 				_log.log(Level.SEVERE, "Error", e);
-				StringBuilder error = new StringBuilder("Error during execution transaction ");
-				error.append(t.getDescription());
-				error.append("\t");
-				error.append(task.getDescription());
-				error.append(": ");
-				error.append(e.toString());
+				StringBuilder error = new StringBuilder("Error during execution task ");
+//				error.append(t.getDescription()).append(" ");
+				error.append(task.getDescription()).append(": ").append(e.toString());
 				t.setResultDescription(error.toString());
 				t.setResultCode(Transaction.ESITO_KO);
 				return;
