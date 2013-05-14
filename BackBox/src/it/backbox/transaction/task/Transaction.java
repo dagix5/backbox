@@ -6,6 +6,7 @@ public class Transaction {
 
 	public static final short ESITO_OK = 1;
 	public static final short ESITO_KO = -1;
+	public static final short NO_ESITO = 0;
 
 	private ArrayList<Task> tasks;
 	private short resultCode;
