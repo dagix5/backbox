@@ -28,6 +28,12 @@ public class DownloadTask extends Task {
 		setInput(path, file);
 	}
 
+	public Long getSize() {
+		if (file != null)
+			return file.getSize();
+		return null;
+	}
+	
 	@Override
 	public void run() throws Exception {
 		byte[] data = null;
