@@ -179,6 +179,15 @@ public class TransactionManager {
 	}
 	
 	/**
+	 * Clear all pending transactions
+	 */
+	public void clear() {
+		allTasks = 0;
+		completedTasks = 0;
+		getTransactions().clear();
+	}
+	
+	/**
 	 * Check if there are transactions running
 	 * 
 	 * @return true if the are transactions running, false otherwise
@@ -200,11 +209,9 @@ public class TransactionManager {
 	/**
 	 * Start executor and reset tasks counters
 	 */
-	public void start() {
-		allTasks = 0;
-		completedTasks = 0;
-		getTransactions().clear();
-		//TODO
+	private void start() {
+		clear();
+		// TODO
 //		executor = Executors.newCachedThreadPool();
 		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
