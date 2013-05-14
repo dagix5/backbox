@@ -1,5 +1,7 @@
 package it.backbox.transaction.task;
 
+import it.backbox.utility.Utility;
+
 import java.util.ArrayList;
 
 public class Transaction {
@@ -12,6 +14,10 @@ public class Transaction {
 	private short resultCode;
 	private String resultDescription;
 	private String id;
+	
+	public Transaction() {
+		setId(Utility.genID());
+	}
 
 	public void addTask(Task task, int position) {
 		getTasks().add(position, task);
