@@ -8,6 +8,7 @@ public abstract class Task {
 	private long weight = 1;
 	private boolean countWeight = true;
 	protected boolean stop = false;
+	private long totalTime = 0;
 
 	public Task() {
 		setId(Utility.genID());
@@ -50,4 +51,13 @@ public abstract class Task {
 	public void stop() {
 		stop = true;
 	}
+
+	public long getTotalTime() {
+		return totalTime;
+	}
+
+	public void setTotalTime(long totalTime) {
+		this.totalTime = totalTime;
+	}
+
 }
