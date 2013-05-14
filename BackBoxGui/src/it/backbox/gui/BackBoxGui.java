@@ -241,10 +241,6 @@ public class BackBoxGui {
 			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
 			helper.getConfiguration().setProperty(BackBoxHelper.CHUNK_SIZE, chunksize);
 			helper.saveConfiguration(CONFIG_FILE);
-			
-			this.backupFolder = backupFolder;
-			this.chunkSize = chunksize;
-			
 		} catch (ConfigurationException e) {
 			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
 		}
