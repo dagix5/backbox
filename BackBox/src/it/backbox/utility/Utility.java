@@ -1,13 +1,33 @@
 package it.backbox.utility;
 
+import it.backbox.security.SecurityManager;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.security.NoSuchAlgorithmException;
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.math.RandomUtils;
 
 public class Utility {
+	
+	/**
+	 * Generate a random String that can be used as ID
+	 * 
+	 * @return The ID
+	 */
+	public static String genID() {
+		try {
+			return Hex.encodeHexString(SecurityManager.hash(String.valueOf(RandomUtils.nextInt(Integer.MAX_VALUE)).getBytes()));
+		} catch (NoSuchAlgorithmException | IOException e) {
+			return null;
+		}
+	}
 	
 	/**
 	 * Clean temp folder
@@ -21,7 +41,7 @@ public class Utility {
 		if (files == null)
 			return;
 		for (File c : files)
-			Utility.delete(c);
+			delete(c);
 	}
 	
 	/**
@@ -73,22 +93,30 @@ public class Utility {
 	    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
 	    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
-	
-	public static void write(byte[] content, String filename) throws IOException {
-		File file = new File(filename);
-		file.createNewFile();
 
-		FileOutputStream fout = new FileOutputStream(file);
-		fout.write(content);
-		fout.close();
-	}
-	
+	/**
+	 * Write content to file
+	 * 
+	 * @param content
+	 *            Bytes to write in file
+	 * @param file
+	 *            File to be written
+	 * @throws IOException
+	 */
 	public static void write(byte[] content, File file) throws IOException {
 		FileOutputStream fout = new FileOutputStream(file);
 		fout.write(content);
 		fout.close();
 	}
 	
+	/**
+	 * Read bytes from file
+	 * 
+	 * @param filename
+	 *            Name of the file to read
+	 * @return File content
+	 * @throws IOException
+	 */
 	public static byte[] read(String filename) throws IOException {
 		File file = new File(filename);
 
@@ -100,4 +128,23 @@ public class Utility {
 		
 		return content;
 	}
+	
+	/**
+	 * Copy file src content to file dest
+	 * 
+	 * @param src
+	 *            Source file
+	 * @param dest
+	 *            Destination file
+	 * @throws IOException
+	 */
+	public static void copy(File src, File dest) throws IOException {
+		try (FileInputStream fis = new FileInputStream(src);
+				FileOutputStream fos = new FileOutputStream(dest);
+				FileChannel fin = fis.getChannel();
+				FileChannel fout = fos.getChannel();) {
+			fin.transferTo(0, fin.size(), fout);
+		}
+	}
+
 }
