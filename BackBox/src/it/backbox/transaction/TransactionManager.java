@@ -19,7 +19,6 @@ public class TransactionManager {
 	private static TransactionManager istanza;
 	
 	private LinkedList<Transaction> transactions;
-	private ArrayList<Transaction> errorTransactions;
 	private ExecutorService executor;
 	private boolean running;
 	private int completedTasks;
@@ -148,23 +147,23 @@ public class TransactionManager {
 	}
 
 	/**
-	 * Get all the transactions terminated with error
+	 * Get the transactions terminated
 	 * 
-	 * @return List of transactions terminated with error
+	 * @return List of transactions terminated
 	 */
-	public ArrayList<Transaction> getErrorTransactions() {
+	public List<Transaction> getResult() {
 		if (isRunning()) {
 			_log.warning("Executor running");
 			return null;
 		}
-		if (errorTransactions == null)
-			errorTransactions = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<>();
 		while (!getTransactions().isEmpty()) {
 			Transaction t = getTransactions().poll();
-			if (t.getResultCode() == Transaction.ESITO_KO)
-				errorTransactions.add(t);
-		}	
-		return errorTransactions;
+			if (t.getResultCode() != Transaction.NO_ESITO)
+				tt.add(t);
+		}
+		clear();
+		return tt;
 	}
 
 	/**
