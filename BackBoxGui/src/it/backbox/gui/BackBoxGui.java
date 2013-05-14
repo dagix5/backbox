@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
@@ -53,6 +54,7 @@ import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
@@ -67,6 +69,7 @@ public class BackBoxGui {
 	protected static final String CONFIG_FILE = "config.xml";
 	protected static final String LOG_FILE = "backbox.log";
 	
+	private static BackBoxGui window;
 	private JFrame frmBackBox;
 	private JTable table;
 	private PasswordDialog pwdDialog;
@@ -79,15 +82,17 @@ public class BackBoxGui {
 	private JButton btnBackup;
 	private JButton btnRestore;
 	private LoadingDialog loadingDialog;
+	private JButton btnClear;
+	private JButton btnStart;
+	private JButton btnStop;
 	
 	protected BackBoxHelper helper;
-	private ArrayList<String> keys;
-	
-	private static BackBoxGui window;
-
+	private ArrayList<String> fileKeys;
+	private Map<String, Integer> taskKeys;
 	private boolean connected = false;
 	private boolean running = false;
-	
+	private boolean pending = false;
+	private boolean pendingDone = false;
 	private String backupFolder;
 	private int chunkSize;
 
@@ -108,61 +113,111 @@ public class BackBoxGui {
 		});
 	}
 	
-	public void update(boolean esito) {
-		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		try {
-			while(model.getRowCount() > 0)
-				model.removeRow(0);
-			
-			keys = new ArrayList<>();
-			if (esito) {
-				List<SimpleEntry<String, File>> map = helper.getRecords();
-				if (map != null) {
-					for (SimpleEntry<String, File> entry : map) {
-						File f = entry.getValue();
-						model.addRow(new Object[] { f.getFilename(), f.getHash(), Utility.humanReadableByteCount(f.getSize(), true),  ((f.getChunks() != null) ? f.getChunks().size() : 0)});
-						keys.add(entry.getKey());
-					}
-				}
-				
-				backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
-				chunkSize = helper.getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE);
-			}
-			connected = esito;
-			updateStatus();
-		} catch (SQLException e) {
-			GuiUtility.handleException(frmBackBox, "Error updating table", e);
+	public void connect() {
+		connected = true;
+		
+		if (connected) {
+			backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
+			chunkSize = helper.getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE);
+			updateTable();
 		}
+		
 		if (pwdDialog != null)
 			pwdDialog.setVisible(false);
 		if (newConfDialog != null)
 			newConfDialog.setVisible(false);
 		preferencesDialog = new PreferencesDialog(this);
+		
+		updateStatus();
 	}
 	
-	private void updatePreview(Iterable<Transaction> transactions) {
+	public void disconnect() {
+		connected = false;
+		TransactionManager.getInstance().clear();
+		clearTable();
+		clearPreviewTable();
+		updateStatus();
+	}
+	
+	private void updateTable() {
+		try {
+			List<SimpleEntry<String, File>> map = helper.getRecords();
+			fileKeys = new ArrayList<>();
+			
+			clearTable();
+			if (map == null) 
+				return;
+			
+			DefaultTableModel model = (DefaultTableModel) table.getModel();
+			for (SimpleEntry<String, File> entry : map) {
+				File f = entry.getValue();
+				model.addRow(new Object[] { f.getFilename(), f.getHash(), Utility.humanReadableByteCount(f.getSize(), true),  ((f.getChunks() != null) ? f.getChunks().size() : 0)});
+				fileKeys.add(entry.getKey());
+			}
+		} catch (SQLException e) {
+			GuiUtility.handleException(frmBackBox, "Error updating table", e);
+		}
+	}
+	
+	private void clearTable() {
+		DefaultTableModel model = (DefaultTableModel) table.getModel();
+		while(model.getRowCount() > 0)
+			model.removeRow(0);
+	}
+	
+	private void updatePreviewTable(List<Transaction> transactions) {
+		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
+		taskKeys = new HashMap<String, Integer>();
+		if (transactions != null) {
+			for (Transaction tt : transactions)
+				for (Task t : tt.getTasks()) {
+					model.addRow(new Object[] {tt.getId(), t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t)});
+					taskKeys.put(t.getId(), model.getRowCount() - 1);
+				}
+		}
+		pending = ((transactions != null) && !transactions.isEmpty());
+	}
+	
+	private void clearPreviewTable() {
 		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		while(model.getRowCount() > 0)
 			model.removeRow(0);
-		if (transactions != null) {
-			for (Transaction tt : transactions)
-				for (Task t : tt.getTasks())
-					model.addRow(new Object[] { t.getDescription(), Utility.humanReadableByteCount(t.getWeight(), true)});
+	}
+	
+	private void showTableResult(List<Transaction> transactions) {
+		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
+		if (transactions == null)
+			return;
+		for (Transaction tt : transactions) {
+			for (Task t : tt.getTasks()) {
+				if (!taskKeys.containsKey(t.getId()))
+					break;
+				if (tt.getResultCode() == Transaction.ESITO_KO)
+					model.setValueAt("Error", taskKeys.get(t.getId()), 4);
+				else if (tt.getResultCode() == Transaction.ESITO_OK)
+					model.setValueAt("Success", taskKeys.get(t.getId()), 4);
+			}
 		}
 	}
 	
 	private void updateStatus() {
-		if (connected)
+		if (running)
+			lblStatus.setText("Running...");
+		else if (pending && !pendingDone)
+			lblStatus.setText("Operations pending");
+		else if (connected)
 			lblStatus.setText("Connected");
 		else
 			lblStatus.setText("Not connected");
 		btnConnect.setEnabled(!connected);
-		btnBackup.setEnabled(connected);
-		btnRestore.setEnabled(connected);
+		btnBackup.setEnabled(connected && !running);
+		btnRestore.setEnabled(connected && !running);
+		btnStart.setEnabled(connected && !running && pending && !pendingDone);
+		btnStop.setEnabled(connected && running);
+		btnClear.setEnabled(connected && !running && pending);
 	}
 	
-	public void showResult() {
-		ArrayList<Transaction> errors = TransactionManager.getInstance().getErrorTransactions();
+	private void showResult(List<Transaction> errors) {
 		if (errors == null)
 			JOptionPane.showMessageDialog(frmBackBox, "Transactions still in progress", "Error", JOptionPane.ERROR_MESSAGE);
 		else if (errors.isEmpty())
@@ -170,13 +225,14 @@ public class BackBoxGui {
 		else {
 			StringBuilder errDescriptions = new StringBuilder();
 			for (Transaction t : errors) {
-				errDescriptions.append(t.getResultDescription());
+				if (t.getResultDescription().length() > 100)
+					errDescriptions.append(t.getResultDescription().substring(0, 99));
+				else
+					errDescriptions.append(t.getResultDescription());
 				errDescriptions.append("\n");
 			}
 			JOptionPane.showMessageDialog(frmBackBox, "Operation completed with errors: \n" + errDescriptions.toString(), "BackBox", JOptionPane.ERROR_MESSAGE);
-			errors.clear();
 		}
-		update(true);
 	}
 	
 	public void setPreferences(String backupFolder, Integer defaultUploadSpeed, int chunksize) {
@@ -313,17 +369,33 @@ public class BackBoxGui {
 		JMenuItem mntmUploadDb = new JMenuItem("Upload DB");
 		mntmUploadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (!connected) {
+					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				try {
-					helper.uploadDB();
-					connected=false;
-					updateStatus();
-				} catch (Exception e1) {
-					GuiUtility.handleException(frmBackBox, "Error uploading database", e1);
-				}
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							helper.uploadDB();
+							disconnect();
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error uploading database", e1);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
 			}
 		});
 		mnFile.add(mntmUploadDb);
@@ -331,17 +403,36 @@ public class BackBoxGui {
 		JMenuItem mntmDownloadDb = new JMenuItem("Download DB");
 		mntmDownloadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (!connected) {
+					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				try {
-					helper.downloadDB();
-					connected=false;
-					updateStatus();
-				} catch (Exception e1) {
-					GuiUtility.handleException(frmBackBox, "Error downloading database", e1);
-				}
+				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local DB.", "Download DB", JOptionPane.YES_NO_OPTION);
+				if (s != JOptionPane.OK_OPTION)
+					return;
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							helper.downloadDB();
+							disconnect();
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error downloading database", e1);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
 			}
 		});
 		mnFile.add(mntmDownloadDb);
@@ -410,8 +501,8 @@ public class BackBoxGui {
 		scrollPane.setViewportBorder(null);
 		frmBackBox.getContentPane().add(scrollPane, BorderLayout.CENTER);
 		
-		final JButton btnStart = new JButton("Start");
-		final JButton btnStop = new JButton("Stop");
+		btnStart = new JButton("Start");
+		btnStop = new JButton("Stop");
 		
 		final JPopupMenu popupMenu = new JPopupMenu();
 		addPopup(table, popupMenu);
@@ -423,33 +514,42 @@ public class BackBoxGui {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				ArrayList<Transaction> tt = null;
-				try {
-					JFileChooser fc = new JFileChooser();
-					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-					int returnVal = fc.showSaveDialog(frmBackBox);
-					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						tt = new ArrayList<Transaction>();
-						int[] ii = table.getSelectedRows();
-						for (int i : ii)
-							tt.add(helper.downloadFile(keys.get(i), fc.getSelectedFile().getCanonicalPath(), false));
-					}
-					btnStart.setEnabled(true);
-				} catch (Exception e1) {
-					GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
-				} finally {
-					if (tt != null) {
-						updatePreview(tt);
-						if (tt.size() > 0)
-							btnStart.setEnabled(true);
-					}
-				}
+				
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				if (fc.showSaveDialog(frmBackBox) == JFileChooser.APPROVE_OPTION) {
+					showLoading();
+					Thread worker = new Thread() {
+						public void run() {
+							List<Transaction> tt = new ArrayList<Transaction>();
+							try {
+								int[] ii = table.getSelectedRows();
+								for (int i : ii)
+									tt.add(helper.downloadFile(fileKeys.get(table.convertRowIndexToModel(i)), fc.getSelectedFile().getCanonicalPath(), false));
+							} catch (Exception e1) {
+								hideLoading();
+								GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
+							} finally {
+								updatePreviewTable(tt);
+								pending = ((tt != null) &&	!tt.isEmpty());
+								pendingDone = false;
+								updateStatus();
+							}
+							SwingUtilities.invokeLater(new Runnable() {
+			                    public void run() {
+			                    	hideLoading();
+			                    }
+			                });
+						}
+					};
+					worker.start();
+				}		
 			}
 		});
 		
 		JPanel panel = new JPanel();
 		frmBackBox.getContentPane().add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new MigLayout("", "[70px][70px][35px][35px][117.00,grow][50.00][]", "[20px][282.00][]"));
+		panel.setLayout(new MigLayout("", "[70px][70px][70px][35px][35px][117.00,grow][31.00][70px]", "[20px][282.00][]"));
 		
 		btnBackup = new JButton("Backup");
 		btnBackup.setMnemonic('B');
@@ -461,18 +561,37 @@ public class BackBoxGui {
 					return;
 				}
 				if (connected) {
-					ArrayList<Transaction> tt = null;
-					try {
-						tt = helper.backup(backupFolder, chunkSize, false);
-					} catch (Exception e) {
-						GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
-					} finally {
-						if (tt != null) {
-							updatePreview(tt);
-							if (tt.size() > 0)
-								btnStart.setEnabled(true);
+					TransactionManager.getInstance().clear();
+					showLoading();
+					Thread worker = new Thread() {
+						public void run() {
+							ArrayList<Transaction> tt = null;
+							try {
+								tt = helper.backup(backupFolder, chunkSize, false);
+							} catch (Exception e) {
+								hideLoading();
+								GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
+							} finally {
+								clearPreviewTable();
+								updatePreviewTable(tt);
+								if ((tt == null) ||	tt.isEmpty()) {
+									hideLoading();
+									JOptionPane.showMessageDialog(frmBackBox, "No files to backup", "Info", JOptionPane.INFORMATION_MESSAGE);
+								} else {
+									pending = true;
+									pendingDone = false;
+								}
+								updateStatus();
+							}
+							
+							SwingUtilities.invokeLater(new Runnable() {
+			                    public void run() {
+			                    	hideLoading();
+			                    }
+			                });
 						}
-					}
+					};
+					worker.start();
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -502,55 +621,81 @@ public class BackBoxGui {
 					return;
 				}
 				if (connected) {
-					JFileChooser fc = new JFileChooser();
+					final JFileChooser fc = new JFileChooser();
 					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					int returnVal = fc.showOpenDialog(frmBackBox);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						ArrayList<Transaction> tt = null;
-						try {
-							tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), false);
-						} catch (Exception e) {
-							GuiUtility.handleException(frmBackBox, "Error building restore transactions", e);
-						} finally {
-							if (tt != null) {
-								updatePreview(tt);
-								if (tt.size() > 0)
-									btnStart.setEnabled(true);
+						TransactionManager.getInstance().clear();
+						showLoading();
+						Thread worker = new Thread() {
+							public void run() {
+								ArrayList<Transaction> tt = null;
+								try {
+									tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), false);
+								} catch (Exception e) {
+									hideLoading();
+									GuiUtility.handleException(frmBackBox, "Error building restore transactions", e);
+								} finally {
+									clearPreviewTable();
+									updatePreviewTable(tt);
+									if ((tt == null) || tt.isEmpty()) {
+										hideLoading();
+										JOptionPane.showMessageDialog(frmBackBox, "No files to restore", "Info", JOptionPane.INFORMATION_MESSAGE);
+									} else {
+										pending = true;
+										pendingDone = false;
+									}
+									updateStatus();
+								}
+								
+								SwingUtilities.invokeLater(new Runnable() {
+				                    public void run() {
+				                    	hideLoading();
+				                    }
+				                });
 							}
-						}
+						};
+						worker.start();
 					}
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
-		panel.add(btnRestore, "cell 2 0 2 1,grow");
+		panel.add(btnRestore, "cell 2 0,grow");
 		
 		lblStatus = new JLabel("");
-		panel.add(lblStatus, "cell 6 0,alignx right");
+		panel.add(lblStatus, "cell 5 0 3 1,alignx right");
 		
 		JScrollPane scrollPanePreview = new JScrollPane();
-		panel.add(scrollPanePreview, "cell 0 1 7 1,grow");
+		panel.add(scrollPanePreview, "cell 0 1 8 1,grow");
 		
 		tablePreview = new JTable();
 		tablePreview.setModel(new DefaultTableModel(
 			new Object[][] {
 			},
 			new String[] {
-				"Filename", "Size"
+				"Transaction", "Filename", "Size", "Operation", "Result"
 			}
-		) {
+		) {			
+			private static final long serialVersionUID = 1L;
 			boolean[] columnEditables = new boolean[] {
-				false, false, false, false
+				false, false, false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
 			}
 		}
 		);
-		tablePreview.getColumnModel().getColumn(0).setPreferredWidth(200);
-		tablePreview.getColumnModel().getColumn(0).setMinWidth(200);
-		tablePreview.getColumnModel().getColumn(1).setPreferredWidth(100);
-		tablePreview.getColumnModel().getColumn(1).setMaxWidth(100);
+		tablePreview.getColumnModel().getColumn(0).setPreferredWidth(150);
+		tablePreview.getColumnModel().getColumn(0).setMaxWidth(100);
+		tablePreview.getColumnModel().getColumn(1).setPreferredWidth(200);
+		tablePreview.getColumnModel().getColumn(1).setMinWidth(200);
+		tablePreview.getColumnModel().getColumn(2).setPreferredWidth(100);
+		tablePreview.getColumnModel().getColumn(2).setMaxWidth(100);
+		tablePreview.getColumnModel().getColumn(3).setPreferredWidth(100);
+		tablePreview.getColumnModel().getColumn(3).setMaxWidth(100);
+		tablePreview.getColumnModel().getColumn(4).setPreferredWidth(100);
+		tablePreview.getColumnModel().getColumn(4).setMaxWidth(100);
 		scrollPanePreview.setViewportView(tablePreview);
 		scrollPanePreview.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPanePreview.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -560,24 +705,38 @@ public class BackBoxGui {
 		currentUploadSpeed.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
 				ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, ((int) currentUploadSpeed.getValue()) * 1024);
+				ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, ((int) currentUploadSpeed.getValue()) * 1024);
 			}
 		});
+		
+		btnClear = new JButton("Clear");
+		btnClear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pending = false;
+				pendingDone = false;
+				TransactionManager.getInstance().clear();
+				clearPreviewTable();
+				updateStatus();
+			}
+		});
+		btnClear.setEnabled(false);
+		panel.add(btnClear, "cell 2 2,grow");
 		currentUploadSpeed.setValue(ProgressManager.getInstance().getSpeed(ProgressManager.UPLOAD_ID) / 1024);
-		panel.add(currentUploadSpeed, "cell 2 2,growx");
+		panel.add(currentUploadSpeed, "cell 3 2,growx");
 		
 		JLabel lblKbs = new JLabel("KB\\s");
-		panel.add(lblKbs, "cell 3 2");
+		panel.add(lblKbs, "cell 4 2");
 
 		final JProgressBar progressBar = new JProgressBar();
 		progressBar.setStringPainted(true);
-		panel.add(progressBar, "cell 4 2,grow");
+		panel.add(progressBar, "cell 5 2,grow");
 		
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				TransactionManager.getInstance().stopTransactions();
-				btnStop.setEnabled(false);
-				btnStart.setEnabled(true);
+				updateStatus();
 				running = false;
+				pendingDone = true;
 			}
 		});
 		btnStop.setEnabled(false);
@@ -586,9 +745,9 @@ public class BackBoxGui {
 		btnStart.setEnabled(false);
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				btnStop.setEnabled(true);
-				btnStart.setEnabled(false);
-
+				final TransactionManager tm = TransactionManager.getInstance();
+				final ProgressManager pm = ProgressManager.getInstance();
+				
 				ProgressListener listener = new ProgressListener() {
 					long partial = 0;
 					long subpartial = 0;
@@ -599,9 +758,9 @@ public class BackBoxGui {
 					int i = 0;
 					
 					@Override
-					public void update(long bytes) {
+					public void update(String id, long bytes) {
 						subpartial += bytes;
-						if (ProgressManager.getInstance().getSpeed(ProgressManager.UPLOAD_ID) == 0) {
+						if (pm.getSpeed(id) == 0) {
 							long timestamp = new Date().getTime();
 							speedSubpartial += bytes;
 							long elapsed = timestamp - lastTimestamp;
@@ -622,46 +781,50 @@ public class BackBoxGui {
 								
 							}
 						} else
-							averagespeed = ProgressManager.getInstance().getSpeed(ProgressManager.UPLOAD_ID);
+							averagespeed = pm.getSpeed(id);
 						
 						if (averagespeed > 0) {
 							partial += subpartial;
 							subpartial = 0;
 							
-							long b = TransactionManager.getInstance().getAllTasks() - partial;
+							long b = tm.getAllTasks() - partial;
 							lblEtaValue.setText(GuiUtility.getETAString(b, averagespeed));
 						}
 						
-						TransactionManager.getInstance().taskCompleted(bytes);
+						tm.taskCompleted(bytes);
 					}
 				};
 				
-				ProgressManager.getInstance().setListener(ProgressManager.UPLOAD_ID, listener);
-				ProgressManager.getInstance().setListener(ProgressManager.DOWNLOAD_ID, listener);
+				pm.setListener(ProgressManager.UPLOAD_ID, listener);
+				pm.setListener(ProgressManager.DOWNLOAD_ID, listener);
 
-				TransactionManager tm = TransactionManager.getInstance();
 				tm.runTransactions();
 				tm.shutdown();
 				
 				running = true;
+				updateStatus();
 				Runnable runnable = new Runnable() {
 					
 					@Override
 					public void run() {
-						int perc = helper.getProgressPercentage();
-						progressBar.setValue(perc);
-						while (perc > -1) {
-							try {
-								Thread.sleep(1000);
-							} catch(Exception e) {}
-							perc = helper.getProgressPercentage();
-							progressBar.setValue(perc);
+						progressBar.setValue(0);
+						while (tm.isRunning()) {
+							if (_log.isLoggable(Level.FINEST)) _log.finest(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasks()).append("/").append(tm.getAllTasks()).toString());
+							if (tm.getAllTasks() > 0) {
+								int perc = (int) ((tm.getCompletedTasks() * 100) / tm.getAllTasks());
+								if ((perc > progressBar.getValue()) && (perc < 99))
+									progressBar.setValue(perc);
+							}
+							try { Thread.sleep(1000); } catch (InterruptedException e) {}
 						}
-						btnStop.setEnabled(false);
-//						btnStart.setEnabled(true);
 						running = false;
-						showResult();
-						updatePreview(null);
+						pendingDone = true;
+						progressBar.setValue(100);
+						List<Transaction> result = tm.getResult();
+						updateTable();
+						showResult(null);
+						showTableResult(result);
+						updateStatus();
 					}
 				};
 				Thread t = new Thread(runnable, "ProgressBar");
@@ -671,10 +834,10 @@ public class BackBoxGui {
 		panel.add(btnStart, "cell 0 2,grow");
 		
 		JLabel lblEta = new JLabel("ETA:");
-		panel.add(lblEta, "cell 5 2,alignx right");
+		panel.add(lblEta, "cell 6 2,alignx right");
 		
 		lblEtaValue = new JLabel("");
-		panel.add(lblEtaValue, "cell 6 2");
+		panel.add(lblEtaValue, "cell 7 2");
 		
 		popupMenu.add(mntmDownload);
 		
