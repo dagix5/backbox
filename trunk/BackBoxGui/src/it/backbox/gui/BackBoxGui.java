@@ -78,6 +78,7 @@ public class BackBoxGui {
 	private JLabel lblEtaValue;
 	private JButton btnBackup;
 	private JButton btnRestore;
+	private LoadingDialog loadingDialog;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> keys;
@@ -219,8 +220,21 @@ public class BackBoxGui {
 		
 		pwdDialog = new PasswordDialog(this);
 		newConfDialog = new NewConfDialog(this);
+		loadingDialog = new LoadingDialog();
 	}
 
+	public void showLoading() {
+		loadingDialog.setLocationRelativeTo(frmBackBox);
+		loadingDialog.setVisible(true);
+        frmBackBox.setEnabled(false);
+	}
+	
+	public void hideLoading() {
+		loadingDialog.setVisible(false);
+        frmBackBox.setEnabled(true);
+        frmBackBox.toFront();
+	}
+	
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -239,6 +253,8 @@ public class BackBoxGui {
 		_log.setLevel(Level.SEVERE);
 		
 		frmBackBox = new JFrame();
+		frmBackBox.setLocationRelativeTo(null);
+		frmBackBox.setSize(750, 700);
 		frmBackBox.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -251,7 +267,7 @@ public class BackBoxGui {
 			}
 		});
 		frmBackBox.setTitle("BackBox");
-		frmBackBox.setBounds(100, 100, 739, 692);
+		frmBackBox.setBounds(100, 100, 732, 692);
 		frmBackBox.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -264,9 +280,10 @@ public class BackBoxGui {
 		JMenuItem mntmNewConfiguration = new JMenuItem("New configuration...");
 		mntmNewConfiguration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (!running)
+				if (!running) {
+					newConfDialog.setLocationRelativeTo(frmBackBox);
 					newConfDialog.setVisible(true);
-				else
+				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
@@ -346,6 +363,7 @@ public class BackBoxGui {
 				}
 				if (connected) {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					preferencesDialog.setLocationRelativeTo(frmBackBox);
 					preferencesDialog.setVisible(true);
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
@@ -464,9 +482,10 @@ public class BackBoxGui {
 		btnConnect.setMnemonic('c');
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (helper.confExists(CONFIG_FILE))
+				if (helper.confExists(CONFIG_FILE)) {
+					pwdDialog.setLocationRelativeTo(frmBackBox);
 					pwdDialog.setVisible(true);
-				else
+				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Configuration not found", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
