@@ -20,6 +20,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
@@ -37,6 +38,7 @@ public class NewConfDialog extends JDialog {
 	 * @param BackboxGui 
 	 */
 	public NewConfDialog(final BackBoxGui main) {
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("New configuration");
 		setBounds(100, 100, 450, 255);
 		getContentPane().setLayout(new MigLayout("", "[434px,grow]", "[185px][31.00,grow][33px]"));
@@ -106,27 +108,39 @@ public class NewConfDialog extends JDialog {
 		final JButton okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try {
-					lblSetFolderTo.setVisible(false);
-					lblPasswordErrata.setVisible(false);
-					if (textField.getText().isEmpty() || !Files.exists(Paths.get(textField.getText()))) {
-						lblSetFolderTo.setVisible(true);
-						return;
+				main.showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							lblSetFolderTo.setVisible(false);
+							lblPasswordErrata.setVisible(false);
+							if (textField.getText().isEmpty() || !Files.exists(Paths.get(textField.getText()))) {
+								lblSetFolderTo.setVisible(true);
+								return;
+							}
+							if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
+								lblPasswordErrata.setVisible(true);
+								return;
+							}
+							main.setPreferences(textField.getText(), 0, (int) spinnerChunksize.getValue() * 1024);
+							
+							main.helper.register(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
+							passwordField.setText("");
+							passwordField_1.setText("");
+							lblPasswordErrata.setVisible(false);
+							main.connect();	
+						} catch (Exception e) {
+							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	main.hideLoading();
+		                    }
+		                });
 					}
-					if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
-						lblPasswordErrata.setVisible(true);
-						return;
-					}
-					main.setPreferences(textField.getText(), 0, (int) spinnerChunksize.getValue() * 1024);
-					
-					main.helper.register(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
-					passwordField.setText("");
-					passwordField_1.setText("");
-					lblPasswordErrata.setVisible(false);
-					main.update(true);	
-				} catch (Exception e) {
-					GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
-				}
+				};
+				worker.start();
 			}
 		});
 		okButton.setActionCommand("OK");
@@ -136,7 +150,7 @@ public class NewConfDialog extends JDialog {
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				main.update(false);
+				setVisible(false);
 			}
 		});
 		cancelButton.setActionCommand("Cancel");

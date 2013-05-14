@@ -14,6 +14,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
@@ -56,12 +57,27 @@ public class PasswordDialog extends JDialog {
 		okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				boolean pwd = main.helper.login(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
-				ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
-				lblPasswordErrata.setVisible(!pwd);
-				passwordField.setText("");
-				if (pwd)
-					main.update(true);
+				main.showLoading();
+				setVisible(false);
+				Thread worker = new Thread() {
+					public void run() {
+						boolean pwd = main.helper.login(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
+						ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+						lblPasswordErrata.setVisible(!pwd);
+						passwordField.setText("");
+						if (pwd)
+							main.connect();
+						else
+							setVisible(true);
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	main.hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
 					
 			}
 		});
@@ -71,7 +87,7 @@ public class PasswordDialog extends JDialog {
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				main.update(false);
+				setVisible(false);
 			}
 		});
 		cancelButton.setActionCommand("Cancel");
