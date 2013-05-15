@@ -122,9 +122,9 @@ public class NewConfDialog extends JDialog {
 								lblPasswordErrata.setVisible(true);
 								return;
 							}
-							main.setPreferences(textField.getText(), 0, (int) spinnerChunksize.getValue() * 1024);
+							main.setPreferences(textField.getText(), 0);
 							
-							main.helper.register(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
+							main.helper.register(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()), (int) spinnerChunksize.getValue() * 1024);
 							passwordField.setText("");
 							passwordField_1.setText("");
 							lblPasswordErrata.setVisible(false);
