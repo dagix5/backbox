@@ -228,7 +228,8 @@ public class RestClient implements IRestClient {
 		_log.fine("MkDir: " + request.getUrl().toString());
 		HttpResponse response = null;
 		try {
-			request.execute();
+			response = request.execute();
+			_log.fine("MkDir: " + response.getStatusCode());
 		} catch (HttpResponseException e) {
 			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
 				request = requestFactory.buildPostRequest(url, new JsonHttpContent(JSON_FACTORY, data));
@@ -237,7 +238,6 @@ public class RestClient implements IRestClient {
 			} else
 				throw e;
 		}
-		_log.fine("MkDir: " + response.getStatusCode());
 		return response.parseAs(BoxFolder.class);
 	}
 	
