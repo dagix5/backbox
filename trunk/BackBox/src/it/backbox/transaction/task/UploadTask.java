@@ -1,11 +1,10 @@
 package it.backbox.transaction.task;
 
+import it.backbox.IBoxManager;
+import it.backbox.ISecurityManager;
+import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
-import it.backbox.boxcom.BoxManager;
 import it.backbox.compress.Zipper;
-import it.backbox.db.DBManager;
-import it.backbox.security.SecurityManager;
-import it.backbox.split.Splitter;
 import it.backbox.security.DigestManager;
 
 import java.io.File;
@@ -18,13 +17,11 @@ public class UploadTask extends Task {
 	
 	private String hash;
 	private File file;
-	private int chunkSize;
 	private String relativePath;
 	
-	public void setInput(String hash, File file, int chunkSize, String relativePath) {
+	public void setInput(String hash, File file, String relativePath) {
 		this.hash = hash;
 		this.file = file;
-		this.chunkSize = chunkSize;
 		this.relativePath = relativePath;
 	}
 	
@@ -32,9 +29,9 @@ public class UploadTask extends Task {
 		super();
 	}
 	
-	public UploadTask(String hash, File file, int chunkSize, String relativePath) {
+	public UploadTask(String hash, File file, String relativePath) {
 		super();
-		setInput(hash, file, chunkSize, relativePath);
+		setInput(hash, file, relativePath);
 	}
 	
 	public Long getSize() {
@@ -45,8 +42,7 @@ public class UploadTask extends Task {
 
 	@Override
 	public void run() throws Exception {
-		DBManager dbm = DBManager.getInstance();
-		Splitter s = new Splitter(chunkSize);
+		ISplitter s = getSplitter();
 		
 		if (stop) return;
 		
@@ -61,7 +57,7 @@ public class UploadTask extends Task {
 		if (stop) return;
 		
 		if (isEncryptEnabled()) {
-			SecurityManager sm = SecurityManager.getInstance();
+			ISecurityManager sm = getSecurityManager();
 			byte[] encrypted = null;
 			if (isCompressEnabled())			
 				encrypted = sm.encrypt(data);
@@ -83,10 +79,10 @@ public class UploadTask extends Task {
 		
 		if (stop) return;
 		
-		BoxManager bm = BoxManager.getInstance();
+		IBoxManager bm = getBoxManager();
 		bm.uploadChunk(splitted, bm.getBackBoxFolderID());
 		
-		dbm.insert(file, relativePath, hash, splitted, isEncryptEnabled(), isCompressEnabled(), (splitted.size() > 1));
+		getDbManager().insert(file, relativePath, hash, splitted, isEncryptEnabled(), isCompressEnabled(), (splitted.size() > 1));
 	}
 
 	public boolean isEncryptEnabled() {

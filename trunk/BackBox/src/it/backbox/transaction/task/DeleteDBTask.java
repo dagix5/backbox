@@ -1,7 +1,6 @@
 package it.backbox.transaction.task;
 
 import it.backbox.bean.File;
-import it.backbox.db.DBManager;
 
 public class DeleteDBTask extends Task {
 	
@@ -22,8 +21,7 @@ public class DeleteDBTask extends Task {
 
 	@Override
 	public void run() throws Exception {	
-		DBManager dbm = DBManager.getInstance();
-		dbm.delete(file.getFilename(), file.getHash());
+		getDbManager().delete(file.getFilename(), file.getHash());
 	}
 
 }

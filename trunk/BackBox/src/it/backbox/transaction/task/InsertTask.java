@@ -1,6 +1,6 @@
 package it.backbox.transaction.task;
 
-import it.backbox.db.DBManager;
+import it.backbox.IDBManager;
 import it.backbox.exception.BackBoxException;
 
 import java.io.File;
@@ -28,7 +28,7 @@ public class InsertTask extends Task {
 
 	@Override
 	public void run() throws Exception {
-		DBManager dbm = DBManager.getInstance();
+		IDBManager dbm = getDbManager();
 		
 		it.backbox.bean.File f = dbm.getFileRecord(hash);
 		if (f == null)

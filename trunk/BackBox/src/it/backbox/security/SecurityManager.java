@@ -1,14 +1,12 @@
 package it.backbox.security;
 
 import it.backbox.ISecurityManager;
-import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,13 +14,10 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.AlgorithmParameters;
 import java.security.Key;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.ArrayList;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
@@ -50,8 +45,6 @@ public class SecurityManager implements ISecurityManager{
 	private static final int BUFFER_LENGTH = 1024;
 	private static final String CHARSET = "UTF-8";
 	
-	private static SecurityManager istanza;
-
 	private Key key;
 	private byte[] salt;
 	private String pwdDigest;
@@ -67,7 +60,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws BackBoxException 
 	 * @throws DecoderException 
 	 */
-	private SecurityManager(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
+	public SecurityManager(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
 		this(password, null, null);
 	}
 
@@ -86,7 +79,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws BackBoxException
 	 * @throws DecoderException
 	 */
-	private SecurityManager(String password, String pwdDigest, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
+	public SecurityManager(String password, String pwdDigest, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
 		if ((pwdDigest != null) && (salt != null)) { 
 			this.pwdDigest = pwdDigest;
 			this.salt = Hex.decodeHex(salt.toCharArray());
@@ -99,56 +92,6 @@ public class SecurityManager implements ISecurityManager{
 		}
 	}
 	
-	/**
-	 * Get the SecurityManager instance
-	 * 
-	 * @param password
-	 *            User password
-	  * @param pwdDigest
-	 *            Saved user password
-	 * @param salt
-	 *            Salt
-	 * @return The SecurityManager instance
-	 * @throws InvalidKeySpecException
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws BackBoxException 
-	 * @throws DecoderException 
-	 */
-	public static SecurityManager createInstance(String password, String pwdDigest, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
-		istanza = new SecurityManager(password, pwdDigest, salt);
-		return istanza;
-	}
-	
-	/**
-	 * Get the SecurityManager instance
-	 * 
-	 * @param password
-	 *            User password
-	 * @return The SecurityManager instance
-	 * @throws InvalidKeySpecException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws IOException 
-	 * @throws BackBoxException 
-	 * @throws DecoderException 
-	 */
-	public static SecurityManager createInstance(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
-		istanza = new SecurityManager(password);
-		return istanza;
-	}
-	
-	/**
-	 * Get the security manager instance, if it exists
-	 * 
-	 * @return The security manager instance
-	 * @throws BackBoxException
-	 *             The security manager instance doesn't exist
-	 */
-	public static SecurityManager getInstance() throws BackBoxException {
-		if (istanza == null)
-			throw new BackBoxException("Security Manager not instantiated");
-		return istanza;
-	}
 
 	/**
 	 * Check if the password is correct

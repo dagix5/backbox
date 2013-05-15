@@ -1,8 +1,6 @@
 package it.backbox.transaction.task;
 
 import it.backbox.bean.File;
-import it.backbox.boxcom.BoxManager;
-import it.backbox.db.DBManager;
 
 public class DeleteBoxTask extends Task {
 
@@ -26,11 +24,9 @@ public class DeleteBoxTask extends Task {
 
 	@Override
 	public void run() throws Exception {
-		BoxManager bm = BoxManager.getInstance();
-		bm.deleteChunk(file.getChunks());
+		getBoxManager().deleteChunk(file.getChunks());
 		
-		DBManager dbm = DBManager.getInstance();
-		dbm.delete(file.getFilename(), file.getHash());
+		getDbManager().delete(file.getFilename(), file.getHash());
 	}
 
 	public boolean isEncryptEnabled() {

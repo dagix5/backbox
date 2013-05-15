@@ -1,5 +1,10 @@
 package it.backbox.transaction;
 
+import it.backbox.IBoxManager;
+import it.backbox.IDBManager;
+import it.backbox.ISecurityManager;
+import it.backbox.ISplitter;
+import it.backbox.IZipper;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 
@@ -16,46 +21,42 @@ import java.util.logging.Logger;
 public class TransactionManager {
 	private static Logger _log = Logger.getLogger(TransactionManager.class.getCanonicalName());
 	
-	private static TransactionManager istanza;
-	
 	private LinkedList<Transaction> transactions;
 	private ExecutorService executor;
 	private boolean running;
 	private int completedTasks;
 	private long allTasks;
 	
+	private IBoxManager boxManager;
+	private IDBManager dbManager;
+	private ISecurityManager securityManager;
+	private ISplitter splitter;
+	private IZipper zipper;
+	
 	/**
 	 * Constructor
 	 * 
-	 * @param dbm
+	 * @param dbManager
 	 *            DBManager
-	 * @param bm
+	 * @param boxManager
 	 *            BoxManager
-	 * @param sm
+	 * @param securityManager
 	 *            SecurityManager
+	 * @param splitter
+	 *            Splitter
+	 * @param zipper
+	 *            Zipper
 	 */
-	private TransactionManager() {
+	public TransactionManager(IDBManager dbManager, IBoxManager boxManager, ISecurityManager securityManager, ISplitter splitter, IZipper zipper) {
+		this.boxManager = boxManager;
+		this.dbManager = dbManager;
+		this.securityManager = securityManager;
+		this.splitter = splitter;
+		this.zipper = zipper;
 		running = false;
 		start();
 	}
-	
-	/**
-	 * Get the TransactionManager instance
-	 * 
-	 * @param dbm
-	 *            DBManager
-	 * @param bm
-	 *            BoxManager
-	 * @param sm
-	 *            SecurityManager
-	 * @return The TransactionManager instance
-	 */
-	public static TransactionManager getInstance() {
-		if (istanza == null)
-			istanza = new TransactionManager();
-		return istanza;
-	}
-	
+
 	/**
 	 * Run a transaction
 	 * 
@@ -76,8 +77,15 @@ public class TransactionManager {
 	public void addTransaction(Transaction t) {
 		if (executor.isShutdown())
 			start();
-		for (Task task : t.getTasks())
+		for (Task task : t.getTasks()) {
 			allTasks+=task.getWeight();
+			
+			task.setBoxManager(boxManager);
+			task.setDbManager(dbManager);
+			task.setSecurityManager(securityManager);
+			task.setSplitter(splitter);
+			task.setZipper(zipper);
+		}
 
 		getTransactions().add(t);
 		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " added");
@@ -90,7 +98,7 @@ public class TransactionManager {
 	 *            The transaction to start
 	 */
 	private void startTransaction(Transaction t) {
-		Runnable tt = new TransactionThread(t);
+		Runnable tt = new TransactionThread(this, t);
 		executor.execute(tt);
 		running = true;
 		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " transaction thread running");
@@ -210,8 +218,6 @@ public class TransactionManager {
 	 */
 	private void start() {
 		clear();
-		// TODO
-//		executor = Executors.newCachedThreadPool();
 		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
 	}

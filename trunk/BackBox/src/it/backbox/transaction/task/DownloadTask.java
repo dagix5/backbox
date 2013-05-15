@@ -1,11 +1,10 @@
 package it.backbox.transaction.task;
 
+import it.backbox.ISecurityManager;
 import it.backbox.bean.File;
-import it.backbox.boxcom.BoxManager;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.security.DigestManager;
-import it.backbox.security.SecurityManager;
 import it.backbox.split.Splitter;
 
 import java.util.ArrayList;
@@ -40,8 +39,7 @@ public class DownloadTask extends Task {
 		byte[] data = null;
 		String filename = path + "\\" + file.getFilename();
 		
-		BoxManager bm = BoxManager.getInstance();
-		ArrayList<byte[]> chunks = bm.downloadChunk(file.getChunks());
+		ArrayList<byte[]> chunks = getBoxManager().downloadChunk(file.getChunks());
 		
 		if (stop) return;
 		
@@ -54,7 +52,7 @@ public class DownloadTask extends Task {
 		if (stop) return;
 		
 		if (file.isEncrypted()) {
-			SecurityManager sm = SecurityManager.getInstance();
+			ISecurityManager sm = getSecurityManager();
 			if (file.isCompressed()) {
 				byte[] decrypted = sm.decrypt(data);
 				data = decrypted;

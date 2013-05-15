@@ -30,7 +30,7 @@ public class BoxManagerTest {
 		ch.setLevel(Level.ALL);
 		_log.setLevel(Level.ALL);
 		
-		bm = BoxManager.createInstance();
+		bm = new BoxManager();
 		
 		folderID = bm.getBoxID("Test");
 		if (folderID == null)

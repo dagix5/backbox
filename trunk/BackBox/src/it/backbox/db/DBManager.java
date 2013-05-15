@@ -23,8 +23,6 @@ import java.util.logging.Logger;
 public class DBManager implements IDBManager {
 	private static Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
 
-	private static DBManager istanza;
-
 	private static final int QUERY_TIMEOUT = 30;
 	public static final String DB_NAME = "backbox.db";
 
@@ -39,33 +37,9 @@ public class DBManager implements IDBManager {
 	 * @param sm
 	 *            SecurityManager to database encrypt/decrypt operations
 	 */
-	private DBManager(ISecurityManager sm) {
+	public DBManager(ISecurityManager sm) {
 		this.sm = sm;
 		open = false;
-	}
-
-	/**
-	 * Get the DBManager instance
-	 * 
-	 * @param sm
-	 *            SecurityManager to database encrypt/decrypt operations
-	 * @return The DBManager instance
-	 */
-	public static DBManager createInstance(ISecurityManager sm) {
-		istanza = new DBManager(sm);
-		return istanza;
-	}
-	
-	/**
-	 * Get the DBManager instance
-	 * 
-	 * @return The DBManager instance
-	 * @throws BackBoxException Manager not instantiated
-	 */
-	public static DBManager getInstance() throws BackBoxException {
-		if (istanza == null)
-			throw new BackBoxException("Manager not instantiated");
-		return istanza;
 	}
 	
 	/**
