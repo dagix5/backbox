@@ -84,6 +84,9 @@ public class BackBoxGui {
 	private JButton btnStart;
 	private JButton btnStop;
 	private DetailsDialog detailsDialog;
+	private JMenuItem mntmUploadDb;
+	private JMenuItem mntmDownloadDb;
+	private JSpinner spnCurrentUploadSpeed;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -94,7 +97,6 @@ public class BackBoxGui {
 	private boolean pending = false;
 	private boolean pendingDone = false;
 	private String backupFolder;
-	private int chunkSize;
 
 	/**
 	 * Launch the application.
@@ -113,12 +115,18 @@ public class BackBoxGui {
 		});
 	}
 	
+	private void setSpeed(int uploadSpeed) {
+		spnCurrentUploadSpeed.setValue(uploadSpeed / 1024);
+		ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, uploadSpeed);
+		ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, uploadSpeed);
+	}
+	
 	public void connect() {
 		connected = true;
 		
 		if (connected) {
 			backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
-			chunkSize = helper.getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE);
+			setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 			updateTable();
 		}
 		
@@ -132,11 +140,16 @@ public class BackBoxGui {
 	}
 	
 	public void disconnect() {
-		connected = false;
-		TransactionManager.getInstance().clear();
-		clearTable();
-		clearPreviewTable();
-		updateStatus();
+		try {
+			connected = false;
+			helper.getTransactionManager().clear();
+			clearTable();
+			clearPreviewTable();
+			updateStatus();
+			helper.logout();
+		} catch (Exception e) {
+			GuiUtility.handleException(frmBackBox, "Error in logout", e);
+		}
 	}
 	
 	private void updateTable() {
@@ -227,6 +240,8 @@ public class BackBoxGui {
 		btnStart.setEnabled(connected && !running && pending && !pendingDone);
 		btnStop.setEnabled(connected && running);
 		btnClear.setEnabled(connected && !running && pending);
+		mntmUploadDb.setEnabled(connected && !running);
+		mntmDownloadDb.setEnabled(connected && !running);
 	}
 	
 	private void showResult(List<Transaction> result) {
@@ -245,11 +260,10 @@ public class BackBoxGui {
 		JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	public void setPreferences(String backupFolder, Integer defaultUploadSpeed, int chunksize) {
+	public void setPreferences(String backupFolder, Integer defaultUploadSpeed) {
 		try {
 			helper.getConfiguration().setProperty(BackBoxHelper.BACKUP_FOLDER, backupFolder);
 			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
-			helper.getConfiguration().setProperty(BackBoxHelper.CHUNK_SIZE, chunksize);
 			helper.saveConfiguration(CONFIG_FILE);
 		} catch (ConfigurationException e) {
 			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
@@ -257,18 +271,10 @@ public class BackBoxGui {
 	}
 	
 	public void savePreferences(String backupFolder, Integer defaultUploadSpeed) {
-		try {
-			helper.getConfiguration().setProperty(BackBoxHelper.BACKUP_FOLDER, backupFolder);
-			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
-			helper.saveConfiguration(CONFIG_FILE);
-			
-			this.backupFolder = backupFolder;
-
-			if (preferencesDialog != null)
-				preferencesDialog.setVisible(false);
-		} catch (ConfigurationException e) {
-			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
-		}
+		setPreferences(backupFolder, defaultUploadSpeed);
+		
+		this.backupFolder = backupFolder;
+		setSpeed(defaultUploadSpeed);
 	}
 	
 	/**
@@ -364,8 +370,7 @@ public class BackBoxGui {
 					return;
 				}
 				try {
-					if (connected)
-						helper.logout();
+					disconnect();
 					System.exit(0);
 				} catch (Exception e) {
 					GuiUtility.handleException(frmBackBox, "Error in logout", e);
@@ -373,7 +378,7 @@ public class BackBoxGui {
 			}
 		});
 		
-		JMenuItem mntmUploadDb = new JMenuItem("Upload DB");
+		mntmUploadDb = new JMenuItem("Upload DB");
 		mntmUploadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
@@ -405,9 +410,10 @@ public class BackBoxGui {
 				worker.start();
 			}
 		});
+		mntmUploadDb.setEnabled(connected);
 		mnFile.add(mntmUploadDb);
 		
-		JMenuItem mntmDownloadDb = new JMenuItem("Download DB");
+		mntmDownloadDb = new JMenuItem("Download DB");
 		mntmDownloadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
@@ -442,6 +448,7 @@ public class BackBoxGui {
 				worker.start();
 			}
 		});
+		mntmDownloadDb.setEnabled(connected);
 		mnFile.add(mntmDownloadDb);
 		
 		JSeparator separator_1 = new JSeparator();
@@ -607,13 +614,13 @@ public class BackBoxGui {
 					return;
 				}
 				if (connected) {
-					TransactionManager.getInstance().clear();
+					helper.getTransactionManager().clear();
 					showLoading();
 					Thread worker = new Thread() {
 						public void run() {
 							ArrayList<Transaction> tt = null;
 							try {
-								tt = helper.backup(backupFolder, chunkSize, false);
+								tt = helper.backup(backupFolder, false);
 							} catch (Exception e) {
 								hideLoading();
 								GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
@@ -671,7 +678,7 @@ public class BackBoxGui {
 					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					int returnVal = fc.showOpenDialog(frmBackBox);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						TransactionManager.getInstance().clear();
+						helper.getTransactionManager().clear();
 						showLoading();
 						Thread worker = new Thread() {
 							public void run() {
@@ -784,11 +791,11 @@ public class BackBoxGui {
 		});
 		popupPreviewMenu.add(mntmDetails);
 		
-		final JSpinner currentUploadSpeed = new JSpinner();
-		currentUploadSpeed.addChangeListener(new ChangeListener() {
+		spnCurrentUploadSpeed = new JSpinner();
+		spnCurrentUploadSpeed.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
-				ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, ((int) currentUploadSpeed.getValue()) * 1024);
-				ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, ((int) currentUploadSpeed.getValue()) * 1024);
+				ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, ((int) spnCurrentUploadSpeed.getValue()) * 1024);
+				ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, ((int) spnCurrentUploadSpeed.getValue()) * 1024);
 			}
 		});
 		
@@ -797,15 +804,14 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				pending = false;
 				pendingDone = false;
-				TransactionManager.getInstance().clear();
+				helper.getTransactionManager().clear();
 				clearPreviewTable();
 				updateStatus();
 			}
 		});
 		btnClear.setEnabled(false);
 		panel.add(btnClear, "cell 2 2,grow");
-		currentUploadSpeed.setValue(ProgressManager.getInstance().getSpeed(ProgressManager.UPLOAD_ID) / 1024);
-		panel.add(currentUploadSpeed, "cell 3 2,growx");
+		panel.add(spnCurrentUploadSpeed, "cell 3 2,growx");
 		
 		JLabel lblKbs = new JLabel("KB\\s");
 		panel.add(lblKbs, "cell 4 2");
@@ -816,7 +822,7 @@ public class BackBoxGui {
 		
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				TransactionManager.getInstance().stopTransactions();
+				helper.getTransactionManager().stopTransactions();
 				updateStatus();
 				running = false;
 				pendingDone = true;
@@ -828,7 +834,7 @@ public class BackBoxGui {
 		btnStart.setEnabled(false);
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				final TransactionManager tm = TransactionManager.getInstance();
+				final TransactionManager tm = helper.getTransactionManager();
 				final ProgressManager pm = ProgressManager.getInstance();
 				
 				ProgressListener listener = new ProgressListener() {
