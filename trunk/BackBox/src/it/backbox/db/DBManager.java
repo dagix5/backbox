@@ -1,8 +1,9 @@
 package it.backbox.db;
 
+import it.backbox.IDBManager;
+import it.backbox.ISecurityManager;
 import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
-import it.backbox.security.SecurityManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,13 +14,13 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DBManager {
+public class DBManager implements IDBManager {
 	private static Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
 
 	private static DBManager istanza;
@@ -28,7 +29,7 @@ public class DBManager {
 	public static final String DB_NAME = "backbox.db";
 
 	private Connection connection;
-	private SecurityManager sm;
+	private ISecurityManager sm;
 
 	private boolean open;
 	
@@ -38,7 +39,7 @@ public class DBManager {
 	 * @param sm
 	 *            SecurityManager to database encrypt/decrypt operations
 	 */
-	private DBManager(SecurityManager sm) {
+	private DBManager(ISecurityManager sm) {
 		this.sm = sm;
 		open = false;
 	}
@@ -50,7 +51,7 @@ public class DBManager {
 	 *            SecurityManager to database encrypt/decrypt operations
 	 * @return The DBManager instance
 	 */
-	public static DBManager createInstance(SecurityManager sm) {
+	public static DBManager createInstance(ISecurityManager sm) {
 		istanza = new DBManager(sm);
 		return istanza;
 	}
@@ -158,24 +159,11 @@ public class DBManager {
 		_log.fine("DB created");
 	}
 	
-	/**
-	 * Insert new file informations in database
-	 * 
-	 * @param file
-	 *            New file
-	 * @param relativePath
-	 *            File relative path
-	 * @param digest
-	 *            New file hash
-	 * @param chunks
-	 *            List of new file chunks
-	 * @param encrypted
-	 * @param compressed
-	 * @param splitted
-	 * @throws SQLException
-	 * @throws IOException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.util.List, boolean, boolean, boolean)
 	 */
-	public void insert(File file, String relativePath, String digest, ArrayList<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws SQLException, IOException {
+	public void insert(File file, String relativePath, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws SQLException, IOException {
 		Statement statement = null;
 
 		statement = connection.createStatement();
@@ -230,14 +218,9 @@ public class DBManager {
 		if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
 	}
 
-	/**
-	 * Delete file informations from database
-	 * 
-	 * @param filename
-	 *            Name of the file to delete
-	 * @param digest
-	 *            File hash to delete
-	 * @throws SQLException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#delete(java.lang.String, java.lang.String)
 	 */
 	public void delete(String filename, String digest) throws SQLException {
 		Statement statement = null;
@@ -342,13 +325,9 @@ public class DBManager {
 		return statement.executeQuery(query);
 	}
 	
-	/**
-	 * Get the record of a file
-	 * 
-	 * @param key
-	 *            Key of the record
-	 * @return The file record
-	 * @throws SQLException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#getFileRecord(java.lang.String)
 	 */
 	public it.backbox.bean.File getFileRecord(String key) throws SQLException {
 		Statement statement = connection.createStatement();
