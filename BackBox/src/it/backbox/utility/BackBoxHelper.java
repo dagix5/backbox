@@ -19,7 +19,6 @@ import it.backbox.transaction.task.Transaction;
 import it.backbox.transaction.task.UploadTask;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -223,12 +222,19 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void uploadConf() throws Exception {
-		dbm.closeDB();
+		if (!confExists())
+			throw new BackBoxException("Configuration not found");
+		
+		if (dbm != null)
+			dbm.closeDB();
+		if (bm == null)
+			bm = new BoxManager();
+		bm.setRestClient(new RestClient());
+		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
+		
 		bm.upload(DBManager.DB_NAME, bm.getBackBoxFolderID());
 		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		getConfiguration().save(baos);
-		bm.upload(baos.toByteArray(), CONFIG_FILE, bm.getBackBoxFolderID());
+		bm.upload(CONFIG_FILE, bm.getBackBoxFolderID());
 	}
 	
 	/**
@@ -237,7 +243,13 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void downloadConf() throws Exception {
-		dbm.closeDB();
+		if (dbm != null)
+			dbm.closeDB();
+		if (bm == null)
+			bm = new BoxManager();
+		bm.setRestClient(new RestClient());
+		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
+		
 		String name = DBManager.DB_NAME + ".new";
 		bm.download(bm.getBoxID(DBManager.DB_NAME), name);
 		File f = new File(name);

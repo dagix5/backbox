@@ -86,6 +86,8 @@ public class BackBoxGui {
 	private JMenuItem mntmUploadDb;
 	private JMenuItem mntmDownloadDb;
 	private JSpinner spnCurrentUploadSpeed;
+	private JMenuItem mntmNewConfiguration;
+	private JMenuItem mntmPreferences;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -239,8 +241,10 @@ public class BackBoxGui {
 		btnStart.setEnabled(connected && !running && pending && !pendingDone);
 		btnStop.setEnabled(connected && running);
 		btnClear.setEnabled(connected && !running && pending);
-		mntmUploadDb.setEnabled(connected && !running);
-		mntmDownloadDb.setEnabled(connected && !running);
+		mntmUploadDb.setEnabled(!running);
+		mntmDownloadDb.setEnabled(!running);
+		mntmNewConfiguration.setEnabled(!running);
+		mntmPreferences.setEnabled(connected && !running);
 	}
 	
 	private void showResult(List<Transaction> result) {
@@ -345,7 +349,7 @@ public class BackBoxGui {
 		mnFile.setMnemonic('F');
 		menuBar.add(mnFile);
 		
-		JMenuItem mntmNewConfiguration = new JMenuItem("New configuration...");
+		mntmNewConfiguration = new JMenuItem("New configuration...");
 		mntmNewConfiguration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (!running) {
@@ -380,10 +384,6 @@ public class BackBoxGui {
 		mntmUploadDb = new JMenuItem("Upload configuration");
 		mntmUploadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!connected) {
-					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
@@ -393,7 +393,8 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.uploadConf();
-							disconnect();
+							if (connected)
+								disconnect();
 						} catch (Exception e1) {
 							hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error uploading configuration", e1);
@@ -415,10 +416,6 @@ public class BackBoxGui {
 		mntmDownloadDb = new JMenuItem("Download configuration");
 		mntmDownloadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!connected) {
-					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
@@ -431,7 +428,8 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.downloadConf();
-							disconnect();
+							if (connected)
+								disconnect();
 						} catch (Exception e1) {
 							hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error downloading configuration", e1);
@@ -458,7 +456,7 @@ public class BackBoxGui {
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 		
-		JMenuItem mntmPreferences = new JMenuItem("Preferences...");
+		mntmPreferences = new JMenuItem("Preferences...");
 		mntmPreferences.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (running) {
