@@ -48,11 +48,20 @@ public class PreferencesDialog extends JDialog {
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				main.savePreferences(backupFolder.getText(), ((Integer) defaultUploadSpeed.getValue()) * 1024);
+				setVisible(false);
 			}
 		});
 		okButton.setActionCommand("OK");
 		buttonPane.add(okButton);
 		getRootPane().setDefaultButton(okButton);
+		
+		JButton btnCancel = new JButton("Cancel");
+		btnCancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setVisible(false);
+			}
+		});
+		buttonPane.add(btnCancel);
 
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
@@ -70,7 +79,7 @@ public class PreferencesDialog extends JDialog {
 		panel.add(lblDefaultUploadSpeed, "cell 0 1,alignx right");
 		
 		defaultUploadSpeed = new JSpinner();
-		defaultUploadSpeed.setModel(new SpinnerNumberModel(new Integer(0), new Integer(0), null, new Integer(1)));
+		defaultUploadSpeed.setModel(new SpinnerNumberModel(main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), new Integer(0), null, new Integer(1)));
 		panel.add(defaultUploadSpeed, "cell 1 1,growx");
 		
 		JLabel lblKbsset = new JLabel("KB\\s (set 0 for unlmited)");
