@@ -4,6 +4,7 @@ import it.backbox.bean.File;
 import it.backbox.boxcom.BoxManager;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
+import it.backbox.security.DigestManager;
 import it.backbox.security.SecurityManager;
 import it.backbox.split.Splitter;
 
@@ -70,7 +71,7 @@ public class DownloadTask extends Task {
 		
 		if (stop) return;
 			
-		if (!SecurityManager.checkIntegrity(filename, file.getHash()))
+		if (!DigestManager.checkIntegrity(filename, file.getHash()))
 			throw new BackBoxException(filename + ": File integrity check failed");
 	}
 

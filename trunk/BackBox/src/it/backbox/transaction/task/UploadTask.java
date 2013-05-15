@@ -6,6 +6,7 @@ import it.backbox.compress.Zipper;
 import it.backbox.db.DBManager;
 import it.backbox.security.SecurityManager;
 import it.backbox.split.Splitter;
+import it.backbox.security.DigestManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class UploadTask extends Task {
 		
 		if (stop) return;
 		
-		SecurityManager.hashChunks(splitted);
+		DigestManager.hashChunks(splitted);
 		
 		if (stop) return;
 		
