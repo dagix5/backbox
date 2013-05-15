@@ -17,6 +17,7 @@ import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
+import javax.swing.JScrollPane;
 
 public class DetailsDialog extends JDialog {
 
@@ -119,9 +120,12 @@ public class DetailsDialog extends JDialog {
 		JLabel lblResultMessage = new JLabel("Result message: ");
 		contentPanel.add(lblResultMessage, "cell 0 7,alignx left,growy");
 		
+		JScrollPane scrollPane = new JScrollPane();
+		contentPanel.add(scrollPane, "cell 0 8 2 1,grow");
+		
 		txtResult = new JTextPane();
+		scrollPane.setViewportView(txtResult);
 		txtResult.setEditable(false);
-		contentPanel.add(txtResult, "cell 0 8 2 1,grow");
 		
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
