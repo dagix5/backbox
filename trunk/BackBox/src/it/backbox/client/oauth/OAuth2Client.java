@@ -1,5 +1,7 @@
 package it.backbox.client.oauth;
 
+import it.backbox.exception.BackBoxException;
+
 import java.awt.Desktop;
 import java.awt.Desktop.Action;
 import java.io.File;
@@ -23,6 +25,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class OAuth2Client {
 	
+	//TODO put final client ID/secret
 	private static final String CLIENT_ID = "7d8cdaq9h09o23wvkhauznnwho1w1bcz";
 	private static final String CLIENT_SECRET = "j0dRkC57zpcmihxB4KgRdYScOBaan0Hi";
 	private static final String TOKEN_SERVER_URL = "https://www.box.com/api/oauth2/token";
@@ -75,7 +78,7 @@ public class OAuth2Client {
 		return false;
 	}
 
-	private static void launchInBrowser(String browser, String redirectUrl, String clientId) throws IOException {
+	private static void launchInBrowser(String browser, String redirectUrl, String clientId) throws IOException, BackBoxException {
 		String authorizationUrl = new AuthorizationCodeRequestUrl(
 				AUTHORIZATION_SERVER_URL, clientId).setRedirectUri(redirectUrl)
 				.setScopes(Arrays.asList("")).build();
@@ -86,12 +89,11 @@ public class OAuth2Client {
 				return;
 			}
 		}
-		if (browser != null) {
-			Runtime.getRuntime().exec(new String[] { browser, authorizationUrl });
-		} else {
-			System.out.println("Open the following address in your favorite browser:");
-			System.out.println("  " + authorizationUrl);
-		}
+		if (browser == null)
+			throw new BackBoxException("Browser not found, impossible open authorization url");
+
+		Runtime.getRuntime().exec(new String[] { browser, authorizationUrl });
+			
 	}
 
 }
