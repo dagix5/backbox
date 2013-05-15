@@ -1,7 +1,6 @@
 package it.backbox.split;
 
 import it.backbox.ISplitter;
-import it.backbox.ISplitterChunk;
 import it.backbox.bean.Chunk;
 import it.backbox.utility.Utility;
 
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Splitter implements ISplitter, ISplitterChunk {
+public class Splitter implements ISplitter {
 	
 	private static Logger _log = Logger.getLogger(Splitter.class.getCanonicalName());
 	

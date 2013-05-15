@@ -1,9 +1,8 @@
 package it.backbox.boxcom;
 
 import it.backbox.IBoxManager;
-import it.backbox.IBoxManagerChunk;
+import it.backbox.IRestClient;
 import it.backbox.bean.Chunk;
-import it.backbox.client.rest.RestClient;
 import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxSearchResult;
@@ -21,16 +20,13 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Hex;
 
-public class BoxManager implements IBoxManager, IBoxManagerChunk{
+public class BoxManager implements IBoxManager {
 	private static Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
 
 	public static final String UPLOAD_FOLDER = "BackBox";
 
-	private static BoxManager istanza;
-
 	private String backBoxFolderID;
-	
-	private RestClient client;
+	private IRestClient client;
 
 	/**
 	 * Costructor
@@ -39,50 +35,23 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 	 *            App folder ID
 	 * @throws Exception 
 	 */
-	private BoxManager(String backBoxFolderID) throws Exception {
+	public BoxManager(String backBoxFolderID, IRestClient client) throws Exception {
 		this.backBoxFolderID = backBoxFolderID;
 		if (_log.isLoggable(Level.FINE)) _log.fine("BoxManager created with folder id: " + backBoxFolderID);
-		client = new RestClient();
+		this.client = client;
 	}
 	
 	/**
-	 * Get BoxManager instance
+	 * Costructor
 	 * 
-	 * @param backBoxFolderID
-	 *            App folder ID
-	 * @return The Box manager instance
 	 * @throws Exception 
 	 */
-	public static BoxManager createInstance(String backBoxFolderID) throws Exception {
-		istanza = new BoxManager(backBoxFolderID);
-		return istanza;
+	public BoxManager() throws Exception {
+		this(null, null);
 	}
 	
-	/**
-	 * Get BoxManager instance
-	 * 
-	 * @param backBoxFolderID
-	 *            App folder ID
-	 * @return The Box manager instance
-	 * @throws Exception 
-	 */
-	public static BoxManager createInstance() throws Exception {
-		istanza = new BoxManager(null);
-		return istanza;
-	}
-	
-	
-	/**
-	 * Get BoxManager instance
-	 * 
-	 * @return The Box manager instance
-	 * @throws BackBoxException
-	 *             If the Box manager is not already instantiated
-	 */
-	public static BoxManager getInstance() throws BackBoxException {
-		if (istanza == null)
-			throw new BackBoxException("Manager not instantiated");
-		return istanza;
+	public void setRestClient(IRestClient client) {
+		this.client = client;
 	}
 	
 	/**
@@ -95,10 +64,9 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 		this.backBoxFolderID = backBoxFolderID;
 	}
 
-	/**
-	 * Get the app folder ID
-	 * 
-	 * @return App folder ID
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#getBackBoxFolderID()
 	 */
 	public String getBackBoxFolderID() {
 		return backBoxFolderID;
@@ -113,7 +81,7 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 	 * @throws IOException
 	 * @throws RestException 
 	 */
-	public String mkdir(String folderName) throws IOException, RestException {
+	public String mkdir(String folderName) throws Exception {
 		BoxFolder folder = client.mkdir(folderName);
 		if (folder != null) {
 			if (_log.isLoggable(Level.FINE)) _log.fine("Folder created id: " + folder.id);
@@ -132,7 +100,7 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 	 * @throws IOException
 	 * @throws RestException 
 	 */
-	public String getBoxID(String filename) throws RestException, IOException {
+	public String getBoxID(String filename) throws Exception {
 		BoxSearchResult results = client.search(filename);
 		if ((results != null) && (results.entries != null) && !results.entries.isEmpty()) {
 			if (_log.isLoggable(Level.FINE)) _log.fine(filename + " found");

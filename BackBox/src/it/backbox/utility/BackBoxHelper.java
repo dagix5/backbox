@@ -1,10 +1,13 @@
 package it.backbox.utility;
 
 import it.backbox.boxcom.BoxManager;
+import it.backbox.client.rest.RestClient;
 import it.backbox.compare.FileCompare;
+import it.backbox.compress.Zipper;
 import it.backbox.db.DBManager;
 import it.backbox.exception.BackBoxException;
 import it.backbox.security.SecurityManager;
+import it.backbox.split.Splitter;
 import it.backbox.transaction.TransactionManager;
 import it.backbox.transaction.task.CopyTask;
 import it.backbox.transaction.task.DeleteBoxTask;
@@ -59,6 +62,10 @@ public class BackBoxHelper {
 		c = new FileCompare();
 	}
 	
+	public TransactionManager getTransactionManager() {
+		return tm;
+	}
+	
 	/**
 	 * Chech if the configuration file exists
 	 * 
@@ -88,10 +95,10 @@ public class BackBoxHelper {
 			}
 			_log.fine("Configuration load OK");
 
-			sm = SecurityManager.createInstance(password, configuration.getString(PWD_DIGEST), configuration.getString(SALT));
+			sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
 			_log.fine("SecurityManager init OK");
 
-			dbm = DBManager.createInstance(sm);
+			dbm = new DBManager(sm);
 			_log.fine("DBManager init OK");
 			
 			if (DBManager.exists()) {
@@ -102,11 +109,9 @@ public class BackBoxHelper {
 				dbm.createDB();
 			}
 			
-			tm = TransactionManager.getInstance();
-			_log.fine("TransactionManager init OK");
-			
-			bm = BoxManager.createInstance();
-			String folderID = configuration.getString(FOLDER_ID);
+			bm = new BoxManager();
+			bm.setRestClient(new RestClient());
+			String folderID = getConfiguration().getString(FOLDER_ID);
 			if ((folderID == null) || folderID.isEmpty())
 				folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
 			if ((folderID != null) && !folderID.isEmpty()) {
@@ -119,6 +124,12 @@ public class BackBoxHelper {
 			
 			c.setRecords(dbm.loadDB());
 			_log.fine("DB load OK");
+			
+			Zipper z = new Zipper();
+			Splitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
+			
+			tm = new TransactionManager(dbm, bm, sm, s, z);
+			_log.fine("TransactionManager init OK");
 			
 			return true;
 		} catch (Exception e) {
@@ -133,42 +144,46 @@ public class BackBoxHelper {
 	 * @param configFilename
 	 *            Configuration file name
 	 * @param password
-	 *            User passoword
-	 * @param callback
-	 *            Callback method to call after login to Box.xom
+	 *            User password
+	 * @param chunksize
+	 *            Chunk size limit of cloud provider
 	 * @throws Exception
 	 */
-	public void register(String configFilename, String password) throws Exception {
+	public void register(String configFilename, String password, int chunksize) throws Exception {
 		DBManager.delete();
 		
-		sm = SecurityManager.createInstance(password);
+		sm = new SecurityManager(password);
 		_log.fine("SecurityManager init OK");
 		
 		getConfiguration().setProperty(PWD_DIGEST, sm.getPwdDigest());
 		getConfiguration().setProperty(SALT, Hex.encodeHexString(sm.getSalt()));
 		
-		dbm = DBManager.createInstance(sm);
+		dbm = new DBManager(sm);
 		_log.fine("DBManager init OK");
 		dbm.createDB();
 		_log.fine("DB created");
 		
-		tm = TransactionManager.getInstance();
-		_log.fine("TransactionManager init OK");
-		
 		c.setRecords(dbm.loadDB());
 		_log.fine("DB load OK");
 		
-		bm = BoxManager.createInstance();
-		_log.fine("BoxManager init OK");
-
+		bm = new BoxManager();
+		bm.setRestClient(new RestClient());
 		folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
 		if (folderID == null)
 			folderID = bm.mkdir(BoxManager.UPLOAD_FOLDER);
 		else
 			_log.warning("Box Upload folder exists");
 		bm.setBackBoxFolderID(folderID);
+		_log.fine("BoxManager init OK");
+		
+		Zipper z = new Zipper();
+		Splitter s = new Splitter(chunksize);
+		
+		tm = new TransactionManager(dbm, bm, sm, s, z);
+		_log.fine("TransactionManager init OK");
 		
 		getConfiguration().setProperty(FOLDER_ID, folderID);
+		getConfiguration().setProperty(CHUNK_SIZE, chunksize);
 		
 		saveConfiguration(configFilename);
 		_log.fine("Configuration saved");
@@ -390,14 +405,12 @@ public class BackBoxHelper {
 	 * 
 	 * @param backupFolder
 	 *            Foldet to backup
-	 * @param chunkSize
-	 *            Size of the chunks to upload
 	 * @param startNow
 	 *            true if start the transactions, false if just create them
 	 * @return The created transactions
 	 * @throws Exception
 	 */
-	public ArrayList<Transaction> backup(String backupFolder, int chunkSize, boolean startNow) throws Exception {
+	public ArrayList<Transaction> backup(String backupFolder, boolean startNow) throws Exception {
 		if (backupFolder == null)
 			throw new BackBoxException("Backup path not specified");
 		
@@ -423,7 +436,7 @@ public class BackBoxHelper {
 					it.setDescription(path);
 					t.addTask(it);
 				} else if (!c.getRecords().containsKey(hash) && first) {
-					UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), chunkSize, path);
+					UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), path);
 					ut.setWeight(c.getFiles().get(hash).get(path).length());
 					ut.setCountWeight(false);
 					ut.setDescription(path);

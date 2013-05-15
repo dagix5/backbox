@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 public class TransactionThread implements Runnable {
 	private static Logger _log = Logger.getLogger(TransactionThread.class.getCanonicalName());
 
+	private TransactionManager tm;
+	
 	protected Transaction t;
 	private Task currentTask;
 	private boolean stop = false;
@@ -21,7 +23,8 @@ public class TransactionThread implements Runnable {
 	 * @param t
 	 *            Transaction to run
 	 */
-	public TransactionThread(Transaction t) {
+	public TransactionThread(TransactionManager tm, Transaction t) {
+		this.tm = tm;
 		this.t = t;
 	}
 
@@ -33,15 +36,15 @@ public class TransactionThread implements Runnable {
 		for (Task task : t.getTasks()) {
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> start");
 			try {
+				if (stop)
+					throw new BackBoxException("Interrupted");
 				currentTask = task;
 				long start = new Date().getTime();
 				currentTask.run();
 				long finish = new Date().getTime();
 				currentTask.setTotalTime(finish - start);
 				if (currentTask.isCountWeight())
-					TransactionManager.getInstance().taskCompleted(currentTask.getWeight());
-				if (stop)
-					throw new BackBoxException("Interrupted");
+					tm.taskCompleted(currentTask.getWeight());
 			} catch (Exception e) {
 				_log.log(Level.SEVERE, "Error", e);
 				StringBuilder error = new StringBuilder("Error during execution task ");
