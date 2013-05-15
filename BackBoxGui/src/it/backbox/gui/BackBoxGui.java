@@ -64,7 +64,6 @@ import org.apache.commons.configuration.ConfigurationException;
 public class BackBoxGui {
 	private static Logger _log = Logger.getLogger("it.backbox");
 
-	protected static final String CONFIG_FILE = "config.xml";
 	protected static final String LOG_FILE = "backbox.log";
 	
 	private static BackBoxGui window;
@@ -264,7 +263,7 @@ public class BackBoxGui {
 		try {
 			helper.getConfiguration().setProperty(BackBoxHelper.BACKUP_FOLDER, backupFolder);
 			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
-			helper.saveConfiguration(CONFIG_FILE);
+			helper.saveConfiguration();
 		} catch (ConfigurationException e) {
 			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
 		}
@@ -378,7 +377,7 @@ public class BackBoxGui {
 			}
 		});
 		
-		mntmUploadDb = new JMenuItem("Upload DB");
+		mntmUploadDb = new JMenuItem("Upload configuration");
 		mntmUploadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
@@ -393,11 +392,11 @@ public class BackBoxGui {
 				Thread worker = new Thread() {
 					public void run() {
 						try {
-							helper.uploadDB();
+							helper.uploadConf();
 							disconnect();
 						} catch (Exception e1) {
 							hideLoading();
-							GuiUtility.handleException(frmBackBox, "Error uploading database", e1);
+							GuiUtility.handleException(frmBackBox, "Error uploading configuration", e1);
 						}
 						
 						SwingUtilities.invokeLater(new Runnable() {
@@ -413,7 +412,7 @@ public class BackBoxGui {
 		mntmUploadDb.setEnabled(connected);
 		mnFile.add(mntmUploadDb);
 		
-		mntmDownloadDb = new JMenuItem("Download DB");
+		mntmDownloadDb = new JMenuItem("Download configuration");
 		mntmDownloadDb.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!connected) {
@@ -424,18 +423,18 @@ public class BackBoxGui {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local DB.", "Download DB", JOptionPane.YES_NO_OPTION);
+				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local configuration.", "Download configuration", JOptionPane.YES_NO_OPTION);
 				if (s != JOptionPane.OK_OPTION)
 					return;
 				showLoading();
 				Thread worker = new Thread() {
 					public void run() {
 						try {
-							helper.downloadDB();
+							helper.downloadConf();
 							disconnect();
 						} catch (Exception e1) {
 							hideLoading();
-							GuiUtility.handleException(frmBackBox, "Error downloading database", e1);
+							GuiUtility.handleException(frmBackBox, "Error downloading configuration", e1);
 						}
 						
 						SwingUtilities.invokeLater(new Runnable() {
@@ -654,7 +653,7 @@ public class BackBoxGui {
 		btnConnect.setMnemonic('c');
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (helper.confExists(CONFIG_FILE)) {
+				if (helper.confExists()) {
 					pwdDialog.setLocationRelativeTo(frmBackBox);
 					pwdDialog.setVisible(true);
 				} else

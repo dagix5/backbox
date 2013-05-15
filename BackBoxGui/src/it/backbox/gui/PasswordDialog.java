@@ -61,7 +61,7 @@ public class PasswordDialog extends JDialog {
 				setVisible(false);
 				Thread worker = new Thread() {
 					public void run() {
-						boolean pwd = main.helper.login(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()));
+						boolean pwd = main.helper.login(new String(passwordField.getPassword()));
 						ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 						lblPasswordErrata.setVisible(!pwd);
 						passwordField.setText("");

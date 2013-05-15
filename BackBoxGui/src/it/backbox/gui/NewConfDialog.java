@@ -124,7 +124,7 @@ public class NewConfDialog extends JDialog {
 							}
 							main.setPreferences(textField.getText(), 0);
 							
-							main.helper.register(BackBoxGui.CONFIG_FILE, new String(passwordField.getPassword()), (int) spinnerChunksize.getValue() * 1024);
+							main.helper.register(new String(passwordField.getPassword()), (int) spinnerChunksize.getValue() * 1024);
 							passwordField.setText("");
 							passwordField_1.setText("");
 							lblPasswordErrata.setVisible(false);

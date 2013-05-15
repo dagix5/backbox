@@ -18,6 +18,8 @@ import it.backbox.transaction.task.InsertTask;
 import it.backbox.transaction.task.Transaction;
 import it.backbox.transaction.task.UploadTask;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -38,6 +40,7 @@ public class BackBoxHelper {
 	private static Logger _log = Logger.getLogger(BackBoxHelper.class.getCanonicalName());
 	
 	private static final String CHARSET = "UTF-8";
+	public static final String CONFIG_FILE = "config.xml";
 	public static final String BACKUP_FOLDER = "backupFolder";
 	public static final String RESTORE_FOLDER = "restoreFolder";
 	public static final String SALT = "salt";
@@ -69,26 +72,22 @@ public class BackBoxHelper {
 	/**
 	 * Chech if the configuration file exists
 	 * 
-	 * @param configFilename
-	 *            The configuration file name
 	 * @return true if it exists, false otherwise
 	 */
-	public boolean confExists(String configFilename) {
-		return Files.exists(Paths.get(configFilename)) && DBManager.exists();
+	public boolean confExists() {
+		return Files.exists(Paths.get(CONFIG_FILE)) && DBManager.exists();
 	}
 	
 	/**
 	 * Load the configuration, open and load the database
 	 * 
-	 * @param configFilename
-	 *            The configuration file name
 	 * @param password
 	 *            User password
 	 * @return true if everything is ok, false otherwise
 	 */
-	public boolean login(String configFilename, String password) {
+	public boolean login(String password) {
 		try {
-			loadConfiguration(configFilename);
+			loadConfiguration();
 			if (getConfiguration().isEmpty()) {
 				_log.fine("Configuration not found.");
 				return false;
@@ -118,7 +117,7 @@ public class BackBoxHelper {
 				bm.setBackBoxFolderID(folderID);
 				_log.fine("BoxManager init OK");
 				getConfiguration().setProperty(FOLDER_ID, folderID);
-				saveConfiguration(configFilename);
+				saveConfiguration();
 			} else
 				_log.fine("BoxManager init OK, but folder ID null");
 			
@@ -141,15 +140,13 @@ public class BackBoxHelper {
 	/**
 	 * Create a new configuration, login to Box
 	 * 
-	 * @param configFilename
-	 *            Configuration file name
 	 * @param password
 	 *            User password
 	 * @param chunksize
 	 *            Chunk size limit of cloud provider
 	 * @throws Exception
 	 */
-	public void register(String configFilename, String password, int chunksize) throws Exception {
+	public void register(String password, int chunksize) throws Exception {
 		DBManager.delete();
 		
 		sm = new SecurityManager(password);
@@ -185,7 +182,7 @@ public class BackBoxHelper {
 		getConfiguration().setProperty(FOLDER_ID, folderID);
 		getConfiguration().setProperty(CHUNK_SIZE, chunksize);
 		
-		saveConfiguration(configFilename);
+		saveConfiguration();
 		_log.fine("Configuration saved");
 		
 	}
@@ -204,42 +201,42 @@ public class BackBoxHelper {
 	/**
 	 * Save the configuration
 	 * 
-	 * @param confFile
-	 *            Configuration file name
 	 * @throws ConfigurationException
 	 */
-	public void saveConfiguration(String confFile) throws ConfigurationException {
+	public void saveConfiguration() throws ConfigurationException {
 		getConfiguration().setEncoding(CHARSET);
-		getConfiguration().save(confFile);
+		getConfiguration().save(CONFIG_FILE);
 	}
 	
 	/**
 	 * Load the configuration
 	 * 
-	 * @param confFile
-	 *            Configuration file name
 	 * @throws ConfigurationException
 	 */
-	public void loadConfiguration(String confFile) throws ConfigurationException {
-		getConfiguration().load(confFile);
+	public void loadConfiguration() throws ConfigurationException {
+		getConfiguration().load(CONFIG_FILE);
 	}
 	
 	/**
-	 * Upload the database on Box.com
+	 * Upload the configuration on Box.com
 	 * 
 	 * @throws Exception
 	 */
-	public void uploadDB() throws Exception {
+	public void uploadConf() throws Exception {
 		dbm.closeDB();
 		bm.upload(DBManager.DB_NAME, bm.getBackBoxFolderID());
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		getConfiguration().save(baos);
+		bm.upload(baos.toByteArray(), CONFIG_FILE, bm.getBackBoxFolderID());
 	}
 	
 	/**
-	 * Download the database from Box.com
+	 * Download the configuration from Box.com
 	 * 
 	 * @throws Exception
 	 */
-	public void downloadDB() throws Exception {
+	public void downloadConf() throws Exception {
 		dbm.closeDB();
 		String name = DBManager.DB_NAME + ".new";
 		bm.download(bm.getBoxID(DBManager.DB_NAME), name);
@@ -248,6 +245,12 @@ public class BackBoxHelper {
 			Files.move(Paths.get(name), Paths.get(DBManager.DB_NAME), StandardCopyOption.REPLACE_EXISTING);
 		else
 			throw new BackBoxException("DB file empty");
+		
+		byte[] conf = bm.download(bm.getBoxID("config.xml"));
+		if (conf.length == 0)
+			throw new BackBoxException("Configuration file empty");
+		getConfiguration().load(new ByteArrayInputStream(conf));
+		saveConfiguration();
 	}
 	
 	/**
