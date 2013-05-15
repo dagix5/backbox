@@ -1,5 +1,6 @@
 package it.backbox.client.rest;
 
+import it.backbox.IRestClient;
 import it.backbox.client.http.MultipartContent.MultipartFormDataContent;
 import it.backbox.client.oauth.OAuth2Client;
 import it.backbox.client.rest.bean.BoxError;
@@ -39,7 +40,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
 
-public class RestClient {
+public class RestClient implements IRestClient {
 	private static Logger _log = Logger.getLogger(RestClient.class.getCanonicalName());
 
 	/** Global instance of the HTTP transport. */
@@ -75,6 +76,10 @@ public class RestClient {
 		_log.fine("Rest Client init ok");
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#download(java.lang.String)
+	 */
 	public byte[] download(String fileID) throws IOException, NumberFormatException, InterruptedException {
 		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID + "/content");
 		HttpRequest request = requestFactory.buildGetRequest(url);
@@ -105,6 +110,10 @@ public class RestClient {
 		return baos.toByteArray();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#upload(java.lang.String, java.lang.String, byte[], java.lang.String, java.lang.String)
+	 */
 	public BoxFile upload(String name, String fileID, byte[] content, String folderID, String sha1) throws RestException, IOException {
 		String uri;
 		if (fileID == null)
@@ -158,6 +167,10 @@ public class RestClient {
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#delete(java.lang.String)
+	 */
 	public void delete(String fileID) throws RestException, IOException {
 		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID);
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
@@ -176,6 +189,10 @@ public class RestClient {
 		_log.fine("Delete: " + response.getStatusCode());
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#search(java.lang.String)
+	 */
 	public BoxSearchResult search(String query) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "/search");
 		url.put("query", query);
@@ -196,6 +213,10 @@ public class RestClient {
 		return response.parseAs(BoxSearchResult.class);
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#mkdir(java.lang.String)
+	 */
 	public BoxFolder mkdir(String name) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "/folders");
 		GenericData data = new GenericData();
