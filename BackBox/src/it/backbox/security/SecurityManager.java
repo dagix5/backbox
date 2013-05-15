@@ -39,7 +39,6 @@ import org.apache.commons.codec.binary.Hex;
 public class SecurityManager implements ISecurityManager{
 	private static Logger _log = Logger.getLogger(SecurityManager.class.getCanonicalName());
 
-	private static final String DIGEST_ALGO = "SHA-1";
 	private static final String ENCRYPT_ALGO = "AES/CBC/PKCS5Padding";
 	private static final String ENCRYPT_ALGO_GEN_KEY = "AES";
 	private static final String GEN_KEY_ALGO = "PBKDF2WithHmacSHA1";
@@ -95,7 +94,7 @@ public class SecurityManager implements ISecurityManager{
 				throw new BackBoxException("Wrong Password");
 			generateKey(password, this.salt);
 		} else {
-			this.pwdDigest = Hex.encodeHexString(hash(password.getBytes(CHARSET)));
+			this.pwdDigest = Hex.encodeHexString(DigestManager.hash(password.getBytes(CHARSET)));
 			generateKey(password);
 		}
 	}
@@ -164,133 +163,8 @@ public class SecurityManager implements ISecurityManager{
 		if (pwdDigest == null)
 			return false;
 		Charset cs = Charset.forName(CHARSET);
-		String pwdDigestCalc = Hex.encodeHexString(hash(password.getBytes(cs)));
+		String pwdDigestCalc = Hex.encodeHexString(DigestManager.hash(password.getBytes(cs)));
 		return pwdDigestCalc.equals(pwdDigest);
-	}
-	
-	/**
-	 * Get the hash of a file
-	 * 
-	 * @param file
-	 *            File to hash
-	 * @return Hex-encoded hash
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static String hash(File file) throws NoSuchAlgorithmException, IOException {
-		InputStream in = null;
-		String toReturn = null;
-		try {
-			MessageDigest md = MessageDigest.getInstance(DIGEST_ALGO);
-			byte[] result = null;
-					
-			in = new FileInputStream(file);
-
-			byte[] buf = new byte[BUFFER_LENGTH];
-			int count = in.read(buf);
-			while (count >= 0) {
-				md.update(buf);
-				count = in.read(buf);
-			}
-			result = md.digest();
-			
-			if (result != null) {
-				if (_log.isLoggable(Level.FINE))  _log.fine(file.getName() + "-> hash ok");
-				toReturn =  Hex.encodeHexString(result);
-			}
-		} finally {
-			if (in != null)
-				in.close();
-		}
-		return toReturn;
-	}
-	
-	/**
-	 * Check the file integrity, comparing its digest with that one passed as
-	 * parameter
-	 * 
-	 * @param filename
-	 *            Name of the file to check
-	 * @param hash
-	 *            Hash to check
-	 * @return true if the file is intact, false otherwise
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws BackBoxException 
-	 */
-	public static boolean checkIntegrity(String filename, String hash) throws NoSuchAlgorithmException, IOException, BackBoxException {
-		File file = new File(filename);
-		if (!file.exists())
-			throw new BackBoxException("File not found");
-		String newHash = hash(file);
-		return hash.equals(newHash);
-	}
-	
-	/**
-	 * Fill the list of chunks with the chunkfile hash
-	 * 
-	 * @param path
-	 *            Folder where find the chunk files
-	 * @param chunks
-	 *            ArrayList of Chunks
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static void hashChunks(String path, ArrayList<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
-		for (Chunk c : chunks) {
-			File cf = new File(path + "\\" + c.getChunkname());
-			c.setChunkhash(hash(cf));
-		}
-	}
-	
-	/**
-	 * Fill the list of chunks with the chunkfile hash
-	 * 
-	 * @param chunks
-	 *            ArrayList of Chunks
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static void hashChunks(ArrayList<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
-		for (Chunk c : chunks)
-			c.setChunkhash(Hex.encodeHexString(hash(c.getContent())));
-	}
-	
-	/**
-	 * Check the chunk file integrity
-	 * 
-	 * @param path
-	 *            Folder where find the chunk files
-	 * @param chunks
-	 *            ArrayList of Chunks
-	 * @throws BackBoxException 
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static void checkChunks(String path, ArrayList<Chunk> chunks) throws NoSuchAlgorithmException, IOException, BackBoxException {
-		for (Chunk c : chunks) {
-			if (!checkIntegrity(path + "\\" + c.getChunkname(), c.getChunkhash()))
-				throw new BackBoxException("Chunk integrity check failed");
-		}
-	}
-
-	/**
-	 * Get the hash of a byte array
-	 * 
-	 * @param data
-	 *            Byte array to hash
-	 * @return Byte array of hash
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static byte[] hash(byte[] data) throws NoSuchAlgorithmException, IOException {
-		MessageDigest md = MessageDigest.getInstance(DIGEST_ALGO);
-		byte[] result = null;
-		if (data != null) {
-			md.update(data);
-			result = md.digest();
-		}
-		return result;
 	}
 	
 	/**

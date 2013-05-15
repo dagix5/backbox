@@ -9,7 +9,7 @@ import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
-import it.backbox.security.SecurityManager;
+import it.backbox.security.DigestManager;
 import it.backbox.utility.Utility;
 
 import java.io.File;
@@ -174,7 +174,7 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 				String[] ns = name.split("\\\\");
 				String n = ns[ns.length - 1];
 				
-				BoxFile file = client.upload(n, getBoxID(n), src.get(i), remotefolderID, Hex.encodeHexString(SecurityManager.hash(src.get(i))));
+				BoxFile file = client.upload(n, getBoxID(n), src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
 				String id = ((file != null) ? file.id : null);
 				if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
 				ids.put(name, id);
@@ -209,7 +209,7 @@ public class BoxManager implements IBoxManager, IBoxManagerChunk{
 			String n = ns[ns.length - 1];
 			
 			byte[] content = Utility.read(name);
-			BoxFile file = client.upload(n, getBoxID(n), content, remotefolderID,Hex.encodeHexString(SecurityManager.hash(content)));
+			BoxFile file = client.upload(n, getBoxID(n), content, remotefolderID,Hex.encodeHexString(DigestManager.hash(content)));
 			String id = ((file != null) ? file.id : null);
 			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
 			ids.put(name, id);

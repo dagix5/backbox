@@ -1,6 +1,6 @@
 package it.backbox.compare;
 
-import it.backbox.security.SecurityManager;
+import it.backbox.security.DigestManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class FileCompare {
 		if (exclusions.contains(relativePath))
 			return;
 		if (!file.isDirectory()) {
-			String hash = SecurityManager.hash(file);
+			String hash = DigestManager.hash(file);
 			if (list.containsKey(hash))
 				list.get(hash).put(relativePath, file);
 			else {

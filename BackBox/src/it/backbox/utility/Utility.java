@@ -1,6 +1,6 @@
 package it.backbox.utility;
 
-import it.backbox.security.SecurityManager;
+import it.backbox.security.DigestManager;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -23,7 +23,7 @@ public class Utility {
 	 */
 	public static String genID() {
 		try {
-			return Hex.encodeHexString(SecurityManager.hash(String.valueOf(RandomUtils.nextInt(Integer.MAX_VALUE)).getBytes()));
+			return Hex.encodeHexString(DigestManager.hash(String.valueOf(RandomUtils.nextInt(Integer.MAX_VALUE)).getBytes()));
 		} catch (NoSuchAlgorithmException | IOException e) {
 			return null;
 		}

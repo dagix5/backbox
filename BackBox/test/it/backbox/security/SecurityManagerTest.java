@@ -20,12 +20,12 @@ public class SecurityManagerTest {
 	
 	@Before
 	public void setUpBefore() throws Exception {
-		sm = SecurityManager.createInstance("passwordTest", Hex.encodeHexString(SecurityManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
+		sm = SecurityManager.createInstance("passwordTest", Hex.encodeHexString(DigestManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
 	}
 	
 	@Test
 	public void testEncryptByteArray1() throws Exception {
-		SecurityManager sm = SecurityManager.createInstance("passwordTest", Hex.encodeHexString(SecurityManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
+		SecurityManager sm = SecurityManager.createInstance("passwordTest", Hex.encodeHexString(DigestManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
 		byte[] cypher = sm.encrypt(plain);
 		
 		byte[] newplain = sm.decrypt(cypher);
