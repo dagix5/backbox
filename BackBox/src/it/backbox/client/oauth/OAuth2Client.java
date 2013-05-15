@@ -25,9 +25,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class OAuth2Client {
 	
-	//TODO put final client ID/secret
-	private static final String CLIENT_ID = "7d8cdaq9h09o23wvkhauznnwho1w1bcz";
-	private static final String CLIENT_SECRET = "j0dRkC57zpcmihxB4KgRdYScOBaan0Hi";
+	private static final String CLIENT_ID = "zr56mtgkjibomdnmtje8cer8v8sw3nxe";
+	private static final String CLIENT_SECRET = "AkFazArd6LnIifodfHQJ02D1fh90qLs2";
 	private static final String TOKEN_SERVER_URL = "https://www.box.com/api/oauth2/token";
 	private static final String AUTHORIZATION_SERVER_URL = "https://www.box.com/api/oauth2/authorize";
 	private static final String USER_ID = "Box";
