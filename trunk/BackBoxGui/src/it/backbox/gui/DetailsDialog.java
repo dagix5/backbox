@@ -73,7 +73,7 @@ public class DetailsDialog extends JDialog {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new MigLayout("", "[125.00,grow][322.00]", "[][][][][][][][][grow]"));
+		contentPanel.setLayout(new MigLayout("", "[125.00][322.00]", "[][][][][][][][][grow]"));
 		
 		JLabel lblTransactionId = new JLabel("Transaction ID: ");
 		contentPanel.add(lblTransactionId, "cell 0 0,alignx right,growy");
