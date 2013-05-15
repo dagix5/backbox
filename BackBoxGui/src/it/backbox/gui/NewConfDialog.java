@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
+import java.awt.Dialog.ModalityType;
 
 public class NewConfDialog extends JDialog {
 
@@ -38,6 +39,7 @@ public class NewConfDialog extends JDialog {
 	 * @param BackboxGui 
 	 */
 	public NewConfDialog(final BackBoxGui main) {
+		setModalityType(ModalityType.APPLICATION_MODAL);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("New configuration");
 		setBounds(100, 100, 450, 255);
@@ -115,10 +117,12 @@ public class NewConfDialog extends JDialog {
 							lblSetFolderTo.setVisible(false);
 							lblPasswordErrata.setVisible(false);
 							if (textField.getText().isEmpty() || !Files.exists(Paths.get(textField.getText()))) {
+								main.hideLoading();
 								lblSetFolderTo.setVisible(true);
 								return;
 							}
 							if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
+								main.hideLoading();
 								lblPasswordErrata.setVisible(true);
 								return;
 							}
@@ -130,6 +134,7 @@ public class NewConfDialog extends JDialog {
 							lblPasswordErrata.setVisible(false);
 							main.connect();	
 						} catch (Exception e) {
+							main.hideLoading();
 							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
 						}
 						
