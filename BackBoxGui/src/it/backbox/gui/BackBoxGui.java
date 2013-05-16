@@ -361,7 +361,7 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				if (!running) {
 					if (helper.confExists()) {
-						int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite current configuration.", "Download configuration", JOptionPane.YES_NO_OPTION);
+						int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite current configuration.", "New configuration", JOptionPane.YES_NO_OPTION);
 						if (s != JOptionPane.OK_OPTION)
 							return;
 					}
@@ -484,6 +484,23 @@ public class BackBoxGui {
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
+		
+		JMenuItem mntmBuildDatabase = new JMenuItem("Build database");
+		mntmBuildDatabase.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (running) {
+					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local database.", "Build database", JOptionPane.YES_NO_OPTION);
+				if (s != JOptionPane.OK_OPTION)
+					return;
+				pwdDialog.setLocationRelativeTo(frmBackBox);
+				pwdDialog.setMode(PasswordDialog.BUILDDB_MODE);
+				pwdDialog.setVisible(true);
+			}
+		});
+		mnEdit.add(mntmBuildDatabase);
 		mnEdit.add(mntmConfiguration);
 		
 		JMenuItem mntmPreferences = new JMenuItem("Preferences...");
@@ -491,10 +508,14 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				preferencesDialog.setLocationRelativeTo(frmBackBox);
-				preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+				if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
+					preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 				preferencesDialog.setVisible(true);
 			}
 		});
+		
+		JSeparator separator_2 = new JSeparator();
+		mnEdit.add(separator_2);
 		mnEdit.add(mntmPreferences);
 		
 		table = new JTable();
@@ -677,6 +698,7 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				if (helper.confExists()) {
 					pwdDialog.setLocationRelativeTo(frmBackBox);
+					pwdDialog.setMode(PasswordDialog.LOGIN_MODE);
 					pwdDialog.setVisible(true);
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Configuration not found", "Error", JOptionPane.ERROR_MESSAGE);
