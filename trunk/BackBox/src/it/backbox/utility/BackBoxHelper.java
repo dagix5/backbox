@@ -1,5 +1,6 @@
 package it.backbox.utility;
 
+import it.backbox.bean.Chunk;
 import it.backbox.boxcom.BoxManager;
 import it.backbox.client.rest.RestClient;
 import it.backbox.compare.FileCompare;
@@ -109,13 +110,14 @@ public class BackBoxHelper {
 			bm = new BoxManager();
 			bm.setRestClient(new RestClient());
 			String folderID = getConfiguration().getString(FOLDER_ID);
-			if ((folderID == null) || folderID.isEmpty())
+			if ((folderID == null) || folderID.isEmpty()) {
 				folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
+				getConfiguration().setProperty(FOLDER_ID, folderID);
+				saveConfiguration();
+			}
 			if ((folderID != null) && !folderID.isEmpty()) {
 				bm.setBackBoxFolderID(folderID);
 				_log.fine("BoxManager init OK");
-				getConfiguration().setProperty(FOLDER_ID, folderID);
-				saveConfiguration();
 			} else
 				_log.fine("BoxManager init OK, but folder ID null");
 			
@@ -527,6 +529,61 @@ public class BackBoxHelper {
 		} else
 			tm.addTransaction(t);
 		return t;
+	}
+	
+	/**
+	 * Build the database from remote files
+	 * 
+	 * @param password
+	 *            User password
+	 * 
+	 * @throws Exception
+	 */
+	public void buildDB(String password) throws Exception {
+		loadConfiguration();
+		if (getConfiguration().isEmpty())
+			throw new BackBoxException("Configuration not found.");
+		_log.fine("Configuration load OK");
+
+		sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
+		_log.fine("SecurityManager init OK");
+
+		dbm = new DBManager(sm);
+		dbm.createDB();
+		_log.fine("DBManager init OK");
+		
+		bm = new BoxManager();
+		bm.setRestClient(new RestClient());
+		String folderID = getConfiguration().getString(FOLDER_ID);
+		if ((folderID == null) || folderID.isEmpty()) {
+			folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
+			if ((folderID == null) || folderID.isEmpty())
+				throw new BackBoxException("Remote folder not found");
+		}
+		bm.setBackBoxFolderID(folderID);
+		
+		Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(bm.getBackBoxFolderID());
+		List<String> ex = new ArrayList<>();
+		ex.add(".deleted");
+		
+		File root = new File(getConfiguration().getString(BACKUP_FOLDER));
+		c.listFiles(root, ex);
+		
+		Map<String, Map<String, File>> localInfo = c.getFiles();
+		for (String hash : remoteInfo.keySet()) {
+			List<Chunk> chunks = remoteInfo.get(hash);
+			if (!localInfo.containsKey(hash)) {
+				bm.deleteChunk(chunks);
+				break;
+			}
+			Map<String, File> fileInfo = localInfo.get(hash);
+			for (String path : fileInfo.keySet()) {
+				File file = fileInfo.get(path);
+				dbm.insert(file, path, hash, chunks, true, true, true);
+			}
+		}
+		
+		dbm.closeDB();
 	}
 
 }

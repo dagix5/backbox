@@ -1,7 +1,10 @@
 package it.backbox;
 
+import java.io.IOException;
+
 import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
+import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 
 public interface IRestClient {
@@ -65,4 +68,14 @@ public interface IRestClient {
 	 */
 	public void delete(String fileID, boolean isFolder) throws Exception;
 	
+	/**
+	 * Get all the items in a folder
+	 * 
+	 * @param folderID
+	 *            ID of the folder
+	 * @return Items in the folder
+	 * @throws IOException
+	 */
+	public BoxItemCollection getFolderItems(String folderID) throws Exception;
+
 }
