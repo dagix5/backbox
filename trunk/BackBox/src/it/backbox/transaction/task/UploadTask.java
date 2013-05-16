@@ -8,7 +8,7 @@ import it.backbox.compress.Zipper;
 import it.backbox.security.DigestManager;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
 public class UploadTask extends Task {
 
@@ -47,7 +47,7 @@ public class UploadTask extends Task {
 		if (stop) return;
 		
 		byte[] data = null;
-		ArrayList<Chunk> splitted = null;
+		List<Chunk> splitted = null;
 		
 		if (isCompressEnabled()) {
 			Zipper z = new Zipper();

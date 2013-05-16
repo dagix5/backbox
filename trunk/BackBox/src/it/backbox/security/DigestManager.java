@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -102,7 +103,7 @@ public class DigestManager {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public static void hashChunks(ArrayList<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
+	public static void hashChunks(List<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
 		for (Chunk c : chunks)
 			c.setChunkhash(Hex.encodeHexString(hash(c.getContent())));
 	}

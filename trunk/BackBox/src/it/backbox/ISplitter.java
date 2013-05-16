@@ -2,7 +2,7 @@ package it.backbox;
 
 import it.backbox.bean.Chunk;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface ISplitter {
 
@@ -14,7 +14,7 @@ public interface ISplitter {
 	 * @return List of byte array chunks
 	 * @throws Exception 
 	 */
-	public ArrayList<byte[]> split(byte[] src) throws Exception;
+	public List<byte[]> split(byte[] src) throws Exception;
 
 	/**
 	 * Split a file
@@ -24,7 +24,7 @@ public interface ISplitter {
 	 * @return List of byte array chunks
 	 * @throws Exception 
 	 */
-	public ArrayList<byte[]> split(String filename) throws Exception;
+	public List<byte[]> split(String filename) throws Exception;
 
 	/**
 	 * Split a file
@@ -38,7 +38,7 @@ public interface ISplitter {
 	 * @return List of chunks names
 	 * @throws Exception 
 	 */
-	public ArrayList<String> split(String filename, String chunkprefix,	String destfolder) throws Exception;
+	public List<String> split(String filename, String chunkprefix,	String destfolder) throws Exception;
 
 	/**
 	 * Split a byte array in files
@@ -52,7 +52,7 @@ public interface ISplitter {
 	 * @return List of chunks names
 	 * @throws Exception 
 	 */
-	public ArrayList<String> split(byte[] src, String chunkprefix, String destfolder) throws Exception;
+	public List<String> split(byte[] src, String chunkprefix, String destfolder) throws Exception;
 
 	/**
 	 * Merge a list of byte arrays
@@ -62,7 +62,7 @@ public interface ISplitter {
 	 * @return Merged byte array
 	 * @throws Exception 
 	 */
-	public byte[] merge(ArrayList<byte[]> chunks) throws Exception;
+	public byte[] merge(List<byte[]> chunks) throws Exception;
 
 	/**
 	 * Merge a list of byte array in a file
@@ -73,7 +73,7 @@ public interface ISplitter {
 	 *            Merged file
 	 * @throws Exception 
 	 */
-	public void merge(ArrayList<byte[]> chunks, String destfilename) throws Exception;
+	public void merge(List<byte[]> chunks, String destfilename) throws Exception;
 	
 	/**
 	 * Split a byte array in Chunk(s)
@@ -85,7 +85,7 @@ public interface ISplitter {
 	 * @return List of Chunk
 	 * @throws Exception 
 	 */
-	public ArrayList<Chunk> splitChunk(byte[] src, String chunkprefix) throws Exception;
+	public List<Chunk> splitChunk(byte[] src, String chunkprefix) throws Exception;
 
 	/**
 	 * Split a file in Chunk(s)
@@ -96,7 +96,7 @@ public interface ISplitter {
 	 *            Prefix to append a progressive to create a chunk name
 	 * @return List of Chunk
 	 */
-	public ArrayList<Chunk> splitChunk(String filename, String chunkprefix) throws Exception;
+	public List<Chunk> splitChunk(String filename, String chunkprefix) throws Exception;
 
 	/**
 	 * Merge a list of Chunk in a byte array
@@ -105,7 +105,7 @@ public interface ISplitter {
 	 *            Chunk to merge
 	 * @return Merged byte array
 	 */
-	public byte[] mergeChunk(ArrayList<Chunk> chunks) throws Exception;
+	public byte[] mergeChunk(List<Chunk> chunks) throws Exception;
 
 	/**
 	 * Merge a list of Chunk in a file
@@ -115,6 +115,6 @@ public interface ISplitter {
 	 * @param destfilename
 	 *            Merged file
 	 */
-	public void mergeChunk(ArrayList<Chunk> chunks, String destfilename) throws Exception;
+	public void mergeChunk(List<Chunk> chunks, String destfilename) throws Exception;
 
 }

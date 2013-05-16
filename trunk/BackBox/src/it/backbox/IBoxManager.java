@@ -2,8 +2,8 @@ package it.backbox;
 
 import it.backbox.bean.Chunk;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface IBoxManager {
 	
@@ -40,7 +40,7 @@ public interface IBoxManager {
 	 * @return List of uploaded file IDs
 	 * @throws Exception 
 	 */
-	public HashMap<String, String> upload(ArrayList<byte[]> src, ArrayList<String> filename, String remotefolderID) throws Exception;
+	public Map<String, String> upload(List<byte[]> src, List<String> filename, String remotefolderID) throws Exception;
 
 	/**
 	 * Upload a file to Box.com
@@ -64,7 +64,7 @@ public interface IBoxManager {
 	 * @return Uploaded file ID
 	 * @throws Exception 
 	 */
-	public HashMap<String, String> upload(ArrayList<String> filename, String remotefolderID) throws Exception;
+	public Map<String, String> upload(List<String> filename, String remotefolderID) throws Exception;
 
 	/**
 	 * Download a file from Box.com
@@ -84,7 +84,7 @@ public interface IBoxManager {
 	 * @return List of Byte arrays downloaded files contents
 	 * @throws Exception 
 	 */
-	public ArrayList<byte[]> download(ArrayList<String> fileID) throws Exception;
+	public List<byte[]> download(List<String> fileID) throws Exception;
 
 	/**
 	 * Download a file from Box.com to a file
@@ -106,7 +106,7 @@ public interface IBoxManager {
 	 *            Downloaded files
 	 * @throws Exception 
 	 */
-	public void download(ArrayList<String> fileID, ArrayList<String> destfilename) throws Exception;
+	public void download(List<String> fileID, List<String> destfilename) throws Exception;
 	
 	/**
 	 * Delete a file from Box.com
@@ -133,7 +133,7 @@ public interface IBoxManager {
 	 *            List of Chunk to delete
 	 * @throws Exception 
 	 */
-	public void deleteChunk(ArrayList<Chunk> chunks) throws Exception;
+	public void deleteChunk(List<Chunk> chunks) throws Exception;
 	
 
 	/**
@@ -164,7 +164,7 @@ public interface IBoxManager {
 	 *            List of Chunk to download
 	 * @return List of byte arrays chunks contents
 	 */
-	public ArrayList<byte[]> downloadChunk(ArrayList<Chunk> chunks) throws Exception;
+	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception;
 
 	/**
 	 * Download a list of Chunk to files from Box.com
@@ -175,7 +175,7 @@ public interface IBoxManager {
 	 *            Folder where put downloaded files
 	 * @throws Exception 
 	 */
-	public void downloadChunk(ArrayList<Chunk> chunks, String destfolder) throws Exception;
+	public void downloadChunk(List<Chunk> chunks, String destfolder) throws Exception;
 	
 	/**
 	 * Upload a Chunk (content) to Box.com
@@ -197,7 +197,7 @@ public interface IBoxManager {
 	 *            ID of the folder where upload the chunks
 	 * @throws Exception 
 	 */
-	public void uploadChunk(ArrayList<Chunk> chunks, String remotefolderID) throws Exception;
+	public void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception;
 
 	/**
 	 * Upload a list of Chunk (files) to Box.com
@@ -210,7 +210,7 @@ public interface IBoxManager {
 	 *            ID of the folder where upload the chunks
 	 * @throws Exception 
 	 */
-	public void uploadChunk(ArrayList<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception;
+	public void uploadChunk(List<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception;
 
 	/**
 	 * Upload a Chunk (files) to Box.com
