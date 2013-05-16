@@ -566,19 +566,25 @@ public class BackBoxHelper {
 		List<String> ex = new ArrayList<>();
 		ex.add(".deleted");
 		
+		if (!getConfiguration().containsKey(BACKUP_FOLDER))
+			throw new BackBoxException("Backup folder not found in configuration");
+		
 		File root = new File(getConfiguration().getString(BACKUP_FOLDER));
 		c.listFiles(root, ex);
 		
 		Map<String, Map<String, File>> localInfo = c.getFiles();
 		for (String hash : remoteInfo.keySet()) {
+			_log.fine("Restoring " + hash);
 			List<Chunk> chunks = remoteInfo.get(hash);
 			if (!localInfo.containsKey(hash)) {
 				bm.deleteChunk(chunks);
+				_log.fine("Not found locally, deleted " + hash);
 				break;
 			}
 			Map<String, File> fileInfo = localInfo.get(hash);
 			for (String path : fileInfo.keySet()) {
 				File file = fileInfo.get(path);
+				_log.fine("Insert " + hash + " " + path + " " + chunks.size());
 				dbm.insert(file, path, hash, chunks, true, true, true);
 			}
 		}

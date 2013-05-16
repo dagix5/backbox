@@ -128,7 +128,8 @@ public class BackBoxGui {
 		
 		if (connected) {
 			backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
-			setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+			if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
+				setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 			updateTable();
 		}
 		
@@ -143,7 +144,8 @@ public class BackBoxGui {
 	public void disconnect() {
 		try {
 			connected = false;
-			helper.getTransactionManager().clear();
+			if (helper.getTransactionManager() != null)
+				helper.getTransactionManager().clear();
 			clearTable();
 			clearPreviewTable();
 			updateStatus();
