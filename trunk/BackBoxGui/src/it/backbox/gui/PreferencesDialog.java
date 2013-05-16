@@ -1,7 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.utility.BackBoxHelper;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;

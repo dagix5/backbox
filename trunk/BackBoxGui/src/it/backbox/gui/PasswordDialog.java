@@ -1,5 +1,6 @@
 package it.backbox.gui;
 
+import it.backbox.gui.utility.GuiUtility;
 import it.backbox.progress.ProgressManager;
 import it.backbox.utility.BackBoxHelper;
 
@@ -22,9 +23,14 @@ import net.miginfocom.swing.MigLayout;
 public class PasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
+	
+	public static final int LOGIN_MODE = 0;
+	public static final int BUILDDB_MODE = 1;
+	
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordField;
 	private JButton okButton;
+	private int mode = LOGIN_MODE;
 	
 	/**
 	 * Create the dialog.
@@ -61,15 +67,23 @@ public class PasswordDialog extends JDialog {
 				setVisible(false);
 				Thread worker = new Thread() {
 					public void run() {
-						boolean pwd = main.helper.login(new String(passwordField.getPassword()));
-						ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
-						lblPasswordErrata.setVisible(!pwd);
-						passwordField.setText("");
-						if (pwd)
-							main.connect();
-						else
-							setVisible(true);
-						
+						if (mode == LOGIN_MODE) {
+							boolean pwd = main.helper.login(new String(passwordField.getPassword()));
+							ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+							lblPasswordErrata.setVisible(!pwd);
+							passwordField.setText("");
+							if (pwd)
+								main.connect();
+							else
+								setVisible(true);
+						} else if (mode == BUILDDB_MODE) {
+							try {
+								main.helper.buildDB(new String(passwordField.getPassword()));
+							} catch (Exception e) {
+								main.hideLoading();
+								GuiUtility.handleException(contentPanel, "Error building database", e);
+							}
+						}
 						SwingUtilities.invokeLater(new Runnable() {
 		                    public void run() {
 		                    	main.hideLoading();
@@ -92,6 +106,14 @@ public class PasswordDialog extends JDialog {
 		});
 		cancelButton.setActionCommand("Cancel");
 		buttonPane.add(cancelButton);
+	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.mode = mode;
 	}
 	
 }
