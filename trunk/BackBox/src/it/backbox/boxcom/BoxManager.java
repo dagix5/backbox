@@ -239,13 +239,24 @@ public class BoxManager implements IBoxManager {
 		}
 	}
 
+	/**
+	 * Delete recursively a folder from Box.com
+	 * 
+	 * @param folderID
+	 *            ID of the folder to delete
+	 * @throws Exception
+	 */
+	public void deleteFolder(String folderID) throws Exception {
+		client.delete(folderID, true);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#delete(java.lang.String)
 	 */
 	@Override
 	public void delete(String fileID) throws Exception {
-		client.delete(fileID);
+		client.delete(fileID, false);
 	}
 
 	/*
