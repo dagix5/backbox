@@ -48,16 +48,23 @@ public class DBManager implements IDBManager {
 	 * @return true if the file exists, false otherwise
 	 */
 	public static boolean exists() {
+		if (Files.exists(Paths.get(DB_NAME + ".temp"))) {
+			_log.fine("Decrypted DB found");
+			return true;
+		}
 		return Files.exists(Paths.get(DB_NAME));
 	}
 	
 	/**
 	 * Delete the database file
+	 * 
 	 * @throws IOException
 	 */
 	public static void delete() throws IOException {
-		if (exists())
+		if (Files.exists(Paths.get(DB_NAME)))
 			Files.delete(Paths.get(DB_NAME));
+		if (Files.exists(Paths.get(DB_NAME + ".temp")))
+			Files.delete(Paths.get(DB_NAME + ".temp"));
 	}
 	
 	/**
@@ -73,13 +80,18 @@ public class DBManager implements IDBManager {
 			throw new BackBoxException("SecurityManager null");
 		}
 
-		if (!Files.exists(Paths.get(DB_NAME))) {
-			_log.severe("DB not found");
-			throw new BackBoxException("DB not found");
+		//first time: if something goes wrong you could have only the decrypted db file
+		if (Files.exists(Paths.get(DB_NAME + ".temp")) && !Files.exists(Paths.get(DB_NAME))) {
+			_log.warning("Something went wrong, only decrypted DB found. Trying to open it...");
+		} else {
+			if (!Files.exists(Paths.get(DB_NAME))) {
+				_log.severe("DB not found");
+				throw new BackBoxException("DB not found");
+			}
+			
+			_log.fine("DB found");
+			sm.decrypt(DB_NAME, DB_NAME + ".temp");
 		}
-		
-		_log.fine("DB found");
-		sm.decrypt(DB_NAME, DB_NAME + ".temp");
 
 		Class.forName("org.sqlite.JDBC");
 		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME + ".temp");
