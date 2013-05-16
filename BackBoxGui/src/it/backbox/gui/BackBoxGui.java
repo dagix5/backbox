@@ -70,6 +70,7 @@ public class BackBoxGui {
 	private JFrame frmBackBox;
 	private JTable table;
 	private PasswordDialog pwdDialog;
+	private ConfigurationDialog configurationDialog;
 	private PreferencesDialog preferencesDialog;
 	private JLabel lblStatus;
 	private NewConfDialog newConfDialog;
@@ -87,7 +88,7 @@ public class BackBoxGui {
 	private JMenuItem mntmDownloadDb;
 	private JSpinner spnCurrentUploadSpeed;
 	private JMenuItem mntmNewConfiguration;
-	private JMenuItem mntmPreferences;
+	private JMenuItem mntmConfiguration;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -135,7 +136,6 @@ public class BackBoxGui {
 			pwdDialog.setVisible(false);
 		if (newConfDialog != null)
 			newConfDialog.setVisible(false);
-		preferencesDialog = new PreferencesDialog(this);
 		
 		updateStatus();
 	}
@@ -244,7 +244,7 @@ public class BackBoxGui {
 		mntmUploadDb.setEnabled(!running);
 		mntmDownloadDb.setEnabled(!running);
 		mntmNewConfiguration.setEnabled(!running);
-		mntmPreferences.setEnabled(connected && !running);
+		mntmConfiguration.setEnabled(connected && !running);
 	}
 	
 	private void showResult(List<Transaction> result) {
@@ -263,21 +263,26 @@ public class BackBoxGui {
 		JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	public void setPreferences(String backupFolder, Integer defaultUploadSpeed) {
+	public void setConfiguration(String backupFolder) {
 		try {
 			helper.getConfiguration().setProperty(BackBoxHelper.BACKUP_FOLDER, backupFolder);
-			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
 			helper.saveConfiguration();
+			
+			this.backupFolder = backupFolder;
 		} catch (ConfigurationException e) {
 			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
 		}
 	}
 	
-	public void savePreferences(String backupFolder, Integer defaultUploadSpeed) {
-		setPreferences(backupFolder, defaultUploadSpeed);
-		
-		this.backupFolder = backupFolder;
-		setSpeed(defaultUploadSpeed);
+	public void setPreferences(Integer defaultUploadSpeed) {
+		try {
+			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
+			helper.saveConfiguration();
+			
+			setSpeed(defaultUploadSpeed);
+		} catch (ConfigurationException e) {
+			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
+		}
 	}
 	
 	/**
@@ -293,6 +298,8 @@ public class BackBoxGui {
 		newConfDialog = new NewConfDialog(this);
 		loadingDialog = new LoadingDialog();
 		detailsDialog = new DetailsDialog();
+		preferencesDialog = new PreferencesDialog(this);
+		configurationDialog = new ConfigurationDialog(this);
 	}
 
 	public void showLoading() {
@@ -353,6 +360,11 @@ public class BackBoxGui {
 		mntmNewConfiguration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (!running) {
+					if (helper.confExists()) {
+						int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite current configuration.", "Download configuration", JOptionPane.YES_NO_OPTION);
+						if (s != JOptionPane.OK_OPTION)
+							return;
+					}
 					newConfDialog.setLocationRelativeTo(frmBackBox);
 					newConfDialog.setVisible(true);
 				} else
@@ -456,19 +468,31 @@ public class BackBoxGui {
 		JMenu mnEdit = new JMenu("Edit");
 		menuBar.add(mnEdit);
 		
-		mntmPreferences = new JMenuItem("Preferences...");
-		mntmPreferences.addActionListener(new ActionListener() {
+		mntmConfiguration = new JMenuItem("Configuration...");
+		mntmConfiguration.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (connected) {
-					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					preferencesDialog.setLocationRelativeTo(frmBackBox);
-					preferencesDialog.setVisible(true);
+					configurationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					configurationDialog.setLocationRelativeTo(frmBackBox);
+					configurationDialog.loadConf(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
+					configurationDialog.setVisible(true);
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+		mnEdit.add(mntmConfiguration);
+		
+		JMenuItem mntmPreferences = new JMenuItem("Preferences...");
+		mntmPreferences.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				preferencesDialog.setLocationRelativeTo(frmBackBox);
+				preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+				preferencesDialog.setVisible(true);
 			}
 		});
 		mnEdit.add(mntmPreferences);

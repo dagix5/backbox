@@ -24,7 +24,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
-import java.awt.Dialog.ModalityType;
 
 public class NewConfDialog extends JDialog {
 
@@ -126,7 +125,7 @@ public class NewConfDialog extends JDialog {
 								lblPasswordErrata.setVisible(true);
 								return;
 							}
-							main.setPreferences(textField.getText(), 0);
+							main.setConfiguration(textField.getText());
 							
 							main.helper.register(new String(passwordField.getPassword()), (int) spinnerChunksize.getValue() * 1024);
 							passwordField.setText("");
