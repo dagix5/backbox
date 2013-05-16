@@ -49,7 +49,6 @@ public class BackBoxHelper {
 	public static final String FOLDER_ID = "folderID";
 	
 	private XMLConfiguration configuration;
-	private String folderID;
 	
 	protected FileCompare c;
 	protected SecurityManager sm;
@@ -164,12 +163,12 @@ public class BackBoxHelper {
 		
 		bm = new BoxManager();
 		bm.setRestClient(new RestClient());
-		folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
-		if (folderID == null)
-			folderID = bm.mkdir(BoxManager.UPLOAD_FOLDER);
-		else
+		String folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
+		if (folderID != null) {
 			_log.warning("Box Upload folder exists");
-		bm.setBackBoxFolderID(folderID);
+			bm.deleteFolder(folderID);
+		}
+		bm.setBackBoxFolderID(bm.mkdir(BoxManager.UPLOAD_FOLDER));
 		_log.fine("BoxManager init OK");
 		
 		Zipper z = new Zipper();
@@ -178,8 +177,8 @@ public class BackBoxHelper {
 		tm = new TransactionManager(dbm, bm, sm, s, z);
 		_log.fine("TransactionManager init OK");
 		
-		getConfiguration().setProperty(FOLDER_ID, folderID);
-		getConfiguration().setProperty(CHUNK_SIZE, chunksize);
+		getConfiguration().setProperty(FOLDER_ID, bm.getBackBoxFolderID());
+		getConfiguration().setProperty(CHUNK_SIZE, s.getChunkSize());
 		
 		saveConfiguration();
 		_log.fine("Configuration saved");
