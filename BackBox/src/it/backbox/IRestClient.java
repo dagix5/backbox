@@ -59,8 +59,10 @@ public interface IRestClient {
 	 * 
 	 * @param fileID
 	 *            ID of the file to delete
+	 * @param isFolder
+	 *            True if the item to delete is a folder, false otherwise
 	 * @throws Exception
 	 */
-	public void delete(String fileID) throws Exception;
-
+	public void delete(String fileID, boolean isFolder) throws Exception;
+	
 }

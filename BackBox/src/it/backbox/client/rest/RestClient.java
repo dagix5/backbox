@@ -169,10 +169,12 @@ public class RestClient implements IRestClient {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#delete(java.lang.String)
+	 * @see it.backbox.IRestClient#delete(java.lang.String, boolean)
 	 */
-	public void delete(String fileID) throws RestException, IOException {
-		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID);
+	public void delete(String fileID, boolean isFolder) throws RestException, IOException {
+		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "/folders/" : "/files/") + fileID);
+		if (isFolder)
+			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
 		_log.fine("Delete: " + request.getUrl().toString());
 		HttpResponse response = null;
