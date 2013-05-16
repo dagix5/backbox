@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +59,7 @@ public class BoxManager implements IBoxManager {
 	/**
 	 * Set the app folder ID
 	 * 
-	 * @param uploadFolderID
+	 * @param backBoxFolderID
 	 *            The app folder ID
 	 */
 	public void setBackBoxFolderID(String backBoxFolderID) {
@@ -116,27 +118,27 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public String upload(byte[] src, String filename, String remotefolderID) throws Exception {
-		ArrayList<byte[]> srcs = new ArrayList<>();
+		List<byte[]> srcs = new ArrayList<>();
 		srcs.add(src);
-		ArrayList<String> filenames = new ArrayList<>();
+		List<String> filenames = new ArrayList<>();
 		filenames.add(filename);
 		
-		HashMap<String, String> result = upload(srcs, filenames, remotefolderID);
+		Map<String, String> result = upload(srcs, filenames, remotefolderID);
 		
 		return result.get(filename);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.util.ArrayList, java.util.ArrayList, java.lang.String)
+	 * @see it.backbox.IBoxManager#upload(java.util.List, java.util.List, java.lang.String)
 	 */
 	@Override
-	public HashMap<String, String> upload(ArrayList<byte[]> src, ArrayList<String> filenames, String remotefolderID) throws Exception {
+	public Map<String, String> upload(List<byte[]> src, List<String> filenames, String remotefolderID) throws Exception {
 		if (src.size() != filenames.size())
 			throw new BackBoxException("src and filename lists should have same size");
 		
 		try {
-			HashMap<String, String> ids = new HashMap<String, String>();
+			Map<String, String> ids = new HashMap<String, String>();
 			for (int i = 0; i < filenames.size(); i++) {
 				String name = filenames.get(i);
 				String[] ns = name.split("\\\\");
@@ -159,19 +161,19 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public String upload(String filename, String remotefolderID) throws Exception {
-		ArrayList<String> filenames = new ArrayList<>();
+		List<String> filenames = new ArrayList<>();
 		filenames.add(filename);
-		HashMap<String, String> result = upload(filenames, remotefolderID);
+		Map<String, String> result = upload(filenames, remotefolderID);
 		return result.get(filename);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.util.ArrayList, java.lang.String)
+	 * @see it.backbox.IBoxManager#upload(java.util.List, java.lang.String)
 	 */
 	@Override
-	public HashMap<String, String> upload(ArrayList<String> filenames, String remotefolderID) throws Exception{
-		HashMap<String, String> ids = new HashMap<String, String>();
+	public Map<String, String> upload(List<String> filenames, String remotefolderID) throws Exception{
+		Map<String, String> ids = new HashMap<String, String>();
 		for (String name : filenames) {
 			String[] ns = name.split("\\\\");
 			String n = ns[ns.length - 1];
@@ -198,11 +200,11 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.util.ArrayList)
+	 * @see it.backbox.IBoxManager#download(java.util.List)
 	 */
 	@Override
-	public ArrayList<byte[]> download(ArrayList<String> fileID) throws Exception {
-		ArrayList<byte[]> result = new ArrayList<>();
+	public List<byte[]> download(List<String> fileID) throws Exception {
+		List<byte[]> result = new ArrayList<>();
 		for (String fID : fileID)
 			result.add(download(fID));
 		return result;
@@ -226,10 +228,10 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.util.ArrayList, java.util.ArrayList)
+	 * @see it.backbox.IBoxManager#download(java.util.List, java.util.List)
 	 */
 	@Override
-	public void download(ArrayList<String> fileID, ArrayList<String> destfilename) throws Exception {
+	public void download(List<String> fileID, List<String> destfilename) throws Exception {
 		if (fileID.size() != destfilename.size())
 			throw new BackBoxException("fileID and destfilename lists should have same size");
 		for (int i = 0; i < fileID.size(); i++) {
@@ -270,10 +272,10 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#deleteChunk(java.util.ArrayList)
+	 * @see it.backbox.IBoxManagerChunk#deleteChunk(java.util.List)
 	 */
 	@Override
-	public void deleteChunk(ArrayList<Chunk> chunks) throws Exception {
+	public void deleteChunk(List<Chunk> chunks) throws Exception {
 		for(Chunk c : chunks)
 			deleteChunk(c);
 	}
@@ -299,11 +301,11 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.ArrayList)
+	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.List)
 	 */
 	@Override
-	public ArrayList<byte[]> downloadChunk(ArrayList<Chunk> chunks) throws Exception {
-		ArrayList<byte[]> result = new ArrayList<>();
+	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception {
+		List<byte[]> result = new ArrayList<>();
 		for(Chunk c : chunks)
 			result.add(downloadChunk(c));
 		return result;
@@ -311,10 +313,10 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.ArrayList, java.lang.String)
+	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.List, java.lang.String)
 	 */
 	@Override
-	public void downloadChunk(ArrayList<Chunk> chunks, String destfolder) throws Exception {
+	public void downloadChunk(List<Chunk> chunks, String destfolder) throws Exception {
 		for(Chunk c : chunks)
 			downloadChunk(c, new StringBuilder(destfolder).append("\\").append(c.getChunkname()).toString());
 	}
@@ -325,39 +327,39 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public void uploadChunk(Chunk chunk, String remotefolderID) throws Exception {
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		chunks.add(chunk);
 		uploadChunk(chunks, remotefolderID);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.ArrayList, java.lang.String)
+	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.List, java.lang.String)
 	 */
 	@Override
-	public void uploadChunk(ArrayList<Chunk> chunks, String remotefolderID) throws Exception {
-		ArrayList<byte[]> srcs = new ArrayList<>();
-		ArrayList<String> filenames = new ArrayList<>();
+	public void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception {
+		List<byte[]> srcs = new ArrayList<>();
+		List<String> filenames = new ArrayList<>();
 		for (Chunk c : chunks) {
 			srcs.add(c.getContent());
 			filenames.add(c.getChunkname());
 		}
-		HashMap<String, String> result = upload(srcs, filenames, remotefolderID);
+		Map<String, String> result = upload(srcs, filenames, remotefolderID);
 		for (int i = 0; i < result.size(); i++)
         	chunks.get(i).setBoxid(result.get(chunks.get(i).getChunkname()));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.ArrayList, java.lang.String, java.lang.String)
+	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.List, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void uploadChunk(ArrayList<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception {
-		ArrayList<String> filenames = new ArrayList<>();
+	public void uploadChunk(List<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception {
+		List<String> filenames = new ArrayList<>();
 		for (Chunk c : chunks)
 			filenames.add(srcFolder + "\\" + c.getChunkname());
 		
-		HashMap<String, String> result = upload(filenames, remotefolderID);
+		Map<String, String> result = upload(filenames, remotefolderID);
 		for (int i = 0; i < result.size(); i++)
         	chunks.get(i).setBoxid(result.get(chunks.get(i).getChunkname()));
 	}
@@ -368,7 +370,7 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public void uploadChunk(Chunk chunk, String srcFolder, String remotefolderID) throws Exception {
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		chunks.add(chunk);
 		uploadChunk(chunks, srcFolder, remotefolderID);
 	}

@@ -7,7 +7,7 @@ import it.backbox.exception.BackBoxException;
 import it.backbox.security.DigestManager;
 import it.backbox.split.Splitter;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class DownloadTask extends Task {
 
@@ -39,7 +39,7 @@ public class DownloadTask extends Task {
 		byte[] data = null;
 		String filename = path + "\\" + file.getFilename();
 		
-		ArrayList<byte[]> chunks = getBoxManager().downloadChunk(file.getChunks());
+		List<byte[]> chunks = getBoxManager().downloadChunk(file.getChunks());
 		
 		if (stop) return;
 		

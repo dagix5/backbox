@@ -6,6 +6,7 @@ import it.backbox.util.TestUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayByteArray() throws Exception {
-		ArrayList<byte[]> splitted = s.split(in);
+		List<byte[]> splitted = s.split(in);
 		byte[] merged = s.merge(splitted);
 		
 		assertTrue(TestUtil.checkTest(in, merged));
@@ -32,7 +33,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayFile() throws Exception {
-		ArrayList<byte[]> splitted = s.split(in);
+		List<byte[]> splitted = s.split(in);
 		
 		for(int i = 0; i < splitted.size(); i++)
 			TestUtil.write(splitted.get(i), TestUtil.folder + "\\splitByteArrayFile.c" + i);
@@ -44,9 +45,9 @@ public class SplitterTest {
 
 	@Test
 	public void splitByteArrayChunk() throws Exception {
-		ArrayList<byte[]> splitted = s.split(in);
+		List<byte[]> splitted = s.split(in);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < splitted.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname("splitByteArrayChunk.c" + i);
@@ -61,9 +62,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayChunkFile() throws Exception {
-		ArrayList<byte[]> splitted = s.split(in);
+		List<byte[]> splitted = s.split(in);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < splitted.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname("splitByteArrayChunkFile.c" + i);
@@ -78,7 +79,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileByteArray() throws Exception {
-		ArrayList<byte[]> splitted = s.split(TestUtil.filename);
+		List<byte[]> splitted = s.split(TestUtil.filename);
 		byte[] merged = s.merge(splitted);
 		
 		assertTrue(TestUtil.checkTest(in, merged));
@@ -86,7 +87,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileFile() throws Exception {
-		ArrayList<byte[]> splitted = s.split(TestUtil.filename);
+		List<byte[]> splitted = s.split(TestUtil.filename);
 		
 		for(int i = 0; i < splitted.size(); i++)
 			TestUtil.write(splitted.get(i), TestUtil.folder + "\\splitFileFile.c" + i);
@@ -98,9 +99,9 @@ public class SplitterTest {
 
 	@Test
 	public void splitFileChunk() throws Exception {
-		ArrayList<byte[]> splitted = s.split(TestUtil.filename);
+		List<byte[]> splitted = s.split(TestUtil.filename);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < splitted.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname("splitFileChunk.c" + i);
@@ -115,9 +116,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileChunkFile() throws Exception {
-		ArrayList<byte[]> splitted = s.split(TestUtil.filename);
+		List<byte[]> splitted = s.split(TestUtil.filename);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < splitted.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname("splitFileChunkFile.c" + i);
@@ -132,9 +133,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayFileByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(in, "ByteArrayFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(in, "ByteArrayFileByteArray", TestUtil.folder);
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
 			splitted.add(TestUtil.read(s));
 		
@@ -145,9 +146,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayFileFile() throws Exception {
-		ArrayList<String> chunkNames = s.split(in, "ByteArrayFileFile", TestUtil.folder);
+		List<String> chunkNames = s.split(in, "ByteArrayFileFile", TestUtil.folder);
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
 			splitted.add(TestUtil.read(s));
 		
@@ -158,9 +159,9 @@ public class SplitterTest {
 
 	@Test
 	public void splitByteArrayChunkByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(in, "ByteArrayChunkByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(in, "ByteArrayChunkByteArray", TestUtil.folder);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
@@ -175,9 +176,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayChunkFileByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(in, "ByteArrayChunkFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(in, "ByteArrayChunkFileByteArray", TestUtil.folder);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
@@ -192,9 +193,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileFileByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
 			splitted.add(TestUtil.read(s));
 		
@@ -205,9 +206,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileFileFile() throws Exception {
-		ArrayList<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
 			splitted.add(TestUtil.read(s));
 		
@@ -218,9 +219,9 @@ public class SplitterTest {
 
 	@Test
 	public void splitFileChunkByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
@@ -235,9 +236,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileChunkFileByteArray() throws Exception {
-		ArrayList<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
+		List<String> chunkNames = s.split(TestUtil.filename, "FileFileByteArray", TestUtil.folder);
 		
-		ArrayList<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<>();
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
@@ -252,9 +253,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayChunkByteArray2() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArray2");
+		List<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArray2");
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		
@@ -265,9 +266,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitByteArrayChunkByteArrayFile() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArrayFile");
+		List<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArrayFile");
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		
@@ -278,7 +279,7 @@ public class SplitterTest {
 
 	@Test
 	public void splitChunkByteArray() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(in, "ChunkByteArray");
+		List<Chunk> chunks = s.splitChunk(in, "ChunkByteArray");
 		
 		byte[] merged = s.mergeChunk(chunks);
 		
@@ -287,7 +288,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitChunkFileByteArray() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(in, "ChunkFileByteArray");
+		List<Chunk> chunks = s.splitChunk(in, "ChunkFileByteArray");
 		
 		s.mergeChunk(chunks, TestUtil.folder + "\\mergedChunkFileByteArray");
 		
@@ -296,9 +297,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileChunkByteArray2() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArray2");
+		List<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArray2");
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		
@@ -309,9 +310,9 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileChunkByteArrayFile() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArrayFile");
+		List<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArrayFile");
 		
-		ArrayList<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		
@@ -322,7 +323,7 @@ public class SplitterTest {
 
 	@Test
 	public void splitFileChunkByteArray3() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArray3");
+		List<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkByteArray3");
 		
 		byte[] merged = s.mergeChunk(chunks);
 		
@@ -331,7 +332,7 @@ public class SplitterTest {
 	
 	@Test
 	public void splitFileChunkFileByteArray2() throws Exception {
-		ArrayList<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkFileByteArray2");
+		List<Chunk> chunks = s.splitChunk(TestUtil.filename, "FileChunkFileByteArray2");
 		
 		s.mergeChunk(chunks, TestUtil.folder + "\\mergedFileChunkFileByteArray2");
 		
