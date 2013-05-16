@@ -17,7 +17,6 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import net.miginfocom.swing.MigLayout;
@@ -26,8 +25,11 @@ import org.apache.commons.configuration.ConfigurationException;
 
 public class PreferencesDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
-	private JTextField backupFolder;
+
 	private JSpinner defaultUploadSpeed;
+	private JComboBox<Level> comboBox;
+	
+	private Level newLevel = null;
 
 	/**
 	 * Create the dialog.
@@ -47,7 +49,9 @@ public class PreferencesDialog extends JDialog {
 		JButton okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				main.savePreferences(backupFolder.getText(), ((Integer) defaultUploadSpeed.getValue()) * 1024);
+				main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
+				if (newLevel != null)
+					Logger.getLogger("it.backbox").setLevel(newLevel);
 				setVisible(false);
 			}
 		});
@@ -65,41 +69,47 @@ public class PreferencesDialog extends JDialog {
 
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
-		panel.setLayout(new MigLayout("", "[141.00px][49.00px,grow][250.00]", "[20px][][][][][][]"));
-
-		JLabel lblFolderToBackup = new JLabel("Folder to backup");
-		panel.add(lblFolderToBackup, "cell 0 0,alignx trailing,aligny center");
-
-		backupFolder = new JTextField();
-		backupFolder.setColumns(20);
-		backupFolder.setText(main.helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
-		panel.add(backupFolder, "cell 1 0 2 1,growx,aligny top");
+		panel.setLayout(new MigLayout("", "[141.00px][49.00px,grow][250.00]", "[][][][][][]"));
 		
 		JLabel lblDefaultUploadSpeed = new JLabel("Default upload speed");
-		panel.add(lblDefaultUploadSpeed, "cell 0 1,alignx right");
+		panel.add(lblDefaultUploadSpeed, "cell 0 0,alignx right");
 		
 		defaultUploadSpeed = new JSpinner();
-		defaultUploadSpeed.setModel(new SpinnerNumberModel(main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), new Integer(0), null, new Integer(1)));
-		panel.add(defaultUploadSpeed, "cell 1 1,growx");
+		panel.add(defaultUploadSpeed, "cell 1 0,growx");
 		
 		JLabel lblKbsset = new JLabel("KB\\s (set 0 for unlmited)");
-		panel.add(lblKbsset, "cell 2 1");
+		panel.add(lblKbsset, "cell 2 0");
 		
 		JLabel lblLogLevel = new JLabel("Log level");
-		panel.add(lblLogLevel, "cell 0 2,alignx trailing");
+		panel.add(lblLogLevel, "cell 0 1,alignx trailing");
 		
-		JComboBox<Level> comboBox = new JComboBox<Level>();
+		comboBox = new JComboBox<Level>();
 		comboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent arg0) {
-				Logger.getLogger("it.backbox").setLevel((Level) arg0.getItem());
+				newLevel = (Level) arg0.getItem();
 			}
 		});
 		comboBox.addItem(Level.ALL);
 		comboBox.addItem(Level.INFO);
+		comboBox.addItem(Level.WARNING);
 		comboBox.addItem(Level.SEVERE);
 		comboBox.addItem(Level.OFF);
-		comboBox.setSelectedIndex(2);
-		panel.add(comboBox, "cell 1 2 2 1,growx");
+		
+		panel.add(comboBox, "cell 1 1 2 1,growx");
 	}
 
+	public void loadPref(int uploadSpeed) {
+		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
+		Level level = Logger.getLogger("it.backbox").getLevel();
+		if (level.equals(Level.ALL))
+			comboBox.setSelectedIndex(0);
+		else if (level.equals(Level.INFO))
+			comboBox.setSelectedIndex(1);
+		else if (level.equals(Level.WARNING))
+			comboBox.setSelectedIndex(2);
+		else if (level.equals(Level.SEVERE))
+			comboBox.setSelectedIndex(3);
+		else if (level.equals(Level.OFF))
+			comboBox.setSelectedIndex(4);
+	}
 }
