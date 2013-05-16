@@ -5,6 +5,7 @@ import it.backbox.IRestClient;
 import it.backbox.bean.Chunk;
 import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
+import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
@@ -373,5 +374,34 @@ public class BoxManager implements IBoxManager {
 		List<Chunk> chunks = new ArrayList<>();
 		chunks.add(chunk);
 		uploadChunk(chunks, srcFolder, remotefolderID);
+	}
+	
+	/**
+	 * Get a map with all chunks for all the files in the remote folder with ID
+	 * <i>folderID</i>
+	 * 
+	 * @param folderID
+	 *            ID of the folder to scan
+	 * @return Map with <File hash, List of Chunks>
+	 * @throws Exception
+	 */
+	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws Exception {
+		Map<String, List<Chunk>> info = new HashMap<>();
+		BoxItemCollection items = client.getFolderItems(folderID);
+		List<BoxFile> files = items.entries;
+		for (BoxFile file : files) {
+			Chunk c = new Chunk();
+			c.setBoxid(file.id);
+			c.setChunkhash(file.sha1);
+			c.setChunkname(file.name);
+			String hash = file.name.split("\\.")[0];
+			if (!info.containsKey(hash)) {
+				List<Chunk> chunks = new ArrayList<>();
+				info.put(hash, chunks);
+			}
+			info.get(hash).add(c);
+			
+		}
+		return info;
 	}
 }

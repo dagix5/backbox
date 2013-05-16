@@ -6,6 +6,7 @@ import it.backbox.client.oauth.OAuth2Client;
 import it.backbox.client.rest.bean.BoxError;
 import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
+import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.client.rest.bean.BoxUploadedFile;
 import it.backbox.exception.RestException;
@@ -241,6 +242,30 @@ public class RestClient implements IRestClient {
 				throw e;
 		}
 		return response.parseAs(BoxFolder.class);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#getFolderItems(java.lang.String)
+	 */
+	public BoxItemCollection getFolderItems(String folderID) throws IOException {
+		GenericUrl url = new GenericUrl(baseUri + "/folders/" + folderID + "/items");
+		url.put("limit", "1000");
+		url.put("fields", "name,id,sha1");
+		HttpRequest request = requestFactory.buildGetRequest(url);
+		_log.fine("getFolderItems: " + request.getUrl().toString());
+		HttpResponse response = null;
+		try {
+			response = request.execute();
+			_log.fine("getFolderItems: " + response.getStatusCode());
+		} catch (HttpResponseException e) {
+			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
+				response = request.execute();
+				_log.fine("getFolderItems: Token refreshed");
+			} else
+				throw e;
+		}
+		return response.parseAs(BoxItemCollection.class);
 	}
 	
 	/**
