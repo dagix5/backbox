@@ -69,7 +69,8 @@ public class PasswordDialog extends JDialog {
 					public void run() {
 						if (mode == LOGIN_MODE) {
 							boolean pwd = main.helper.login(new String(passwordField.getPassword()));
-							ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+							if (main.helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
+								ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 							lblPasswordErrata.setVisible(!pwd);
 							passwordField.setText("");
 							if (pwd)
