@@ -88,6 +88,7 @@ public class PreferencesDialog extends JDialog {
 			}
 		});
 		comboBox.addItem(Level.ALL);
+		comboBox.addItem(Level.FINE);
 		comboBox.addItem(Level.INFO);
 		comboBox.addItem(Level.WARNING);
 		comboBox.addItem(Level.SEVERE);
@@ -101,13 +102,15 @@ public class PreferencesDialog extends JDialog {
 		Level level = Logger.getLogger("it.backbox").getLevel();
 		if (level.equals(Level.ALL))
 			comboBox.setSelectedIndex(0);
-		else if (level.equals(Level.INFO))
+		else if (level.equals(Level.FINE))
 			comboBox.setSelectedIndex(1);
-		else if (level.equals(Level.WARNING))
+		else if (level.equals(Level.INFO))
 			comboBox.setSelectedIndex(2);
-		else if (level.equals(Level.SEVERE))
+		else if (level.equals(Level.WARNING))
 			comboBox.setSelectedIndex(3);
-		else if (level.equals(Level.OFF))
+		else if (level.equals(Level.SEVERE))
 			comboBox.setSelectedIndex(4);
+		else if (level.equals(Level.OFF))
+			comboBox.setSelectedIndex(5);
 	}
 }
