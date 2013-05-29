@@ -86,7 +86,6 @@ public class BackBoxHelper {
 	 */
 	public boolean login(String password) {
 		try {
-			loadConfiguration();
 			if (getConfiguration().isEmpty()) {
 				_log.fine("Configuration not found.");
 				return false;
@@ -191,10 +190,13 @@ public class BackBoxHelper {
 	 * Get the configuration
 	 * 
 	 * @return The configration
+	 * @throws ConfigurationException 
 	 */
-	public XMLConfiguration getConfiguration() {
-		if (configuration == null)
+	public XMLConfiguration getConfiguration() throws ConfigurationException {
+		if (configuration == null) {
 			configuration = new XMLConfiguration();
+			configuration.load(CONFIG_FILE);
+		}
 		return configuration;
 	}
 	
@@ -206,15 +208,6 @@ public class BackBoxHelper {
 	public void saveConfiguration() throws ConfigurationException {
 		getConfiguration().setEncoding(CHARSET);
 		getConfiguration().save(CONFIG_FILE);
-	}
-	
-	/**
-	 * Load the configuration
-	 * 
-	 * @throws ConfigurationException
-	 */
-	public void loadConfiguration() throws ConfigurationException {
-		getConfiguration().load(CONFIG_FILE);
 	}
 	
 	/**
@@ -540,7 +533,6 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void buildDB(String password) throws Exception {
-		loadConfiguration();
 		if (getConfiguration().isEmpty())
 			throw new BackBoxException("Configuration not found.");
 		_log.fine("Configuration load OK");
@@ -585,7 +577,7 @@ public class BackBoxHelper {
 			for (String path : fileInfo.keySet()) {
 				File file = fileInfo.get(path);
 				_log.fine("Insert " + hash + " " + path + " " + chunks.size());
-				dbm.insert(file, path, hash, chunks, true, true, true);
+				dbm.insert(file, path, hash, chunks, true, true, chunks.size() > 1);
 			}
 		}
 		
