@@ -1,7 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.utility.BackBoxHelper;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -64,7 +62,6 @@ public class ConfigurationDialog extends JDialog {
 
 		backupFolder = new JTextField();
 		backupFolder.setColumns(20);
-		backupFolder.setText(main.helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
 		panel.add(backupFolder, "cell 1 0 2 1,growx");
 	}
 	
