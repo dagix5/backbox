@@ -50,7 +50,7 @@ public class OAuth2Client {
 				.setCredentialStore(store)
 				.setScopes(Arrays.asList("")).build();
 		Credential cred = codeFlow.loadCredential(USER_ID);
-		if (cred == null) {
+		if ((cred == null) || !cred.refreshToken()) {
 			VerificationCodeReceiver receiver = null;
 			try {
 				receiver = new LocalServerReceiver();
@@ -67,14 +67,6 @@ public class OAuth2Client {
 			}
 		}
 		return cred;
-	}
-	
-	public static boolean refresh(Credential cred) throws IOException {
-		if (cred.refreshToken() && (store != null)) {
-			store.store(USER_ID, cred);
-			return true;
-		}
-		return false;
 	}
 
 	private static void launchInBrowser(String browser, String redirectUrl, String clientId) throws IOException, BackBoxException {
