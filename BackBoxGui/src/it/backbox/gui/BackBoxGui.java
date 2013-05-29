@@ -127,10 +127,14 @@ public class BackBoxGui {
 		connected = true;
 		
 		if (connected) {
-			backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
-			if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-				setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
-			updateTable();
+			try {
+				backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
+				if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
+					setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+				updateTable();
+			} catch (Exception e1) {
+				GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
+			}
 		}
 		
 		if (pwdDialog != null)
@@ -478,10 +482,14 @@ public class BackBoxGui {
 					return;
 				}
 				if (connected) {
-					configurationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					configurationDialog.setLocationRelativeTo(frmBackBox);
-					configurationDialog.loadConf(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
-					configurationDialog.setVisible(true);
+					try {
+						configurationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+						configurationDialog.setLocationRelativeTo(frmBackBox);
+						configurationDialog.loadConf(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
+						configurationDialog.setVisible(true);
+					} catch (Exception e1) {
+						GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
+					}
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -508,11 +516,15 @@ public class BackBoxGui {
 		JMenuItem mntmPreferences = new JMenuItem("Preferences...");
 		mntmPreferences.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-				preferencesDialog.setLocationRelativeTo(frmBackBox);
-				if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-					preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
-				preferencesDialog.setVisible(true);
+				try {
+					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					preferencesDialog.setLocationRelativeTo(frmBackBox);
+					if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
+						preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+					preferencesDialog.setVisible(true);
+				} catch (Exception e1) {
+					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
+				}
 			}
 		});
 		
