@@ -8,8 +8,8 @@ import java.util.Arrays;
 
 public class TestUtil {
 	
-	public static String folder = "C:\\users\\daniele.giardino\\desktop\\test\\";
-	public static String filename = "C:\\users\\daniele.giardino\\desktop\\backup\\NavigatoreApplicativo - Linee GuidaV2.docx";
+	public static String folder = "put_folder_name";
+	public static String filename = "put_file_name";
 	
 	public static void write(byte[] content, String filename) throws IOException {
 		File file = new File(filename);
