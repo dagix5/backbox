@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 public class DBManager implements IDBManager {
 	private static Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
 
@@ -149,96 +151,86 @@ public class DBManager implements IDBManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.util.List, boolean, boolean, boolean)
 	 */
-	public void insert(File file, String relativePath, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws SQLException, IOException {
-		Statement statement = null;
+	public void insert(File file, String relativePath, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+		StringBuilder query = null;
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT);
 
-		statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
+			query = new StringBuilder("insert into files values('");
+			query.append(digest).append("','");
+			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
+			query.append(file.lastModified()).append("',");
+			query.append(file.length()).append(",");
+			query.append(encrypted ? 1 : 0).append(",");
+			query.append(compressed ? 1 : 0).append(",");
+			query.append(splitted ? 1 : 0).append(")");
 
-		StringBuilder query1 = new StringBuilder("insert into files values(");
-		query1.append("'");
-		query1.append(digest);
-		query1.append("','");
-		query1.append(relativePath);
-		query1.append("','");
-		query1.append(file.lastModified());
-		query1.append("',");
-		query1.append(file.length());
-		query1.append(",");
-		query1.append(encrypted ? 1 : 0);
-		query1.append(",");
-		query1.append(compressed ? 1 : 0);
-		query1.append(",");
-		query1.append(splitted ? 1 : 0);
-		query1.append(")");
+			statement.executeUpdate(query.toString());
 
-		statement.executeUpdate(query1.toString());
+			query = new StringBuilder("select filehash from chunks where filehash = '");
+			query.append(digest);
+			query.append("'");
 
-		StringBuilder queryS = new StringBuilder("select filehash from chunks where filehash = '");
-		queryS.append(digest);
-		queryS.append("'");
+			ResultSet rs = statement.executeQuery(query.toString());
 
-		ResultSet rs = statement.executeQuery(queryS.toString());
+			if (!rs.next()) {
+				query = new StringBuilder("insert into chunks ");
+				for (int i = 0; i < chunks.size(); i++) {
+					query.append("select '");
+					query.append(digest).append("','");
+					query.append(chunks.get(i).getChunkname()).append("','");
+					query.append(chunks.get(i).getChunkhash()).append("','");
+					query.append(chunks.get(i).getBoxid()).append("','");
+					query.append(chunks.get(i).getSize()).append("'");
+					if (i < (chunks.size() - 1))
+						query.append(" union ");
+				}
 
-		if (!rs.next()) {
-			StringBuilder query2 = new StringBuilder("insert into chunks ");
-			for (int i = 0; i < chunks.size(); i++) {
-				query2.append("select '");
-				query2.append(digest);
-				query2.append("','");
-				query2.append(chunks.get(i).getChunkname());
-				query2.append("','");
-				query2.append(chunks.get(i).getChunkhash());
-				query2.append("','");
-				query2.append(chunks.get(i).getBoxid());
-				query2.append("','");
-				query2.append(chunks.get(i).getSize());
-				query2.append("'");
-				if (i < (chunks.size() - 1))
-					query2.append(" union ");
+				statement.executeUpdate(query.toString());
 			}
+			
+			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
 
-			statement.executeUpdate(query2.toString());
+		} catch (SQLException e) {
+			throw new BackBoxException(e, (query != null) ? query.toString() : "");
 		}
-		
-		if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IDBManager#delete(java.lang.String, java.lang.String)
 	 */
-	public void delete(String filename, String digest) throws SQLException {
-		Statement statement = null;
-		statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		StringBuilder query3 = new StringBuilder("select hash from files where hash = '");
-		query3.append(digest);
-		query3.append("'");
-		ResultSet rs = statement.executeQuery(query3.toString());
-
-		int i = 0;
-		while (rs.next())
-			i++;
-
-		if (i <= 1) {
-			StringBuilder query2 = new StringBuilder("delete from chunks where filehash = '");
-			query2.append(digest);
-			query2.append("'");
-
-			statement.executeUpdate(query2.toString());
+	public void delete(String filename, String digest) throws BackBoxException {
+		StringBuilder query = null;
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT);
+	
+			query = new StringBuilder("select hash from files where hash = '");
+			query.append(digest).append("'");
+			ResultSet rs = statement.executeQuery(query.toString());
+	
+			int i = 0;
+			while (rs.next())
+				i++;
+	
+			if (i <= 1) {
+				query = new StringBuilder("delete from chunks where filehash = '");
+				query.append(digest).append("'");
+	
+				statement.executeUpdate(query.toString());
+			}
+	
+			query = new StringBuilder("delete from files where hash = '");
+			query.append(digest).append("' and filename = '").append(filename).append("'");
+	
+			statement.executeUpdate(query.toString());
+			
+			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> delete ok");
+		} catch (SQLException e) {
+			throw new BackBoxException(e, (query != null) ? query.toString() : "");
 		}
-
-		StringBuilder query1 = new StringBuilder("delete from files where hash = '");
-		query1.append(digest);
-		query1.append("' and filename = '");
-		query1.append(filename);
-		query1.append("'");
-
-		statement.executeUpdate(query1.toString());
-		
-		if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> delete ok");
 	}
 	
 	/**
@@ -259,7 +251,7 @@ public class DBManager implements IDBManager {
 		while (rs.next()) {
 			it.backbox.bean.File file = new it.backbox.bean.File();
 			file.setHash(rs.getString("hash"));
-			file.setFilename(rs.getString("filename"));
+			file.setFilename(rs.getString("filename").replaceAll("''", "'"));
 			file.setTimestamp(rs.getDate("timestamp"));
 			file.setSize(rs.getLong("size"));
 			file.setEncrypted(rs.getBoolean("encrypted"));
@@ -296,21 +288,6 @@ public class DBManager implements IDBManager {
 		return records;
 	}
 
-	/**
-	 * Execute a custom query
-	 * 
-	 * @param query
-	 *            Query to execute
-	 * @return The ResultSet
-	 * @throws SQLException
-	 */
-	public ResultSet executeQuery(String query) throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		return statement.executeQuery(query);
-	}
-	
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IDBManager#getFileRecord(java.lang.String)
@@ -320,8 +297,7 @@ public class DBManager implements IDBManager {
 		statement.setQueryTimeout(QUERY_TIMEOUT);
 
 		StringBuilder query = new StringBuilder("select * from files where hash like '");
-		query.append(key);
-		query.append("'");
+		query.append(key).append("'");
 		ResultSet rs = statement.executeQuery(query.toString());
 
 		if (!rs.next()) 
@@ -329,7 +305,7 @@ public class DBManager implements IDBManager {
 
 		it.backbox.bean.File file = new it.backbox.bean.File();
 		file.setHash(rs.getString("hash"));
-		file.setFilename(rs.getString("filename"));
+		file.setFilename(rs.getString("filename").replaceAll("''", "'"));
 		file.setTimestamp(rs.getDate("timestamp"));
 		file.setSize(rs.getLong("size"));
 		file.setEncrypted(rs.getBoolean("encrypted"));
