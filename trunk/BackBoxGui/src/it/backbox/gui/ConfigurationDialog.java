@@ -65,7 +65,7 @@ public class ConfigurationDialog extends JDialog {
 		panel.add(backupFolder, "cell 1 0 2 1,growx");
 	}
 	
-	public void loadConf(String backupFolder) {
+	public void load(String backupFolder) {
 		this.backupFolder.setText(backupFolder);
 	}
 
