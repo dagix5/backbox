@@ -3,6 +3,7 @@ package it.backbox.utility;
 import it.backbox.bean.Chunk;
 import it.backbox.boxcom.BoxManager;
 import it.backbox.client.rest.RestClient;
+import it.backbox.client.rest.bean.ProxyConfiguration;
 import it.backbox.compare.FileCompare;
 import it.backbox.compress.Zipper;
 import it.backbox.db.DBManager;
@@ -29,6 +30,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,8 +50,12 @@ public class BackBoxHelper {
 	public static final String DEFAULT_UPLOAD_SPEED = "defaultUploadSpeed";
 	public static final String CHUNK_SIZE = "chunkSize";
 	public static final String FOLDER_ID = "folderID";
+	public static final String PROXY_ADDRESS = "proxy.address";
+	public static final String PROXY_PORT = "proxy.port";
+	public static final String PROXY_ENABLED = "proxy.enabled";
 	
 	private XMLConfiguration configuration;
+	private ProxyConfiguration pc;
 	
 	protected FileCompare c;
 	protected SecurityManager sm;
@@ -107,7 +113,7 @@ public class BackBoxHelper {
 			}
 			
 			bm = new BoxManager();
-			bm.setRestClient(new RestClient());
+			bm.setRestClient(new RestClient(getProxyConfiguration()));
 			String folderID = getConfiguration().getString(FOLDER_ID);
 			if ((folderID == null) || folderID.isEmpty()) {
 				folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
@@ -163,7 +169,7 @@ public class BackBoxHelper {
 		_log.fine("DB load OK");
 		
 		bm = new BoxManager();
-		bm.setRestClient(new RestClient());
+		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		String folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
 		if (folderID != null) {
 			_log.warning("Box Upload folder exists");
@@ -223,7 +229,7 @@ public class BackBoxHelper {
 			dbm.closeDB();
 		if (bm == null)
 			bm = new BoxManager();
-		bm.setRestClient(new RestClient());
+		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
 		bm.upload(DBManager.DB_NAME, bm.getBackBoxFolderID());
@@ -241,7 +247,7 @@ public class BackBoxHelper {
 			dbm.closeDB();
 		if (bm == null)
 			bm = new BoxManager();
-		bm.setRestClient(new RestClient());
+		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
 		String name = DBManager.DB_NAME + ".new";
@@ -545,7 +551,7 @@ public class BackBoxHelper {
 		_log.fine("DBManager init OK");
 		
 		bm = new BoxManager();
-		bm.setRestClient(new RestClient());
+		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		String folderID = getConfiguration().getString(FOLDER_ID);
 		if ((folderID == null) || folderID.isEmpty()) {
 			folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
@@ -582,6 +588,32 @@ public class BackBoxHelper {
 		}
 		
 		dbm.closeDB();
+	}
+	
+	public void setProxyConfiguration(ProxyConfiguration pc) throws Exception {
+		this.pc = pc;
+		if (pc != null) {
+			getConfiguration().setProperty(PROXY_ENABLED, pc.isEnabled());
+			getConfiguration().setProperty(PROXY_ADDRESS, pc.getAddress());
+			getConfiguration().setProperty(PROXY_PORT, pc.getPort());
+		} else
+			getConfiguration().setProperty(PROXY_ENABLED, false);
+		saveConfiguration();
+		
+		if (bm != null)
+			bm.setRestClient(new RestClient(pc));
+			
+	}
+	
+	public ProxyConfiguration getProxyConfiguration() {
+		if (pc == null)
+			try {
+				pc = new ProxyConfiguration(getConfiguration().getBoolean(PROXY_ENABLED), getConfiguration().getString(PROXY_ADDRESS), getConfiguration().getInt(PROXY_PORT));
+			} catch (ConfigurationException | NoSuchElementException e) {
+				_log.log(Level.FINE, "No proxy configuration found", e);
+				pc = new ProxyConfiguration(false, null, 0);
+			}
+		return pc;
 	}
 
 }
