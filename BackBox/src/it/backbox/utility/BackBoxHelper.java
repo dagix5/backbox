@@ -88,58 +88,51 @@ public class BackBoxHelper {
 	 * 
 	 * @param password
 	 *            User password
-	 * @return true if everything is ok, false otherwise
+	 * @throws Exception 
 	 */
-	public boolean login(String password) {
-		try {
-			if (getConfiguration().isEmpty()) {
-				_log.fine("Configuration not found.");
-				return false;
-			}
-			_log.fine("Configuration load OK");
-
-			sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
-			_log.fine("SecurityManager init OK");
-
-			dbm = new DBManager(sm);
-			_log.fine("DBManager init OK");
-			
-			if (DBManager.exists()) {
-				_log.fine("DB found");
-				dbm.openDB();
-			} else {
-				_log.fine("DB not found. Creating..");
-				dbm.createDB();
-			}
-			
-			bm = new BoxManager();
-			bm.setRestClient(new RestClient(getProxyConfiguration()));
-			String folderID = getConfiguration().getString(FOLDER_ID);
-			if ((folderID == null) || folderID.isEmpty()) {
-				folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
-				getConfiguration().setProperty(FOLDER_ID, folderID);
-				saveConfiguration();
-			}
-			if ((folderID != null) && !folderID.isEmpty()) {
-				bm.setBackBoxFolderID(folderID);
-				_log.fine("BoxManager init OK");
-			} else
-				_log.fine("BoxManager init OK, but folder ID null");
-			
-			c.setRecords(dbm.loadDB());
-			_log.fine("DB load OK");
-			
-			Zipper z = new Zipper();
-			Splitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
-			
-			tm = new TransactionManager(dbm, bm, sm, s, z);
-			_log.fine("TransactionManager init OK");
-			
-			return true;
-		} catch (Exception e) {
-			_log.log(Level.SEVERE, "Errore login", e);
+	public void login(String password) throws Exception {
+		if (getConfiguration().isEmpty()) {
+			_log.fine("Configuration not found.");
+			return;
 		}
-		return false;
+		_log.fine("Configuration load OK");
+
+		sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
+		_log.fine("SecurityManager init OK");
+
+		dbm = new DBManager(sm);
+		_log.fine("DBManager init OK");
+		
+		if (DBManager.exists()) {
+			_log.fine("DB found");
+			dbm.openDB();
+		} else {
+			_log.fine("DB not found. Creating..");
+			dbm.createDB();
+		}
+		
+		bm = new BoxManager();
+		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		String folderID = getConfiguration().getString(FOLDER_ID);
+		if ((folderID == null) || folderID.isEmpty()) {
+			folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
+			getConfiguration().setProperty(FOLDER_ID, folderID);
+			saveConfiguration();
+		}
+		if ((folderID != null) && !folderID.isEmpty()) {
+			bm.setBackBoxFolderID(folderID);
+			_log.fine("BoxManager init OK");
+		} else
+			_log.fine("BoxManager init OK, but folder ID null");
+		
+		c.setRecords(dbm.loadDB());
+		_log.fine("DB load OK");
+		
+		Zipper z = new Zipper();
+		Splitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
+		
+		tm = new TransactionManager(dbm, bm, sm, s, z);
+		_log.fine("TransactionManager init OK");
 	}
 	
 	/**
