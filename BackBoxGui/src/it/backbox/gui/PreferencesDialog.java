@@ -136,12 +136,12 @@ public class PreferencesDialog extends JDialog {
 				main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
 				if (newLevel != null)
 					Logger.getLogger("it.backbox").setLevel(newLevel);
-				if (chckbxProxy.isSelected()) {
-					try {
-						main.helper.setProxyConfiguration(new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), Integer.parseInt(txtProxyPort.getText())));
-					} catch (Exception e) {
-						GuiUtility.handleException(panel, "Error setting proxy", e);
-					}
+				
+				try {
+					ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
+					main.helper.setProxyConfiguration(pc);
+				} catch (Exception e) {
+					GuiUtility.handleException(panel, "Error setting proxy", e);
 				}
 				setVisible(false);
 			}
@@ -151,8 +151,9 @@ public class PreferencesDialog extends JDialog {
 		getRootPane().setDefaultButton(okButton);
 	}
 
-	public void load(int uploadSpeed, ProxyConfiguration pc) {
+	public void load(int uploadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled) {
 		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
+		chckbxProxy.setEnabled(proxyChcbxEnabled);
 		if (pc != null) {
 			chckbxProxy.setSelected(pc.isEnabled());
 			txtProxyAddress.setText(pc.getAddress());

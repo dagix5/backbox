@@ -520,7 +520,7 @@ public class BackBoxGui {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 					preferencesDialog.setLocationRelativeTo(frmBackBox);
 					if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-						preferencesDialog.load(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), helper.getProxyConfiguration());
+						preferencesDialog.load(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), helper.getProxyConfiguration(), !running);
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
