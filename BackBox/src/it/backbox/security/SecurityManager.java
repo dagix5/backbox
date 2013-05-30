@@ -2,6 +2,7 @@ package it.backbox.security;
 
 import it.backbox.ISecurityManager;
 import it.backbox.exception.BackBoxException;
+import it.backbox.exception.BackBoxWrongPasswordException;
 import it.backbox.utility.Utility;
 
 import java.io.BufferedInputStream;
@@ -59,8 +60,9 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws IOException 
 	 * @throws BackBoxException 
 	 * @throws DecoderException 
+	 * @throws BackBoxWrongPasswordException 
 	 */
-	public SecurityManager(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
+	public SecurityManager(String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException, BackBoxWrongPasswordException {
 		this(password, null, null);
 	}
 
@@ -78,13 +80,14 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws IOException
 	 * @throws BackBoxException
 	 * @throws DecoderException
+	 * @throws BackBoxWrongPasswordException 
 	 */
-	public SecurityManager(String password, String pwdDigest, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException {
+	public SecurityManager(String password, String pwdDigest, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, BackBoxException, DecoderException, BackBoxWrongPasswordException {
 		if ((pwdDigest != null) && (salt != null)) { 
 			this.pwdDigest = pwdDigest;
 			this.salt = Hex.decodeHex(salt.toCharArray());
 			if (!checkPassword(password))
-				throw new BackBoxException("Wrong Password");
+				throw new BackBoxWrongPasswordException("Wrong Password");
 			generateKey(password, this.salt);
 		} else {
 			this.pwdDigest = Hex.encodeHexString(DigestManager.hash(password.getBytes(CHARSET)));
