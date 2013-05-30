@@ -9,6 +9,8 @@ import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.client.rest.bean.BoxUploadedFile;
+import it.backbox.client.rest.bean.ProxyConfiguration;
+import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 import it.backbox.progress.ProgressManager;
 import it.backbox.progress.stream.InputStreamCounter;
@@ -18,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -45,7 +49,7 @@ public class RestClient implements IRestClient {
 	private static Logger _log = Logger.getLogger(RestClient.class.getCanonicalName());
 
 	/** Global instance of the HTTP transport. */
-	private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+	private static HttpTransport HTTP_TRANSPORT;
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -57,26 +61,50 @@ public class RestClient implements IRestClient {
 
 	private Credential credential;
 
+	private class RestHttpRequestInitializer implements HttpRequestInitializer {
+
+		@Override
+		public void initialize(HttpRequest request) throws IOException {
+			credential.initialize(request);
+			request.setParser(new JsonObjectParser(JSON_FACTORY));
+//			request.setReadTimeout(60*60*1000);
+			request.setBackOffPolicy(new CustomBackOffPolicy());
+		}
+		
+	}
+
 	/**
 	 * Constructor
 	 * 
 	 * @throws Exception
 	 */
 	public RestClient() throws Exception {
+		this(null);
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param pc
+	 *            Proxy configuration
+	 * @throws Exception
+	 */
+	public RestClient(ProxyConfiguration pc) throws Exception {
+		if ((pc == null) || !pc.isEnabled())
+			HTTP_TRANSPORT = new NetHttpTransport();
+		else {
+			String address = pc.getAddress();
+			int port = pc.getPort();
+			if ((address == null) || address.isEmpty() || (port <= 0))
+				throw new BackBoxException("Proxy configuration not valid");
+			HTTP_TRANSPORT = new NetHttpTransport.Builder().setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address, port))).build();
+		}
+		
 		credential = OAuth2Client.getCredential();
-		requestFactory = HTTP_TRANSPORT.createRequestFactory(
-				new HttpRequestInitializer() {
-					@Override
-					public void initialize(HttpRequest request) throws IOException {
-						credential.initialize(request);
-						request.setParser(new JsonObjectParser(JSON_FACTORY));
-//						request.setReadTimeout(60*60*1000);
-						request.setBackOffPolicy(new CustomBackOffPolicy());
-					}
-				});
+		requestFactory = HTTP_TRANSPORT.createRequestFactory(new RestHttpRequestInitializer());
 		_log.fine("Rest Client init ok");
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IRestClient#download(java.lang.String)
