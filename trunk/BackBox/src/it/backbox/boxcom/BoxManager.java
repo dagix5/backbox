@@ -145,7 +145,7 @@ public class BoxManager implements IBoxManager {
 				String[] ns = name.split("\\\\");
 				String n = ns[ns.length - 1];
 				
-				BoxFile file = client.upload(n, getBoxID(n), src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
+				BoxFile file = client.upload(n, null, src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
 				String id = ((file != null) ? file.id : null);
 				if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
 				ids.put(name, id);
@@ -180,7 +180,7 @@ public class BoxManager implements IBoxManager {
 			String n = ns[ns.length - 1];
 			
 			byte[] content = Utility.read(name);
-			BoxFile file = client.upload(n, getBoxID(n), content, remotefolderID,Hex.encodeHexString(DigestManager.hash(content)));
+			BoxFile file = client.upload(n, null, content, remotefolderID, Hex.encodeHexString(DigestManager.hash(content)));
 			String id = ((file != null) ? file.id : null);
 			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
 			ids.put(name, id);
@@ -404,4 +404,5 @@ public class BoxManager implements IBoxManager {
 		}
 		return info;
 	}
+
 }
