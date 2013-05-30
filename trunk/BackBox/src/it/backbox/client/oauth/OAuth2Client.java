@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
@@ -16,6 +18,7 @@ import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.CredentialStore;
 import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.extensions.java7.auth.oauth2.FileCredentialStoreJava7;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpTransport;
@@ -24,6 +27,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class OAuth2Client {
+	private static Logger _log = Logger.getLogger(OAuth2Client.class.getCanonicalName());
 	
 	private static final String CLIENT_ID = "zr56mtgkjibomdnmtje8cer8v8sw3nxe";
 	private static final String CLIENT_SECRET = "AkFazArd6LnIifodfHQJ02D1fh90qLs2";
@@ -50,21 +54,29 @@ public class OAuth2Client {
 				.setCredentialStore(store)
 				.setScopes(Arrays.asList("")).build();
 		Credential cred = codeFlow.loadCredential(USER_ID);
-		if ((cred == null) || !cred.refreshToken()) {
-			VerificationCodeReceiver receiver = null;
+		boolean refreshed = false;
+		if (cred != null) {
 			try {
-				receiver = new LocalServerReceiver();
-				String redirectUri = receiver.getRedirectUri();
-				launchInBrowser(null, redirectUri, CLIENT_ID);
-				String code = receiver.waitForCode();
-				TokenResponse response = codeFlow.newTokenRequest(code)
-						.setRedirectUri(redirectUri)
-						.setScopes(Arrays.asList("")).execute();
-				cred = codeFlow.createAndStoreCredential(response, USER_ID);
-			} finally {
-				if (receiver != null)
-					receiver.stop();
+				refreshed = cred.refreshToken();
+			} catch (TokenResponseException e) {
+				_log.log(Level.WARNING, "Error refreshing token", e);
 			}
+			if (refreshed)
+				return cred;
+		}
+		VerificationCodeReceiver receiver = null;
+		try {
+			receiver = new LocalServerReceiver();
+			String redirectUri = receiver.getRedirectUri();
+			launchInBrowser(null, redirectUri, CLIENT_ID);
+			String code = receiver.waitForCode();
+			TokenResponse response = codeFlow.newTokenRequest(code)
+					.setRedirectUri(redirectUri)
+					.setScopes(Arrays.asList("")).execute();
+			cred = codeFlow.createAndStoreCredential(response, USER_ID);
+		} finally {
+			if (receiver != null)
+				receiver.stop();
 		}
 		return cred;
 	}
