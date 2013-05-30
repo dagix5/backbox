@@ -328,7 +328,7 @@ public class BackBoxGui {
 		ch.setLevel(Level.ALL);
 		_log.addHandler(ch);
 		try {
-			FileHandler fh = new FileHandler(LOG_FILE, 10240, 3, true);
+			FileHandler fh = new FileHandler(LOG_FILE, 102400, 3, true);
 			fh.setFormatter(new SimpleFormatter());
 			fh.setLevel(Level.ALL);
 			_log.addHandler(fh);
@@ -485,7 +485,7 @@ public class BackBoxGui {
 					try {
 						configurationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 						configurationDialog.setLocationRelativeTo(frmBackBox);
-						configurationDialog.loadConf(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
+						configurationDialog.load(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
 						configurationDialog.setVisible(true);
 					} catch (Exception e1) {
 						GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
@@ -506,7 +506,7 @@ public class BackBoxGui {
 				if (s != JOptionPane.OK_OPTION)
 					return;
 				pwdDialog.setLocationRelativeTo(frmBackBox);
-				pwdDialog.setMode(PasswordDialog.BUILDDB_MODE);
+				pwdDialog.load(PasswordDialog.BUILDDB_MODE);
 				pwdDialog.setVisible(true);
 			}
 		});
@@ -520,7 +520,7 @@ public class BackBoxGui {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 					preferencesDialog.setLocationRelativeTo(frmBackBox);
 					if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-						preferencesDialog.loadPref(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+						preferencesDialog.load(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), helper.getProxyConfiguration());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
@@ -712,7 +712,7 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				if (helper.confExists()) {
 					pwdDialog.setLocationRelativeTo(frmBackBox);
-					pwdDialog.setMode(PasswordDialog.LOGIN_MODE);
+					pwdDialog.load(PasswordDialog.LOGIN_MODE);
 					pwdDialog.setVisible(true);
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Configuration not found", "Error", JOptionPane.ERROR_MESSAGE);
@@ -879,10 +879,28 @@ public class BackBoxGui {
 		
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				helper.getTransactionManager().stopTransactions();
-				updateStatus();
-				running = false;
-				pendingDone = true;
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							helper.getTransactionManager().stopTransactions();
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error stopping transactions", e1);
+						} finally {
+							running = false;
+							pendingDone = true;
+							updateStatus();
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
 			}
 		});
 		btnStop.setEnabled(false);
