@@ -1,6 +1,6 @@
 package it.backbox;
 
-public interface IZipper {
+public interface ICompress {
 	
 	/**
 	 * Compress a byte array content

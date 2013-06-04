@@ -5,6 +5,13 @@ import it.backbox.bean.Chunk;
 import java.util.List;
 
 public interface ISplitter {
+	
+	/**
+	 * Get the chunk size
+	 * 
+	 * @return The chunk size
+	 */
+	public int getChunkSize();
 
 	/**
 	 * Split a byte array

@@ -1,10 +1,10 @@
 package it.backbox.transaction.task;
 
 import it.backbox.IBoxManager;
+import it.backbox.ICompress;
 import it.backbox.IDBManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
-import it.backbox.IZipper;
 import it.backbox.utility.Utility;
 
 public abstract class Task {
@@ -19,7 +19,7 @@ public abstract class Task {
 	private IDBManager dbManager;
 	private ISplitter splitter;
 	private ISecurityManager securityManager;
-	private IZipper zipper;
+	private ICompress zipper;
 
 	public Task() {
 		setId(Utility.genID());
@@ -57,11 +57,11 @@ public abstract class Task {
 		this.securityManager = securityManager;
 	}
 
-	public IZipper getZipper() {
+	public ICompress getZipper() {
 		return zipper;
 	}
 
-	public void setZipper(IZipper zipper) {
+	public void setZipper(ICompress zipper) {
 		this.zipper = zipper;
 	}
 
