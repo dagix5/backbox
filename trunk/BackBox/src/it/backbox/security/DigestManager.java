@@ -3,6 +3,7 @@ package it.backbox.security;
 import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class DigestManager {
 			MessageDigest md = MessageDigest.getInstance(DIGEST_ALGO);
 			byte[] result = null;
 					
-			in = new FileInputStream(file);
+			in = new BufferedInputStream(new FileInputStream(file));
 
 			byte[] buf = new byte[BUFFER_LENGTH];
 			int count = in.read(buf);
