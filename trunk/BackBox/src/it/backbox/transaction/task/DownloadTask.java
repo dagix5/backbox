@@ -1,11 +1,11 @@
 package it.backbox.transaction.task;
 
 import it.backbox.ISecurityManager;
+import it.backbox.ISplitter;
 import it.backbox.bean.File;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.security.DigestManager;
-import it.backbox.split.Splitter;
 
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class DownloadTask extends Task {
 		
 		if (stop) return;
 		
-		Splitter s = new Splitter();
+		ISplitter s = getSplitter();
 		if (!file.isEncrypted() && !file.isCompressed())
 			s.merge(chunks, filename);
 		else
