@@ -21,24 +21,36 @@ public class Splitter implements ISplitter {
 	
 	private static Logger _log = Logger.getLogger(Splitter.class.getCanonicalName());
 	
-	private int chunkSize = 1024*1024;
+	private int chunkSize;
 
 	private static final int BUFFER = 1024;
 	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ISplitter#getChunkSize()
+	 */
 	public int getChunkSize() {
 		return chunkSize;
 	}
 
+	/**
+	 * Set chunk size
+	 * 
+	 * @param chunkSize
+	 *            Chunk size
+	 */
 	public void setChunkSize(int chunkSize) {
 		this.chunkSize = chunkSize;
 	}
 
+	/**
+	 * Constructor
+	 * 
+	 * @param chunkSize
+	 *            Chunk size
+	 */
 	public Splitter(int chunkSize) {
 		this.chunkSize = chunkSize;
-	}
-
-	public Splitter() {
-
 	}
 	
 	/**
