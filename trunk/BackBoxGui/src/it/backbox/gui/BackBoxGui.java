@@ -328,7 +328,7 @@ public class BackBoxGui {
 		ch.setLevel(Level.ALL);
 		_log.addHandler(ch);
 		try {
-			FileHandler fh = new FileHandler(LOG_FILE, 102400, 3, true);
+			FileHandler fh = new FileHandler(LOG_FILE, 2097152, 3, true);
 			fh.setFormatter(new SimpleFormatter());
 			fh.setLevel(Level.ALL);
 			_log.addHandler(fh);

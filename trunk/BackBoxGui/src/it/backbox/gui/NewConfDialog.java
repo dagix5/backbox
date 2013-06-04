@@ -110,6 +110,7 @@ public class NewConfDialog extends JDialog {
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				main.showLoading();
+				setVisible(false);
 				Thread worker = new Thread() {
 					public void run() {
 						try {
