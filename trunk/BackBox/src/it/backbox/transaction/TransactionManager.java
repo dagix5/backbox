@@ -1,10 +1,10 @@
 package it.backbox.transaction;
 
 import it.backbox.IBoxManager;
+import it.backbox.ICompress;
 import it.backbox.IDBManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
-import it.backbox.IZipper;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 
@@ -31,7 +31,7 @@ public class TransactionManager {
 	private IDBManager dbManager;
 	private ISecurityManager securityManager;
 	private ISplitter splitter;
-	private IZipper zipper;
+	private ICompress zipper;
 	
 	/**
 	 * Constructor
@@ -47,7 +47,7 @@ public class TransactionManager {
 	 * @param zipper
 	 *            Zipper
 	 */
-	public TransactionManager(IDBManager dbManager, IBoxManager boxManager, ISecurityManager securityManager, ISplitter splitter, IZipper zipper) {
+	public TransactionManager(IDBManager dbManager, IBoxManager boxManager, ISecurityManager securityManager, ISplitter splitter, ICompress zipper) {
 		this.boxManager = boxManager;
 		this.dbManager = dbManager;
 		this.securityManager = securityManager;

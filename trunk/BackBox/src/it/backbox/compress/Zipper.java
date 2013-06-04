@@ -1,6 +1,6 @@
 package it.backbox.compress;
 
-import it.backbox.IZipper;
+import it.backbox.ICompress;
 import it.backbox.utility.Utility;
 
 import java.io.BufferedInputStream;
@@ -17,7 +17,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public class Zipper implements IZipper{
+public class Zipper implements ICompress{
 	private static Logger _log = Logger.getLogger(Zipper.class.getCanonicalName());
 	
 	private static final int BUFFER = 1024;

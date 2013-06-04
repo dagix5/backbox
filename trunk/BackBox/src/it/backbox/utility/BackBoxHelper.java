@@ -1,5 +1,7 @@
 package it.backbox.utility;
 
+import it.backbox.ICompress;
+import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.boxcom.BoxManager;
 import it.backbox.client.rest.RestClient;
@@ -128,8 +130,8 @@ public class BackBoxHelper {
 		c.setRecords(dbm.loadDB());
 		_log.fine("DB load OK");
 		
-		Zipper z = new Zipper();
-		Splitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
+		ICompress z = new Zipper();
+		ISplitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
 		
 		tm = new TransactionManager(dbm, bm, sm, s, z);
 		_log.fine("TransactionManager init OK");
@@ -171,8 +173,8 @@ public class BackBoxHelper {
 		bm.setBackBoxFolderID(bm.mkdir(BoxManager.UPLOAD_FOLDER));
 		_log.fine("BoxManager init OK");
 		
-		Zipper z = new Zipper();
-		Splitter s = new Splitter(chunksize);
+		ICompress z = new Zipper();
+		ISplitter s = new Splitter(chunksize);
 		
 		tm = new TransactionManager(dbm, bm, sm, s, z);
 		_log.fine("TransactionManager init OK");
@@ -583,6 +585,13 @@ public class BackBoxHelper {
 		dbm.closeDB();
 	}
 	
+	/**
+	 * Set and save the proxy configuration
+	 * 
+	 * @param pc
+	 *            Proxy configuration
+	 * @throws Exception
+	 */
 	public void setProxyConfiguration(ProxyConfiguration pc) throws Exception {
 		this.pc = pc;
 		if (pc != null) {
@@ -598,6 +607,11 @@ public class BackBoxHelper {
 			
 	}
 	
+	/**
+	 * Get the proxy configuration
+	 * 
+	 * @return the proxy configuration
+	 */
 	public ProxyConfiguration getProxyConfiguration() {
 		if (pc == null)
 			try {
