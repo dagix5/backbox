@@ -59,18 +59,10 @@ public class BackBoxHelper {
 	private XMLConfiguration configuration;
 	private ProxyConfiguration pc;
 	
-	protected FileCompare c;
 	protected SecurityManager sm;
 	protected DBManager dbm;
 	protected TransactionManager tm;
 	protected BoxManager bm;
-
-	/**
-	 * Constructor
-	 */
-	public BackBoxHelper() {
-		c = new FileCompare();
-	}
 	
 	public TransactionManager getTransactionManager() {
 		return tm;
@@ -127,9 +119,6 @@ public class BackBoxHelper {
 		} else
 			_log.fine("BoxManager init OK, but folder ID null");
 		
-		c.setRecords(dbm.loadDB());
-		_log.fine("DB load OK");
-		
 		ICompress z = new Zipper();
 		ISplitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
 		
@@ -159,9 +148,6 @@ public class BackBoxHelper {
 		_log.fine("DBManager init OK");
 		dbm.createDB();
 		_log.fine("DB created");
-		
-		c.setRecords(dbm.loadDB());
-		_log.fine("DB load OK");
 		
 		bm = new BoxManager();
 		bm.setRestClient(new RestClient(getProxyConfiguration()));
@@ -276,8 +262,7 @@ public class BackBoxHelper {
 	 * @throws SQLException
 	 */
 	public List<SimpleEntry<String, it.backbox.bean.File>> getRecords() throws SQLException {
-		c.setRecords(dbm.loadDB());
-		Map<String, Map<String, it.backbox.bean.File>> map = c.getRecords();
+		Map<String, Map<String, it.backbox.bean.File>> map = dbm.loadDB();
 		List<SimpleEntry<String, it.backbox.bean.File>> ret = new ArrayList<>();
 		for (Map<String, it.backbox.bean.File> m : map.values())
 			for (it.backbox.bean.File f : m.values())
@@ -335,13 +320,11 @@ public class BackBoxHelper {
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
-		c.setRecords(dbm.loadDB());
-		
 		List<String> ex = new ArrayList<>();
 		ex.add(".deleted");
 		
-		File root = new File(restoreFolder);
-		c.listFiles(root, ex);
+		FileCompare c = new FileCompare(dbm.loadDB(), restoreFolder, ex);
+		c.load();
 		
 		Map<String, Map<String, it.backbox.bean.File>> toDownload = c.getRecordsNotInFiles();
 		for (String hash : toDownload.keySet()) {
@@ -381,7 +364,7 @@ public class BackBoxHelper {
 		}
 		
 		File del = null;
-		if (!c.getFiles().isEmpty()) {
+		if (!c.getFilesNotInRecords().isEmpty()) {
 			del = new File(restoreFolder + "\\.deleted");
 			del.mkdirs();
 		}
@@ -426,13 +409,11 @@ public class BackBoxHelper {
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
-		c.setRecords(dbm.loadDB());
-		
 		List<String> ex = new ArrayList<>();
 		ex.add(".deleted");
 		
-		File root = new File(backupFolder);
-		c.listFiles(root, ex);
+		FileCompare c = new FileCompare(dbm.loadDB(), backupFolder, ex);
+		c.load();
 		
 		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
 		for (String hash : toUpload.keySet()) {
@@ -562,8 +543,8 @@ public class BackBoxHelper {
 		if (!getConfiguration().containsKey(BACKUP_FOLDER))
 			throw new BackBoxException("Backup folder not found in configuration");
 		
-		File root = new File(getConfiguration().getString(BACKUP_FOLDER));
-		c.listFiles(root, ex);
+		FileCompare c = new FileCompare(dbm.loadDB(), getConfiguration().getString(BACKUP_FOLDER), ex);
+		c.load();
 		
 		Map<String, Map<String, File>> localInfo = c.getFiles();
 		for (String hash : remoteInfo.keySet()) {

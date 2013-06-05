@@ -4,6 +4,12 @@ import it.backbox.security.DigestManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
@@ -16,62 +22,95 @@ public class FileCompare {
 
 	private Map<String, Map<String, File>> files = null;
 	private Map<String, Map<String, it.backbox.bean.File>> records = null;
-
+	private Map<String, Map<String, it.backbox.bean.File>> recordsNotInFiles = null;
+	private Map<String, Map<String, File>> filesNotInRecords = null;
+	
+	private String root;
+	private List<String> exclusions;
+	
 	/**
-	 * Get all the files in a folder with their hash
+	 * Constructor
 	 * 
-	 * @param file
-	 *            Root folder (or file)
-	 * @param path
-	 *            Root path
-	 * @param list
-	 *            Output map <hash, Map<canonicalPath, java.io.File>>
+	 * @param records
+	 *            Map of files in database
+	 * @param root
+	 *            Root folder
 	 * @param exclusions
 	 *            Folders/files to exclude
-	 * @throws NoSuchAlgorithmException
+	 * 
 	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 */
-	private void listFiles(File file, String path, Map<String, Map<String, File>> list, List<String> exclusions) throws NoSuchAlgorithmException, IOException {
-		if (!path.endsWith("\\"))
-			path+="\\";
-		String relativePath = "";
-		
-		String absolutePath = file.getCanonicalPath();
-		if (path.length() < absolutePath.length())
-			relativePath = absolutePath.substring(path.length());
-		
-		if (exclusions.contains(relativePath))
-			return;
-		if (!file.isDirectory()) {
-			String hash = DigestManager.hash(file);
-			if (list.containsKey(hash))
-				list.get(hash).put(relativePath, file);
-			else {
-				Map<String, File> files = new HashMap<>();
-				files.put(relativePath, file);
-				list.put(hash, files);
-			}
-			return;
-		}
-
-		File[] files = file.listFiles();
-		for (File f : files)
-			listFiles(f, path, list, exclusions);
+	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, String root, List<String> exclusions) throws IOException, ClassNotFoundException {
+		this.records = records;
+        
+		this.root = root;
+		this.exclusions = exclusions;
 	}
 	
 	/**
-	 * Put all the files in a folder with their hash in "file" hashmap
+	 * Walk through all files in a folder and collect their hashes
 	 * 
-	 * @param file
-	 *            Root folder (or file)
-	 * @param exclusions
-	 *            Folders/files to exclude
-	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public void listFiles(File file, List<String> exclusions) throws NoSuchAlgorithmException, IOException {
+	public void load() throws IOException {
 		getFiles().clear();
-		listFiles(file, file.getCanonicalPath(), getFiles(), exclusions);
+		
+		final Path rootPath = Paths.get(root);
+		
+		Files.walkFileTree(rootPath, new FileVisitor<Path>() {
+			
+			@Override
+			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+				return FileVisitResult.CONTINUE;
+			}
+			
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				String hash;
+				try {
+					hash = DigestManager.hash(file.toFile());
+				} catch (IOException e) {
+					_log.log(Level.WARNING, file.toString() + " not accessible");
+					return FileVisitResult.CONTINUE;
+				} catch (NoSuchAlgorithmException e) {
+					_log.log(Level.SEVERE, "Error walking directory tree", e);
+					return FileVisitResult.TERMINATE;
+				}
+				String relativePath = rootPath.relativize(file).toString();
+				if (files.containsKey(hash))
+					files.get(hash).put(relativePath, file.toFile());
+				else {
+					Map<String, File> fs = new HashMap<>();
+					fs.put(relativePath, file.toFile());
+					files.put(hash, fs);
+				}
+				
+				Map<String, File> ff = getFilesNotInRecords().get(hash);
+				if (ff == null) {
+					ff = new HashMap<>();
+					filesNotInRecords.put(hash, ff);
+				}
+				if (getRecords().containsKey(hash) && getRecords().get(hash).containsKey(relativePath)) {
+					if (_log.isLoggable(Level.FINE)) _log.fine("Found " + relativePath);
+				} else
+					ff.put(relativePath, getFiles().get(hash).get(relativePath));
+				
+				return FileVisitResult.CONTINUE;
+			}
+			
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+				if (exclusions.contains(rootPath.relativize(dir).toString()))
+					return FileVisitResult.SKIP_SUBTREE;
+				return FileVisitResult.CONTINUE;
+			}
+			
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				return FileVisitResult.CONTINUE;
+			}
+		});
 	}
 
 	/**
@@ -80,7 +119,9 @@ public class FileCompare {
 	 * @return Map with records
 	 */
 	public Map<String, Map<String, it.backbox.bean.File>> getRecordsNotInFiles() {
-		Map<String, Map<String, it.backbox.bean.File>> ret = new HashMap<>();
+		if (recordsNotInFiles != null)
+			return recordsNotInFiles;
+		recordsNotInFiles = new HashMap<>();
 		for (String hash : getRecords().keySet()) {
 			Map<String, it.backbox.bean.File> m = new HashMap<>();
 			if (getFiles().containsKey(hash))
@@ -92,9 +133,9 @@ public class FileCompare {
 			else
 				for (String path : getRecords().get(hash).keySet())
 					m.put(path, getRecords().get(hash).get(path));
-			ret.put(hash, m);
+			recordsNotInFiles.put(hash, m);
 		}
-		return ret;
+		return recordsNotInFiles;
 	}
 	
 	/**
@@ -103,21 +144,9 @@ public class FileCompare {
 	 * @return Map with files
 	 */
 	public Map<String, Map<String, File>> getFilesNotInRecords() {
-		Map<String, Map<String, File>> ret = new HashMap<>();
-		for (String hash : getFiles().keySet()) {
-			Map<String, File> m = new HashMap<>();
-			if (getRecords().containsKey(hash))
-				for (String path : getFiles().get(hash).keySet())
-					if (getRecords().get(hash).containsKey(path)) {
-						if (_log.isLoggable(Level.FINE)) _log.fine("Found " + path);
-					} else
-						m.put(path, getFiles().get(hash).get(path));
-			else
-				for (String path : getFiles().get(hash).keySet())
-					m.put(path, getFiles().get(hash).get(path));
-			ret.put(hash, m);
-		}
-		return ret;
+		if (filesNotInRecords == null)
+			filesNotInRecords = new HashMap<>();
+		return filesNotInRecords;
 	}
 
 	/**
