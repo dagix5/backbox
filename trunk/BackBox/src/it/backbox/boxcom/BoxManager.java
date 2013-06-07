@@ -405,4 +405,14 @@ public class BoxManager implements IBoxManager {
 		return info;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#isAccessTokenValid()
+	 */
+	@Override
+	public boolean isAccessTokenValid() {
+		if (client == null)
+			return false;
+		return client.isAccessTokenValid();
+	}
 }
