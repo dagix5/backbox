@@ -1,14 +1,10 @@
 package it.backbox.db;
 
 import it.backbox.IDBManager;
-import it.backbox.ISecurityManager;
 import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -26,47 +22,26 @@ public class DBManager implements IDBManager {
 	private static Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
 
 	private static final int QUERY_TIMEOUT = 30;
-	public static final String DB_NAME = "backbox.db";
 
 	private Connection connection;
-	private ISecurityManager sm;
 
 	private boolean open;
+	private static String filename;
 	
 	/**
 	 * Constructor
 	 * 
 	 * @param sm
 	 *            SecurityManager to database encrypt/decrypt operations
+	 * @param filename
+	 *            Database file name
+	 * @throws BackBoxException 
 	 */
-	public DBManager(ISecurityManager sm) {
-		this.sm = sm;
+	public DBManager(String filename) throws BackBoxException {
+		if (filename == null)
+			throw new BackBoxException("DB filename null");
+		DBManager.filename = filename;
 		open = false;
-	}
-	
-	/**
-	 * Check if the database file exists
-	 * 
-	 * @return true if the file exists, false otherwise
-	 */
-	public static boolean exists() {
-		if (Files.exists(Paths.get(DB_NAME + ".temp"))) {
-			_log.fine("Decrypted DB found");
-			return true;
-		}
-		return Files.exists(Paths.get(DB_NAME));
-	}
-	
-	/**
-	 * Delete the database file
-	 * 
-	 * @throws IOException
-	 */
-	public static void delete() throws IOException {
-		if (Files.exists(Paths.get(DB_NAME)))
-			Files.delete(Paths.get(DB_NAME));
-		if (Files.exists(Paths.get(DB_NAME + ".temp")))
-			Files.delete(Paths.get(DB_NAME + ".temp"));
 	}
 	
 	/**
@@ -77,48 +52,26 @@ public class DBManager implements IDBManager {
 	public void openDB() throws Exception {
 		if (open)
 			return;
-		if (sm == null) {
-			_log.severe("SecurityManager null");
-			throw new BackBoxException("SecurityManager null");
-		}
-
-		//first time: if something goes wrong you could have only the decrypted db file
-		if (Files.exists(Paths.get(DB_NAME + ".temp")) && !Files.exists(Paths.get(DB_NAME))) {
-			_log.warning("Something went wrong, only decrypted DB found. Trying to open it...");
-		} else {
-			if (!Files.exists(Paths.get(DB_NAME))) {
-				_log.severe("DB not found");
-				throw new BackBoxException("DB not found");
-			}
-			
-			_log.fine("DB found");
-			sm.decrypt(DB_NAME, DB_NAME + ".temp");
-		}
 
 		Class.forName("org.sqlite.JDBC");
-		connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME + ".temp");
+		connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
 		open = true;
 	}
 
 	/**
 	 * Close the jdbc connection and encrypt the database
-	 * 
-	 * @throws Exception
 	 */
-	public void closeDB() throws Exception {
+	public void closeDB() {
 		if (!open)
 			return;
 		
-		if (connection != null)
-			connection.close();
-
-		if (sm == null) {
-			_log.severe("SecurityManager null");
-			throw new BackBoxException("SecurityManager null");
+		try {
+			if (connection != null)
+				connection.close();
+		} catch (SQLException e) {
+			_log.log(Level.WARNING, "Error closing db connection", e);
 		}
-		
-		sm.encrypt(DB_NAME + ".temp", DB_NAME);
-		Files.delete(Paths.get(DB_NAME + ".temp"));
+
 		open = false;
 	}
 
@@ -131,7 +84,7 @@ public class DBManager implements IDBManager {
 		closeDB();
 		if(!open) {
 			Class.forName("org.sqlite.JDBC");
-			connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME + ".temp");
+			connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
 			open = true;
 		}
 		

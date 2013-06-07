@@ -45,6 +45,9 @@ public class BackBoxHelper {
 	
 	private static final String CHARSET = "UTF-8";
 	public static final String CONFIG_FILE = "config.xml";
+	public static final String DB_FILE = "backbox.db";
+	public static final String DB_FILE_TEMP = "backbox.db.temp";
+	
 	public static final String BACKUP_FOLDER = "backupFolder";
 	public static final String RESTORE_FOLDER = "restoreFolder";
 	public static final String SALT = "salt";
@@ -74,7 +77,20 @@ public class BackBoxHelper {
 	 * @return true if it exists, false otherwise
 	 */
 	public boolean confExists() {
-		return Files.exists(Paths.get(CONFIG_FILE)) && DBManager.exists();
+		return Files.exists(Paths.get(CONFIG_FILE)) && dbExists();
+	}
+	
+	/**
+	 * Check if the database file exists
+	 * 
+	 * @return true if the file exists, false otherwise
+	 */
+	public boolean dbExists() {
+		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
+			_log.fine("Decrypted DB found");
+			return true;
+		}
+		return Files.exists(Paths.get(DB_FILE));
 	}
 	
 	/**
@@ -94,17 +110,6 @@ public class BackBoxHelper {
 		sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
 		_log.fine("SecurityManager init OK");
 
-		dbm = new DBManager(sm);
-		_log.fine("DBManager init OK");
-		
-		if (DBManager.exists()) {
-			_log.fine("DB found");
-			dbm.openDB();
-		} else {
-			_log.fine("DB not found. Creating..");
-			dbm.createDB();
-		}
-		
 		bm = new BoxManager();
 		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		String folderID = getConfiguration().getString(FOLDER_ID);
@@ -118,6 +123,23 @@ public class BackBoxHelper {
 			_log.fine("BoxManager init OK");
 		} else
 			_log.fine("BoxManager init OK, but folder ID null");
+		
+		//if something goes wrong you could have (only) the decrypted db file
+		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
+			_log.warning("Something went wrong, decrypted DB found. Trying to open it...");
+		} else {
+			if (!Files.exists(Paths.get(DB_FILE))) {
+				_log.severe("DB not found");
+				throw new BackBoxException("DB not found");
+			}
+			
+			_log.fine("DB found");
+			sm.decrypt(DB_FILE, DB_FILE_TEMP);
+		}
+		
+		dbm = new DBManager(DB_FILE_TEMP);
+		dbm.openDB();
+		_log.fine("DBManager init OK");
 		
 		ICompress z = new Zipper();
 		ISplitter s = new Splitter(getConfiguration().getInt(BackBoxHelper.CHUNK_SIZE));
@@ -136,7 +158,12 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void register(String password, int chunksize) throws Exception {
-		DBManager.delete();
+		logout();
+		
+		if (Files.exists(Paths.get(DB_FILE)))
+			Files.delete(Paths.get(DB_FILE));
+		if (Files.exists(Paths.get(DB_FILE_TEMP)))
+			Files.delete(Paths.get(DB_FILE_TEMP));
 		
 		sm = new SecurityManager(password);
 		_log.fine("SecurityManager init OK");
@@ -144,7 +171,7 @@ public class BackBoxHelper {
 		getConfiguration().setProperty(PWD_DIGEST, sm.getPwdDigest());
 		getConfiguration().setProperty(SALT, Hex.encodeHexString(sm.getSalt()));
 		
-		dbm = new DBManager(sm);
+		dbm = new DBManager(DB_FILE_TEMP);
 		_log.fine("DBManager init OK");
 		dbm.createDB();
 		_log.fine("DB created");
@@ -206,14 +233,13 @@ public class BackBoxHelper {
 		if (!confExists())
 			throw new BackBoxException("Configuration not found");
 		
-		if (dbm != null)
-			dbm.closeDB();
+		logout();
 		if (bm == null)
 			bm = new BoxManager();
 		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
-		bm.upload(DBManager.DB_NAME, bm.getBackBoxFolderID());
+		bm.upload(DB_FILE, bm.getBackBoxFolderID());
 		
 		bm.upload(CONFIG_FILE, bm.getBackBoxFolderID());
 	}
@@ -224,18 +250,17 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void downloadConf() throws Exception {
-		if (dbm != null)
-			dbm.closeDB();
+		logout();
 		if (bm == null)
 			bm = new BoxManager();
 		bm.setRestClient(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
-		String name = DBManager.DB_NAME + ".new";
-		bm.download(bm.getBoxID(DBManager.DB_NAME), name);
+		String name = DB_FILE + ".new";
+		bm.download(bm.getBoxID(DB_FILE), name);
 		File f = new File(name);
 		if (f.exists() && (f.length() > 0))
-			Files.move(Paths.get(name), Paths.get(DBManager.DB_NAME), StandardCopyOption.REPLACE_EXISTING);
+			Files.move(Paths.get(name), Paths.get(DB_FILE), StandardCopyOption.REPLACE_EXISTING);
 		else
 			throw new BackBoxException("DB file empty");
 		
@@ -252,7 +277,12 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void logout() throws Exception {
-		dbm.closeDB();
+		if (dbm != null)
+			dbm.closeDB();
+		if ((sm != null) && dbExists()) {
+			sm.encrypt(DB_FILE_TEMP, DB_FILE);
+			Files.delete(Paths.get(DB_FILE_TEMP));
+		}
 	}
 	
 	/**
@@ -522,7 +552,7 @@ public class BackBoxHelper {
 		sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
 		_log.fine("SecurityManager init OK");
 
-		dbm = new DBManager(sm);
+		dbm = new DBManager(DB_FILE);
 		dbm.createDB();
 		_log.fine("DBManager init OK");
 		
@@ -563,7 +593,7 @@ public class BackBoxHelper {
 			}
 		}
 		
-		dbm.closeDB();
+		logout();
 	}
 	
 	/**
