@@ -296,6 +296,20 @@ public class RestClient implements IRestClient {
 		return response.parseAs(BoxItemCollection.class);
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#isAccessTokenValid()
+	 */
+	@Override
+	public boolean isAccessTokenValid() {
+		// check if token will expire in 5 minutes
+		if ((credential == null)
+				|| (credential.getAccessToken() == null)
+				|| ((credential.getExpiresInSeconds() != null) && (credential.getExpiresInSeconds() <= 300)))
+			return false;
+		return true;
+	}
+	
 	/**
 	 * Custom BackOff Policy to include the status 429 - TOO MANY REQUEST in the policy
 	 */

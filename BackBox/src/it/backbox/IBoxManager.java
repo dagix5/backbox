@@ -13,6 +13,13 @@ public interface IBoxManager {
 	 * @return App folder ID
 	 */
 	public String getBackBoxFolderID();
+	
+	/**
+	 * Check if the token to access to Box.com is valid
+	 * 
+	 * @return True if the token is valid, false otherwise
+	 */
+	public boolean isAccessTokenValid();
 
 	/**
 	 * Upload a byte array content to Box.com

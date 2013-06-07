@@ -10,6 +10,13 @@ import it.backbox.client.rest.bean.BoxSearchResult;
 public interface IRestClient {
 	
 	/**
+	 * Check if the token to access to Box.com is valid
+	 * 
+	 * @return True if the token is valid, false otherwise
+	 */
+	public boolean isAccessTokenValid();
+	
+	/**
 	 * Download a file with ID <i>fileID</i>
 	 * 
 	 * @param fileID
