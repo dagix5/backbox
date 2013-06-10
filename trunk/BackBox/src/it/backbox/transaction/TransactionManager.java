@@ -106,8 +106,9 @@ public class TransactionManager {
 	
 	/**
 	 * Try to stop the running transactions
+	 * @throws InterruptedException 
 	 */
-	public void stopTransactions() {
+	public void stopTransactions() throws InterruptedException {
 		if (running) {
 			List<Runnable> rr = executor.shutdownNow();
 			for (Runnable r : rr) {
@@ -115,6 +116,7 @@ public class TransactionManager {
 				tt.stop();
 			}
 			running = false;
+			executor.awaitTermination(5, TimeUnit.MINUTES);
 		}
 	}
 	

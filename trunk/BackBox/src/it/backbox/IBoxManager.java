@@ -116,6 +116,15 @@ public interface IBoxManager {
 	public void download(List<String> fileID, List<String> destfilename) throws Exception;
 	
 	/**
+	 * Delete a folder from Box.com
+	 * 
+	 * @param folderID
+	 *            ID of the folder to delete
+	 * @throws Exception 
+	 */
+	public void deleteFolder(String folderID) throws Exception;
+	
+	/**
 	 * Delete a file from Box.com
 	 * 
 	 * @param fileID

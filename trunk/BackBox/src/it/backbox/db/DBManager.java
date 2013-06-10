@@ -35,7 +35,8 @@ public class DBManager implements IDBManager {
 	 *            SecurityManager to database encrypt/decrypt operations
 	 * @param filename
 	 *            Database file name
-	 * @throws BackBoxException 
+	 * @throws BackBoxException
+	 *             If filename is null
 	 */
 	public DBManager(String filename) throws BackBoxException {
 		if (filename == null)

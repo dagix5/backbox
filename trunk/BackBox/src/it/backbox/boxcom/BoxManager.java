@@ -36,23 +36,26 @@ public class BoxManager implements IBoxManager {
 	 * 
 	 * @param backBoxFolderID
 	 *            App folder ID
-	 * @throws Exception 
 	 */
-	public BoxManager(String backBoxFolderID, IRestClient client) throws Exception {
+	public BoxManager(String backBoxFolderID, IRestClient client) {
 		this.backBoxFolderID = backBoxFolderID;
 		if (_log.isLoggable(Level.FINE)) _log.fine("BoxManager created with folder id: " + backBoxFolderID);
 		this.client = client;
 	}
 	
 	/**
-	 * Costructor
-	 * 
-	 * @throws Exception 
+	 * Constructor
 	 */
-	public BoxManager() throws Exception {
+	public BoxManager() {
 		this(null, null);
 	}
 	
+	/**
+	 * Set the client to use for rest operations
+	 * 
+	 * @param client
+	 *            Rest Client
+	 */
 	public void setRestClient(IRestClient client) {
 		this.client = client;
 	}
@@ -415,4 +418,5 @@ public class BoxManager implements IBoxManager {
 			return false;
 		return client.isAccessTokenValid();
 	}
+
 }
