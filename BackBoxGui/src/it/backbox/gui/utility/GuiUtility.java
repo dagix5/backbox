@@ -1,5 +1,6 @@
 package it.backbox.gui.utility;
 
+import it.backbox.gui.bean.Size;
 import it.backbox.transaction.task.CopyTask;
 import it.backbox.transaction.task.DeleteBoxTask;
 import it.backbox.transaction.task.DeleteDBTask;
@@ -8,7 +9,6 @@ import it.backbox.transaction.task.DownloadTask;
 import it.backbox.transaction.task.InsertTask;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.UploadTask;
-import it.backbox.utility.Utility;
 
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
@@ -91,18 +91,18 @@ public class GuiUtility {
 		return "";
 	}
 	
-	public static String getTaskSize(Task t) {
+	public static Size getTaskSize(Task t) {
 		if (t instanceof DownloadTask) {
 			DownloadTask dt = (DownloadTask) t;
 			if (dt.getSize() != null)
-				return Utility.humanReadableByteCount(dt.getSize(), true);
+				return new Size(dt.getSize());
 		}
 		if (t instanceof UploadTask) {
-			UploadTask dt = (UploadTask) t;
-			if (dt.getSize() != null)
-				return Utility.humanReadableByteCount(dt.getSize(), true);
+			UploadTask ut = (UploadTask) t;
+			if (ut.getSize() != null)
+				return new Size(ut.getSize());
 		}
-		return "-";
+		return new Size(-1);
 	}
 	
 	public static void addPopup(Component component, final JPopupMenu popup) {
@@ -136,4 +136,5 @@ public class GuiUtility {
 			}
 		});
 	}
+	
 }
