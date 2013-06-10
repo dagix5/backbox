@@ -52,7 +52,7 @@ public class DetailsDialog extends JDialog {
 		lblTaskIdValue.setText(tbt.getTask().getId());
 		lblFilenameValue.setText(tbt.getTask().getDescription());
 		lblOperationValue.setText(GuiUtility.getTaskType(tbt.getTask()));
-		lblSizeValue.setText(GuiUtility.getTaskSize(tbt.getTask()));
+		lblSizeValue.setText(GuiUtility.getTaskSize(tbt.getTask()).getHsize());
 		txtResult.setText("");
 		if (tbt.getTransaction().getResultCode() == Transaction.NO_ESITO)
 			lblStatusValue.setText("Not executed");

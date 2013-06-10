@@ -1,15 +1,16 @@
 package it.backbox.gui;
 
 import it.backbox.bean.File;
+import it.backbox.gui.bean.Size;
 import it.backbox.gui.bean.TableTask;
 import it.backbox.gui.utility.GuiUtility;
+import it.backbox.gui.utility.SizeTableRowSorter;
 import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
 import it.backbox.transaction.TransactionManager;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 import it.backbox.utility.BackBoxHelper;
-import it.backbox.utility.Utility;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -171,7 +172,7 @@ public class BackBoxGui {
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			for (SimpleEntry<String, File> entry : map) {
 				File f = entry.getValue();
-				model.addRow(new Object[] { f.getFilename(), f.getHash(), Utility.humanReadableByteCount(f.getSize(), true),  ((f.getChunks() != null) ? f.getChunks().size() : 0)});
+				model.addRow(new Object[] { f.getFilename(), f.getHash(), new Size(f.getSize()), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
 				fileKeys.add(entry.getKey());
 			}
 		} catch (SQLException e) {
@@ -544,7 +545,7 @@ public class BackBoxGui {
 		) {
 			private static final long serialVersionUID = 1L;
 			Class[] columnTypes = new Class[] {
-				String.class, String.class, String.class, Integer.class
+				String.class, String.class, Size.class, Integer.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
@@ -565,7 +566,7 @@ public class BackBoxGui {
 		table.getColumnModel().getColumn(3).setPreferredWidth(15);
 		table.getColumnModel().getColumn(3).setMinWidth(5);
 		
-		table.setAutoCreateRowSorter(true);
+		table.setRowSorter(new SizeTableRowSorter(table.getModel()));
 		
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -790,6 +791,12 @@ public class BackBoxGui {
 			}
 		) {			
 			private static final long serialVersionUID = 1L;
+			Class[] columnTypes = new Class[] {
+				String.class, String.class, Size.class, String.class, String.class
+			};
+			public Class getColumnClass(int columnIndex) {
+				return columnTypes[columnIndex];
+			}
 			boolean[] columnEditables = new boolean[] {
 				false, false, false, false, false
 			};
@@ -808,6 +815,9 @@ public class BackBoxGui {
 		tablePreview.getColumnModel().getColumn(3).setMaxWidth(100);
 		tablePreview.getColumnModel().getColumn(4).setPreferredWidth(100);
 		tablePreview.getColumnModel().getColumn(4).setMaxWidth(100);
+		
+		tablePreview.setRowSorter(new SizeTableRowSorter(tablePreview.getModel()));
+		
 		scrollPanePreview.setViewportView(tablePreview);
 		scrollPanePreview.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPanePreview.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
