@@ -35,14 +35,15 @@ public class TransactionThread implements Runnable {
 	public void run() {
 		for (Task task : t.getTasks()) {
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> start");
+			
+			boolean inError = false;
+			long start = new Date().getTime();
 			try {
 				if (stop)
 					throw new BackBoxException("Interrupted");
 				currentTask = task;
-				long start = new Date().getTime();
+				
 				currentTask.run();
-				long finish = new Date().getTime();
-				currentTask.setTotalTime(finish - start);
 				if (currentTask.isCountWeight())
 					tm.taskCompleted(currentTask.getWeight());
 			} catch (Exception e) {
@@ -52,8 +53,14 @@ public class TransactionThread implements Runnable {
 				error.append(task.getDescription()).append(": ").append(e.toString());
 				t.setResultDescription(error.toString());
 				t.setResultCode(Transaction.ESITO_KO);
-				return;
+				inError = true;
 			}
+			long finish = new Date().getTime();
+			currentTask.setTotalTime(finish - start);
+			
+			if (inError)
+				return;
+			
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> end");
 		}
 		t.setResultCode(Transaction.ESITO_OK);

@@ -38,10 +38,8 @@ public class FileCompare {
 	 * @param exclusions
 	 *            Folders/files to exclude
 	 * 
-	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
-	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, String root, List<String> exclusions) throws IOException, ClassNotFoundException {
+	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, String root, List<String> exclusions) {
 		this.records = records;
         
 		this.root = root;

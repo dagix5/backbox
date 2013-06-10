@@ -39,7 +39,7 @@ public final class LocalServerReceiver implements VerificationCodeReceiver {
 
   private static final String CALLBACK_PATH = "/Callback";
   private static final String LOCALHOST = "127.0.0.1";
-  private static final int PORT = 8080;
+  private static final int PORT = 8482;
 
   /** Server or {@code null} before {@link #getRedirectUri()}. */
   private Server server;

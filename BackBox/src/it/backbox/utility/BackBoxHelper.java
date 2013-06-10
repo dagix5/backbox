@@ -24,6 +24,7 @@ import it.backbox.transaction.task.UploadTask;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -209,7 +210,8 @@ public class BackBoxHelper {
 	public XMLConfiguration getConfiguration() throws ConfigurationException {
 		if (configuration == null) {
 			configuration = new XMLConfiguration();
-			configuration.load(CONFIG_FILE);
+			if (confExists())
+				configuration.load(CONFIG_FILE);
 		}
 		return configuration;
 	}
@@ -311,9 +313,9 @@ public class BackBoxHelper {
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
 	 * @return The created transaction
-	 * @throws Exception
+	 * @throws SQLException 
 	 */
-	public Transaction downloadFile(String key, String downloadPath, boolean startNow) throws Exception {
+	public Transaction downloadFile(String key, String downloadPath, boolean startNow) throws SQLException {
 		it.backbox.bean.File file = dbm.getFileRecord(key);
 		
 		Transaction t = new Transaction();
@@ -342,11 +344,15 @@ public class BackBoxHelper {
 	 * @param startNow
 	 *            true if start the transactions, false if just create them
 	 * @return The created transactions
-	 * @throws Exception
+	 * @throws BackBoxException 
+	 * @throws SQLException 
+	 * @throws IOException 
 	 */
-	public ArrayList<Transaction> restore(String restoreFolder, boolean startNow) throws Exception {
-		if (restoreFolder == null)
+	public ArrayList<Transaction> restore(String restoreFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
+		if (restoreFolder == null) {
+			_log.log(Level.SEVERE, "Restore path not specified");
 			throw new BackBoxException("Restore path not specified");
+		}
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
@@ -431,11 +437,15 @@ public class BackBoxHelper {
 	 * @param startNow
 	 *            true if start the transactions, false if just create them
 	 * @return The created transactions
-	 * @throws Exception
+	 * @throws BackBoxException 
+	 * @throws SQLException 
+	 * @throws IOException 
 	 */
-	public ArrayList<Transaction> backup(String backupFolder, boolean startNow) throws Exception {
-		if (backupFolder == null)
+	public ArrayList<Transaction> backup(String backupFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
+		if (backupFolder == null) {
+			_log.log(Level.SEVERE, "Backup path not specified");
 			throw new BackBoxException("Backup path not specified");
+		}
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
@@ -515,9 +525,9 @@ public class BackBoxHelper {
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
 	 * @return The created transaction
-	 * @throws Exception
+	 * @throws SQLException 
 	 */
-	public Transaction delete(String key, boolean startNow) throws Exception {
+	public Transaction delete(String key, boolean startNow) throws SQLException {
 		it.backbox.bean.File file = dbm.getFileRecord(key);
 		
 		Transaction t = new Transaction();
