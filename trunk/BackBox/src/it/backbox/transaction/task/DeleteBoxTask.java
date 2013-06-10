@@ -2,7 +2,7 @@ package it.backbox.transaction.task;
 
 import it.backbox.bean.File;
 
-public class DeleteBoxTask extends Task {
+public class DeleteBoxTask extends BoxTask {
 
 	private boolean encryptEnabled;
 	private boolean compressEnabled;
@@ -24,7 +24,7 @@ public class DeleteBoxTask extends Task {
 
 	@Override
 	public void run() throws Exception {
-		getBoxManager().deleteChunk(file.getChunks());
+		callBox();
 		
 		getDbManager().delete(file.getFilename(), file.getHash());
 	}
@@ -43,6 +43,11 @@ public class DeleteBoxTask extends Task {
 
 	public void setCompressEnabled(boolean compressEnabled) {
 		this.compressEnabled = compressEnabled;
+	}
+
+	@Override
+	protected void boxMethod() throws Exception {
+		getBoxManager().deleteChunk(file.getChunks());
 	}
 
 }

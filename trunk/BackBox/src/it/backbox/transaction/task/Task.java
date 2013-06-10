@@ -5,9 +5,14 @@ import it.backbox.ICompress;
 import it.backbox.IDBManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
+import it.backbox.transaction.BBPhaser;
 import it.backbox.utility.Utility;
 
+import java.util.logging.Logger;
+
 public abstract class Task {
+	protected static Logger _log = Logger.getLogger(Task.class.getCanonicalName());
+	
 	private String id;
 	private String description;
 	private long weight = 1;
@@ -20,6 +25,8 @@ public abstract class Task {
 	private ISplitter splitter;
 	private ISecurityManager securityManager;
 	private ICompress zipper;
+	
+	private BBPhaser phaser;
 
 	public Task() {
 		setId(Utility.genID());
@@ -97,8 +104,6 @@ public abstract class Task {
 		this.countWeight = countWeight;
 	}
 	
-	public abstract void run() throws Exception;
-	
 	public void stop() {
 		stop = true;
 	}
@@ -111,4 +116,14 @@ public abstract class Task {
 		this.totalTime = totalTime;
 	}
 
+	public BBPhaser getPhaser() {
+		return phaser;
+	}
+
+	public void setPhaser(BBPhaser phaser) {
+		this.phaser = phaser;
+	}
+
+	public abstract void run() throws Exception;
+		
 }

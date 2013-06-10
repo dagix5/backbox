@@ -9,10 +9,13 @@ import it.backbox.security.DigestManager;
 
 import java.util.List;
 
-public class DownloadTask extends Task {
+public class DownloadTask extends BoxTask {
 
 	private String path;
 	private File file;
+	
+	/** Local operation variables */
+	private List<byte[]> chunks;
 	
 	public void setInput(String path, File file) {
 		this.path = path;
@@ -37,9 +40,9 @@ public class DownloadTask extends Task {
 	@Override
 	public void run() throws Exception {
 		byte[] data = null;
-		String filename = path + "\\" + file.getFilename();
+		String filename = new StringBuilder(path).append("\\").append(file.getFilename()).toString();
 		
-		List<byte[]> chunks = getBoxManager().downloadChunk(file.getChunks());
+		callBox();
 		
 		if (stop) return;
 		
@@ -71,6 +74,11 @@ public class DownloadTask extends Task {
 			
 		if (!DigestManager.checkIntegrity(filename, file.getHash()))
 			throw new BackBoxException(filename + ": File integrity check failed");
+	}
+
+	@Override
+	protected void boxMethod() throws Exception {
+		chunks = getBoxManager().downloadChunk(file.getChunks());
 	}
 
 }
