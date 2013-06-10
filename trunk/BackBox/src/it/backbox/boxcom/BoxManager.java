@@ -352,32 +352,6 @@ public class BoxManager implements IBoxManager {
 		for (int i = 0; i < result.size(); i++)
         	chunks.get(i).setBoxid(result.get(chunks.get(i).getChunkname()));
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.List, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void uploadChunk(List<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception {
-		List<String> filenames = new ArrayList<>();
-		for (Chunk c : chunks)
-			filenames.add(srcFolder + "\\" + c.getChunkname());
-		
-		Map<String, String> result = upload(filenames, remotefolderID);
-		for (int i = 0; i < result.size(); i++)
-        	chunks.get(i).setBoxid(result.get(chunks.get(i).getChunkname()));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(it.backbox.bean.Chunk, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void uploadChunk(Chunk chunk, String srcFolder, String remotefolderID) throws Exception {
-		List<Chunk> chunks = new ArrayList<>();
-		chunks.add(chunk);
-		uploadChunk(chunks, srcFolder, remotefolderID);
-	}
 	
 	/**
 	 * Get a map with all chunks for all the files in the remote folder with ID
