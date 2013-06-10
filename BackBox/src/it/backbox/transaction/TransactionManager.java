@@ -26,6 +26,7 @@ public class TransactionManager {
 	private boolean running;
 	private int completedTasks;
 	private long allTasks;
+	private BBPhaser phaser;
 	
 	private IBoxManager boxManager;
 	private IDBManager dbManager;
@@ -85,6 +86,7 @@ public class TransactionManager {
 			task.setSecurityManager(securityManager);
 			task.setSplitter(splitter);
 			task.setZipper(zipper);
+			task.setPhaser(phaser);
 		}
 
 		getTransactions().add(t);
@@ -222,6 +224,8 @@ public class TransactionManager {
 		clear();
 		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
+		
+		phaser = new BBPhaser();
 	}
 
 }

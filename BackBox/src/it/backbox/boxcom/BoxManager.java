@@ -3,6 +3,7 @@ package it.backbox.boxcom;
 import it.backbox.IBoxManager;
 import it.backbox.IRestClient;
 import it.backbox.bean.Chunk;
+import it.backbox.client.rest.bean.BoxError;
 import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
@@ -14,6 +15,8 @@ import it.backbox.utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +26,18 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
+
 public class BoxManager implements IBoxManager {
 	private static Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
 
 	public static final String UPLOAD_FOLDER = "BackBox";
+	
+	/** Global instance of the JSON factory. */
+	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
 	private String backBoxFolderID;
 	private IRestClient client;
@@ -87,12 +98,29 @@ public class BoxManager implements IBoxManager {
 	 * @throws IOException
 	 * @throws RestException 
 	 */
-	public String mkdir(String folderName) throws Exception {
-		BoxFolder folder = client.mkdir(folderName);
-		if (folder != null) {
-			if (_log.isLoggable(Level.FINE)) _log.fine("Folder created id: " + folder.id);
-			return folder.id;
+	public String mkdir(String folderName) throws IOException, RestException {
+		BoxFolder folder;
+		try {
+			folder = client.mkdir(folderName);
+			if (folder != null) {
+				if (_log.isLoggable(Level.FINE)) _log.fine("Folder created id: " + folder.id);
+				return folder.id;
+			}
+		} catch (RestException e) {
+			HttpResponseException httpe = e.getHttpException();
+			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
+				_log.warning(folderName + " exists");
+				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
+				if ((error != null) && 
+						(error.context_info != null) && 
+						(error.context_info.conflicts != null) && 
+						!error.context_info.conflicts.isEmpty())
+					return error.context_info.conflicts.get(0).id;
+			} else
+				throw e;
 		}
+		
 		if (_log.isLoggable(Level.FINE)) _log.fine("Folder not created");
 		return null;
 	}
@@ -137,26 +165,42 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#upload(java.util.List, java.util.List, java.lang.String)
 	 */
 	@Override
-	public Map<String, String> upload(List<byte[]> src, List<String> filenames, String remotefolderID) throws Exception {
+	public Map<String, String> upload(List<byte[]> src, List<String> filenames, String remotefolderID) throws BackBoxException, NoSuchAlgorithmException, IOException, RestException {
 		if (src.size() != filenames.size())
 			throw new BackBoxException("src and filename lists should have same size");
 		
-		try {
-			Map<String, String> ids = new HashMap<String, String>();
-			for (int i = 0; i < filenames.size(); i++) {
-				String name = filenames.get(i);
-				String[] ns = name.split("\\\\");
-				String n = ns[ns.length - 1];
-				
-				BoxFile file = client.upload(n, null, src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
-				String id = ((file != null) ? file.id : null);
-				if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
-				ids.put(name, id);
+		Map<String, String> ids = new HashMap<String, String>();
+		for (int i = 0; i < filenames.size(); i++) {
+			String name = filenames.get(i);
+			String[] ns = name.split("\\\\");
+			String n = ns[ns.length - 1];
+			
+			BoxFile file = null;
+			try {
+				file = client.upload(n, null, src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
+			} catch (RestException e) {
+				HttpResponseException httpe = e.getHttpException();
+				if ((httpe != null) && (httpe.getStatusCode() == 409)) {
+					_log.fine("Uploading new version");
+					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+					BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
+					if ((error != null) &&
+							(error.context_info != null) &&
+							(error.context_info.conflicts != null) &&
+							!error.context_info.conflicts.isEmpty()) {
+						String id = error.context_info.conflicts.get(0).id;
+						String sha1 = error.context_info.conflicts.get(0).sha1;
+						_log.fine("upload: 409 Conflict, fileID " + id);
+						file = client.upload(n, id, src.get(i), remotefolderID, sha1);
+					} else
+						throw e;
+				}
 			}
-			return ids;
-		} catch (RestException e) {
-			throw new BackBoxException(e.getLocalizedMessage());
+			String id = ((file != null) ? file.id : null);
+			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
+			ids.put(name, id);
 		}
+		return ids;
 	}
 	
 	/*
@@ -183,9 +227,29 @@ public class BoxManager implements IBoxManager {
 			String n = ns[ns.length - 1];
 			
 			byte[] content = Utility.read(name);
-			BoxFile file = client.upload(n, null, content, remotefolderID, Hex.encodeHexString(DigestManager.hash(content)));
+			BoxFile file = null;
+			try {
+				file = client.upload(n, null, content, remotefolderID, Hex.encodeHexString(DigestManager.hash(content)));
+			} catch (RestException e) {
+				HttpResponseException httpe = e.getHttpException();
+				if ((httpe != null) && (httpe.getStatusCode() == 409)) {
+					_log.fine("Uploading new version");
+					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+					BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
+					if ((error != null) &&
+							(error.context_info != null) &&
+							(error.context_info.conflicts != null) &&
+							!error.context_info.conflicts.isEmpty()) {
+						String id = error.context_info.conflicts.get(0).id;
+						String sha1 = error.context_info.conflicts.get(0).sha1;
+						_log.fine("upload: 409 Conflict, fileID " + id);
+						file = client.upload(n, id, content, remotefolderID, sha1);
+					} else
+						throw e;
+				}
+			}
 			String id = ((file != null) ? file.id : null);
-			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id" + id);
+			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
 			ids.put(name, id);
 		}
 		return ids;

@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -59,8 +60,8 @@ public class RestClient implements IRestClient {
 
 	private HttpRequestFactory requestFactory;
 
-	private Credential credential;
-
+	private static Credential credential;
+	
 	private class RestHttpRequestInitializer implements HttpRequestInitializer {
 
 		@Override
@@ -105,31 +106,49 @@ public class RestClient implements IRestClient {
 		_log.fine("Rest Client init ok");
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#download(java.lang.String)
+	/**
+	 * Execute an HTTP request
+	 * 
+	 * @param request
+	 *            Request to execute
+	 * @return The HTTP response
+	 * @throws IOException
+	 *             Parsing error failed
+	 * @throws RestException
+	 *             HTTP Error
 	 */
-	public byte[] download(String fileID) throws IOException, NumberFormatException, InterruptedException {
-		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID + "/content");
-		HttpRequest request = requestFactory.buildGetRequest(url);
-		_log.fine("Download: " + request.getUrl().toString());
+	private HttpResponse execute(HttpRequest request) throws IOException, RestException {
 		HttpResponse response = null;
 		try {
 			response = request.execute();
 		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				_log.fine("Download: Token refreshed");
-				request = requestFactory.buildGetRequest(url);
-				response = request.execute();
-			} else
-				throw e;
-			
+			String message = new StringBuilder(request.getRequestMethod()).append(" ").append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
+			_log.log(Level.SEVERE, message, e);
+			JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+			BoxError error = parser.parseAndClose(new StringReader(e.getContent()), BoxError.class);
+			throw new RestException(message, e, error);
 		}
+		return response;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#download(java.lang.String)
+	 */
+	public byte[] download(String fileID) throws IOException, RestException {
+		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID + "/content");
+		HttpRequest request = requestFactory.buildGetRequest(url);
+		_log.fine("Download: " + request.getUrl().toString());
+		HttpResponse response = execute(request);
 		_log.fine("Download: " + response.getStatusCode());
 		if (response.getStatusCode() == 202) {
 			String retry = response.getHeaders().getRetryAfter();
-			Thread.sleep(Long.parseLong(retry));
-			response = request.execute();
+			try {
+				Thread.sleep(Long.parseLong(retry));
+			} catch (NumberFormatException | InterruptedException e) {
+				_log.log(Level.SEVERE, "Error waiting to retry the download, retrying now!", e);
+			}
+			response = execute(request);
 		}
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -166,29 +185,7 @@ public class RestClient implements IRestClient {
 			request.setHeaders(h);
 		}
 		_log.fine("Upload: " + request.getUrl().toString());
-		
-		HttpResponse response = null;
-		try {
-			response = request.execute();
-		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				request = requestFactory.buildPostRequest(url, mpc);
-				response = request.execute();
-				_log.fine("Upload: Token refreshed");
-			} if (e.getStatusCode() == 409) {
-				_log.fine("Upload: 409 Conflict, uploading new version");
-				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-				BoxError error = parser.parseAndClose(new StringReader(e.getContent()), BoxError.class);
-				if ((error == null) || (error.context_info == null) || (error.context_info.conflicts == null) || (error.context_info.conflicts.isEmpty()))
-					throw e;
-				String id = error.context_info.conflicts.get(0).id;
-				String sha = error.context_info.conflicts.get(0).sha1;
-				_log.fine("Upload: 409 Conflict, fileID " + id);
-				return upload(name, id, content, folderID, sha);
-			} else
-				throw e;
-			
-		}
+		HttpResponse response = execute(request);
 		_log.fine("Upload: " + response.getStatusCode());
 		BoxUploadedFile file =  response.parseAs(BoxUploadedFile.class);
 		if ((file != null) && (file.entries != null) && !file.entries.isEmpty())
@@ -201,22 +198,12 @@ public class RestClient implements IRestClient {
 	 * @see it.backbox.IRestClient#delete(java.lang.String, boolean)
 	 */
 	public void delete(String fileID, boolean isFolder) throws RestException, IOException {
-		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "/folders/" : "/files/") + fileID);
+		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "folders/" : "files/") + fileID);
 		if (isFolder)
 			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
 		_log.fine("Delete: " + request.getUrl().toString());
-		HttpResponse response = null;
-		try {
-			response = request.execute();
-		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				request = requestFactory.buildDeleteRequest(url);
-				response = request.execute();
-				_log.fine("Delete: Token refreshed");
-			} else
-				throw e;
-		}
+		HttpResponse response = execute(request);
 		_log.fine("Delete: " + response.getStatusCode());
 	}
 	
@@ -225,21 +212,11 @@ public class RestClient implements IRestClient {
 	 * @see it.backbox.IRestClient#search(java.lang.String)
 	 */
 	public BoxSearchResult search(String query) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(baseUri + "/search");
+		GenericUrl url = new GenericUrl(baseUri + "search");
 		url.put("query", query);
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		_log.fine("Search: " + request.getUrl().toString());
-		HttpResponse response = null;
-		try {
-			response = request.execute();
-		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				request = requestFactory.buildGetRequest(url);
-				response = request.execute();
-				_log.fine("Search: Token refreshed");
-			} else
-				throw e;
-		}
+		HttpResponse response = execute(request);
 		_log.fine("Search: " + response.getStatusCode());
 		return response.parseAs(BoxSearchResult.class);
 	}
@@ -249,7 +226,7 @@ public class RestClient implements IRestClient {
 	 * @see it.backbox.IRestClient#mkdir(java.lang.String)
 	 */
 	public BoxFolder mkdir(String name) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(baseUri + "/folders");
+		GenericUrl url = new GenericUrl(baseUri + "folders");
 		GenericData data = new GenericData();
         data.put("name", name);
         GenericData parentData = new GenericData();
@@ -257,18 +234,7 @@ public class RestClient implements IRestClient {
         data.put("parent", parentData);
 		HttpRequest request = requestFactory.buildPostRequest(url, new JsonHttpContent(JSON_FACTORY, data));
 		_log.fine("MkDir: " + request.getUrl().toString());
-		HttpResponse response = null;
-		try {
-			response = request.execute();
-			_log.fine("MkDir: " + response.getStatusCode());
-		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				request = requestFactory.buildPostRequest(url, new JsonHttpContent(JSON_FACTORY, data));
-				response = request.execute();
-				_log.fine("MkDir: Token refreshed");
-			} else
-				throw e;
-		}
+		HttpResponse response = execute(request);
 		return response.parseAs(BoxFolder.class);
 	}
 	
@@ -276,23 +242,13 @@ public class RestClient implements IRestClient {
 	 * (non-Javadoc)
 	 * @see it.backbox.IRestClient#getFolderItems(java.lang.String)
 	 */
-	public BoxItemCollection getFolderItems(String folderID) throws IOException {
+	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "/folders/" + folderID + "/items");
 		url.put("limit", "1000");
 		url.put("fields", "name,id,sha1");
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		_log.fine("getFolderItems: " + request.getUrl().toString());
-		HttpResponse response = null;
-		try {
-			response = request.execute();
-			_log.fine("getFolderItems: " + response.getStatusCode());
-		} catch (HttpResponseException e) {
-			if ((e.getStatusCode() == 401) && credential.refreshToken()) {
-				response = request.execute();
-				_log.fine("getFolderItems: Token refreshed");
-			} else
-				throw e;
-		}
+		HttpResponse response = execute(request);
 		return response.parseAs(BoxItemCollection.class);
 	}
 	
@@ -319,4 +275,5 @@ public class RestClient implements IRestClient {
 			return super.isBackOffRequired(statusCode) || (statusCode == 429);
 		}
 	}
+
 }

@@ -10,7 +10,7 @@ import it.backbox.security.DigestManager;
 import java.io.File;
 import java.util.List;
 
-public class UploadTask extends Task {
+public class UploadTask extends BoxTask {
 
 	private boolean encryptEnabled = true;
 	private boolean compressEnabled = true;
@@ -18,6 +18,9 @@ public class UploadTask extends Task {
 	private String hash;
 	private File file;
 	private String relativePath;
+	
+	/** Local operation variables */
+	private List<Chunk> splitted;
 	
 	public void setInput(String hash, File file, String relativePath) {
 		this.hash = hash;
@@ -47,7 +50,6 @@ public class UploadTask extends Task {
 		if (stop) return;
 		
 		byte[] data = null;
-		List<Chunk> splitted = null;
 		
 		if (isCompressEnabled()) {
 			Zipper z = new Zipper();
@@ -79,8 +81,7 @@ public class UploadTask extends Task {
 		
 		if (stop) return;
 		
-		IBoxManager bm = getBoxManager();
-		bm.uploadChunk(splitted, bm.getBackBoxFolderID());
+		callBox();
 		
 		getDbManager().insert(file, relativePath, hash, splitted, isEncryptEnabled(), isCompressEnabled(), (splitted.size() > 1));
 	}
@@ -99,6 +100,12 @@ public class UploadTask extends Task {
 
 	public void setCompressEnabled(boolean compressEnabled) {
 		this.compressEnabled = compressEnabled;
+	}
+
+	@Override
+	protected void boxMethod() throws Exception {
+		IBoxManager bm = getBoxManager();
+		bm.uploadChunk(splitted, bm.getBackBoxFolderID());
 	}
 
 }
