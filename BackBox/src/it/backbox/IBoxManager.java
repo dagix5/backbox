@@ -215,30 +215,4 @@ public interface IBoxManager {
 	 */
 	public void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception;
 
-	/**
-	 * Upload a list of Chunk (files) to Box.com
-	 * 
-	 * @param chunks
-	 *            List of Chunk to upload
-	 * @param srcFolder
-	 *            Chunks files folder
-	 * @param remotefolderID
-	 *            ID of the folder where upload the chunks
-	 * @throws Exception 
-	 */
-	public void uploadChunk(List<Chunk> chunks, String srcFolder, String remotefolderID) throws Exception;
-
-	/**
-	 * Upload a Chunk (files) to Box.com
-	 * 
-	 * @param chunks
-	 *            List of Chunk to upload
-	 * @param srcFolder
-	 *            Chunk file folder
-	 * @param remotefolderID
-	 *            ID of the folder where upload the chunks
-	 * @throws Exception 
-	 */
-	public void uploadChunk(Chunk chunk, String srcFolder, String remotefolderID) throws Exception;
-	
 }
