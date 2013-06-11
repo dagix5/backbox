@@ -12,7 +12,6 @@ import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 import it.backbox.utility.Utility;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.NoSuchAlgorithmException;
@@ -46,6 +45,8 @@ public class BoxManager implements IBoxManager {
 	 * 
 	 * @param backBoxFolderID
 	 *            App folder ID
+	 * @param client
+	 *            Rest Client
 	 */
 	public BoxManager(String backBoxFolderID, IRestClient client) {
 		this.backBoxFolderID = backBoxFolderID;
@@ -54,48 +55,52 @@ public class BoxManager implements IBoxManager {
 	}
 	
 	/**
-	 * Constructor
-	 */
-	public BoxManager() {
-		this(null, null);
-	}
-	
-	/**
-	 * Set the client to use for rest operations
+	 * Costructor
 	 * 
 	 * @param client
 	 *            Rest Client
 	 */
-	public void setRestClient(IRestClient client) {
+	public BoxManager(IRestClient client) {
 		this.client = client;
 	}
 	
 	/**
-	 * Set the app folder ID
-	 * 
-	 * @param backBoxFolderID
-	 *            The app folder ID
+	 * Constructor
 	 */
+	public BoxManager() {
+		
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#setRestClient(it.backbox.IRestClient)
+	 */
+	@Override
+	public void setRestClient(IRestClient client) {
+		this.client = client;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#setBackBoxFolderID(java.lang.String)
+	 */
+	@Override
 	public void setBackBoxFolderID(String backBoxFolderID) {
 		this.backBoxFolderID = backBoxFolderID;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#getBackBoxFolderID()
+	/**
+	 * Get the app folder ID
+	 * 
+	 * @return App folder ID
 	 */
 	public String getBackBoxFolderID() {
 		return backBoxFolderID;
 	}
 	
-	/**
-	 * Create a folder on box.com
-	 * 
-	 * @param folderName
-	 *            Folder name
-	 * @return ID of the folder created
-	 * @throws IOException
-	 * @throws RestException 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#mkdir(java.lang.String)
 	 */
 	public String mkdir(String folderName) throws IOException, RestException {
 		BoxFolder folder;
@@ -124,14 +129,9 @@ public class BoxManager implements IBoxManager {
 		return null;
 	}
 	
-	/**
-	 * Get the box.com ID of the file with name filename
-	 * 
-	 * @param filename
-	 *            Name of the file to search
-	 * @return Box.com ID
-	 * @throws IOException
-	 * @throws RestException 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#getBoxID(java.lang.String)
 	 */
 	public String getBoxID(String filename) throws Exception {
 		BoxSearchResult results = client.search(filename);
@@ -143,28 +143,19 @@ public class BoxManager implements IBoxManager {
 		return null;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(byte[], java.lang.String, java.lang.String)
+	/**
+	 * Upload a list of byte array contents to Box.com
+	 * 
+	 * @param src
+	 *            List of byte array to upload
+	 * @param filename
+	 *            List of names of the files to upload
+	 * @param remotefolderID
+	 *            ID of the folder where upload the byte arrays
+	 * @return Map uploaded filename, ID
+	 * @throws Exception 
 	 */
-	@Override
-	public String upload(byte[] src, String filename, String remotefolderID) throws Exception {
-		List<byte[]> srcs = new ArrayList<>();
-		srcs.add(src);
-		List<String> filenames = new ArrayList<>();
-		filenames.add(filename);
-		
-		Map<String, String> result = upload(srcs, filenames, remotefolderID);
-		
-		return result.get(filename);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.util.List, java.util.List, java.lang.String)
-	 */
-	@Override
-	public Map<String, String> upload(List<byte[]> src, List<String> filenames, String remotefolderID) throws BackBoxException, NoSuchAlgorithmException, IOException, RestException {
+	private Map<String, String> upload(List<byte[]> src, List<String> filenames, String remotefolderID) throws BackBoxException, NoSuchAlgorithmException, IOException, RestException {
 		if (src.size() != filenames.size())
 			throw new BackBoxException("src and filename lists should have same size");
 		
@@ -202,24 +193,43 @@ public class BoxManager implements IBoxManager {
 		return ids;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String)
+	/**
+	 * Upload a file to Box.com
+	 * 
+	 * @param filename
+	 *            Name of the file to upload
+	 * @param remotefolderID
+	 *            ID of the folder where upload the chunks
+	 * @return Uploaded file ID
+	 * @throws Exception 
 	 */
-	@Override
-	public String upload(String filename, String remotefolderID) throws Exception {
+	private String upload(String filename, String remotefolderID) throws Exception {
 		List<String> filenames = new ArrayList<>();
 		filenames.add(filename);
 		Map<String, String> result = upload(filenames, remotefolderID);
 		return result.get(filename);
 	}
-
+	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.util.List, java.lang.String)
+	 * @see it.backbox.IBoxManager#upload(java.lang.String)
 	 */
 	@Override
-	public Map<String, String> upload(List<String> filenames, String remotefolderID) throws Exception{
+	public String upload(String filename) throws Exception {
+		return upload(filename, getBackBoxFolderID());
+	}
+
+	/**
+	 * Upload a list of files to Box.com
+	 * 
+	 * @param filename
+	 *            List of names of the files to upload
+	 * @param remotefolderID
+	 *            ID of the folder where upload the chunks
+	 * @return Map with filename, ID
+	 * @throws Exception 
+	 */
+	private Map<String, String> upload(List<String> filenames, String remotefolderID) throws Exception{
 		Map<String, String> ids = new HashMap<String, String>();
 		for (String name : filenames) {
 			String[] ns = name.split("\\\\");
@@ -267,49 +277,6 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.util.List)
-	 */
-	@Override
-	public List<byte[]> download(List<String> fileID) throws Exception {
-		List<byte[]> result = new ArrayList<>();
-		for (String fID : fileID)
-			result.add(download(fID));
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void download(String fileID, String destfilename) throws Exception {
-		File file = new File(destfilename);
-		File parent = file.getParentFile();
-		if((parent != null) && !parent.exists() && !parent.mkdirs()){
-		    throw new IllegalStateException("Couldn't create dir: " + parent);
-		}
-		file.createNewFile();
-		
-		Utility.write(download(fileID), file);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.util.List, java.util.List)
-	 */
-	@Override
-	public void download(List<String> fileID, List<String> destfilename) throws Exception {
-		if (fileID.size() != destfilename.size())
-			throw new BackBoxException("fileID and destfilename lists should have same size");
-		for (int i = 0; i < fileID.size(); i++) {
-			String fID = fileID.get(i);
-			String dfn = destfilename.get(i);
-			download(fID, dfn);
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#deleteFolder(java.lang.String)
 	 */
 	public void deleteFolder(String folderID) throws Exception {
@@ -327,40 +294,12 @@ public class BoxManager implements IBoxManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#deleteChunk(it.backbox.bean.Chunk)
-	 */
-	@Override
-	public void deleteChunk(Chunk chunk) throws Exception {
-		delete(chunk.getBoxid());
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManagerChunk#deleteChunk(java.util.List)
 	 */
 	@Override
 	public void deleteChunk(List<Chunk> chunks) throws Exception {
 		for(Chunk c : chunks)
-			deleteChunk(c);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(it.backbox.bean.Chunk)
-	 */
-	@Override
-	public byte[] downloadChunk(Chunk chunk) throws Exception {
-		return download(chunk.getBoxid());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(it.backbox.bean.Chunk, java.lang.String)
-	 */
-	@Override
-	public void downloadChunk(Chunk chunk, String destfolder) throws Exception {
-		download(chunk.getBoxid(), new StringBuilder(destfolder).append("\\").append(chunk.getChunkname()).toString());
-		
+			client.delete(c.getBoxid(), false);
 	}
 
 	/*
@@ -371,37 +310,20 @@ public class BoxManager implements IBoxManager {
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception {
 		List<byte[]> result = new ArrayList<>();
 		for(Chunk c : chunks)
-			result.add(downloadChunk(c));
+			result.add(download(c.getBoxid()));
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.List, java.lang.String)
+	/**
+	 * Upload a list of Chunk (contents) to Box.com
+	 * 
+	 * @param chunks
+	 *            List of Chunk to upload
+	 * @param remotefolderID
+	 *            ID of the folder where upload the chunks
+	 * @throws Exception 
 	 */
-	@Override
-	public void downloadChunk(List<Chunk> chunks, String destfolder) throws Exception {
-		for(Chunk c : chunks)
-			downloadChunk(c, new StringBuilder(destfolder).append("\\").append(c.getChunkname()).toString());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(it.backbox.bean.Chunk, java.lang.String)
-	 */
-	@Override
-	public void uploadChunk(Chunk chunk, String remotefolderID) throws Exception {
-		List<Chunk> chunks = new ArrayList<>();
-		chunks.add(chunk);
-		uploadChunk(chunks, remotefolderID);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#uploadChunk(java.util.List, java.lang.String)
-	 */
-	@Override
-	public void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception {
+	private void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception {
 		List<byte[]> srcs = new ArrayList<>();
 		List<String> filenames = new ArrayList<>();
 		for (Chunk c : chunks) {
@@ -413,14 +335,18 @@ public class BoxManager implements IBoxManager {
         	chunks.get(i).setBoxid(result.get(chunks.get(i).getChunkname()));
 	}
 	
-	/**
-	 * Get a map with all chunks for all the files in the remote folder with ID
-	 * <i>folderID</i>
-	 * 
-	 * @param folderID
-	 *            ID of the folder to scan
-	 * @return Map with <File hash, List of Chunks>
-	 * @throws Exception
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#uploadChunk(java.util.List)
+	 */
+	@Override
+	public void uploadChunk(List<Chunk> chunks) throws Exception {
+		uploadChunk(chunks, getBackBoxFolderID());
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#getFolderChunks(java.lang.String)
 	 */
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws Exception {
 		Map<String, List<Chunk>> info = new HashMap<>();

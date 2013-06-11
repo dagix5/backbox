@@ -1,6 +1,9 @@
 package it.backbox.utility;
 
+import it.backbox.IBoxManager;
 import it.backbox.ICompress;
+import it.backbox.IDBManager;
+import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.boxcom.BoxManager;
@@ -63,10 +66,10 @@ public class BackBoxHelper {
 	private XMLConfiguration configuration;
 	private ProxyConfiguration pc;
 	
-	protected SecurityManager sm;
-	protected DBManager dbm;
+	protected ISecurityManager sm;
+	protected IDBManager dbm;
 	protected TransactionManager tm;
-	protected BoxManager bm;
+	protected IBoxManager bm;
 	
 	public TransactionManager getTransactionManager() {
 		return tm;
@@ -175,14 +178,14 @@ public class BackBoxHelper {
 		dbm.createDB();
 		_log.fine("DB created");
 		
-		bm = new BoxManager();
-		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		bm = new BoxManager(new RestClient(getProxyConfiguration()));
 		String folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
 		if (folderID != null) {
 			_log.warning("Box Upload folder exists");
 			bm.deleteFolder(folderID);
 		}
-		bm.setBackBoxFolderID(bm.mkdir(BoxManager.UPLOAD_FOLDER));
+		folderID = bm.mkdir(BoxManager.UPLOAD_FOLDER);
+		bm.setBackBoxFolderID(folderID);
 		_log.fine("BoxManager init OK");
 		
 		ICompress z = new Zipper();
@@ -191,7 +194,7 @@ public class BackBoxHelper {
 		tm = new TransactionManager(dbm, bm, sm, s, z);
 		_log.fine("TransactionManager init OK");
 		
-		getConfiguration().setProperty(FOLDER_ID, bm.getBackBoxFolderID());
+		getConfiguration().setProperty(FOLDER_ID, folderID);
 		getConfiguration().setProperty(CHUNK_SIZE, s.getChunkSize());
 		
 		saveConfiguration();
@@ -234,14 +237,12 @@ public class BackBoxHelper {
 			throw new BackBoxException("Configuration not found");
 		
 		logout();
-		if (bm == null)
-			bm = new BoxManager();
-		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		
+		bm = new BoxManager(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
-		bm.upload(DB_FILE, bm.getBackBoxFolderID());
-		
-		bm.upload(CONFIG_FILE, bm.getBackBoxFolderID());
+		bm.upload(DB_FILE);
+		bm.upload(CONFIG_FILE);
 	}
 	
 	/**
@@ -251,13 +252,15 @@ public class BackBoxHelper {
 	 */
 	public void downloadConf() throws Exception {
 		logout();
-		if (bm == null)
-			bm = new BoxManager();
-		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		
+		bm = new BoxManager(new RestClient(getProxyConfiguration()));
 		bm.setBackBoxFolderID(bm.getBoxID(BoxManager.UPLOAD_FOLDER));
 		
 		String name = DB_FILE + ".new";
-		bm.download(bm.getBoxID(DB_FILE), name);
+		String id = bm.getBoxID(DB_FILE);
+		if (id == null)
+			throw new BackBoxException("DB file not found");
+		Utility.write(bm.download(id), new File(name));
 		File f = new File(name);
 		if (f.exists() && (f.length() > 0))
 			Files.move(Paths.get(name), Paths.get(DB_FILE), StandardCopyOption.REPLACE_EXISTING);
@@ -560,8 +563,7 @@ public class BackBoxHelper {
 		dbm.createDB();
 		_log.fine("DBManager init OK");
 		
-		bm = new BoxManager();
-		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		bm = new BoxManager(new RestClient(getProxyConfiguration()));
 		String folderID = getConfiguration().getString(FOLDER_ID);
 		if ((folderID == null) || folderID.isEmpty()) {
 			folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
@@ -570,7 +572,7 @@ public class BackBoxHelper {
 		}
 		bm.setBackBoxFolderID(folderID);
 		
-		Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(bm.getBackBoxFolderID());
+		Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(folderID);
 		List<String> ex = new ArrayList<>();
 		ex.add(".deleted");
 		
