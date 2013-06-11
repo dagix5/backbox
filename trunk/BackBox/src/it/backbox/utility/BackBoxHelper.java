@@ -129,10 +129,8 @@ public class BackBoxHelper {
 		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
 			_log.warning("Something went wrong, decrypted DB found. Trying to open it...");
 		} else {
-			if (!Files.exists(Paths.get(DB_FILE))) {
-				_log.severe("DB not found");
+			if (!Files.exists(Paths.get(DB_FILE)))
 				throw new BackBoxException("DB not found");
-			}
 			
 			_log.fine("DB found");
 			sm.decrypt(DB_FILE, DB_FILE_TEMP);
@@ -349,10 +347,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public ArrayList<Transaction> restore(String restoreFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
-		if (restoreFolder == null) {
-			_log.log(Level.SEVERE, "Restore path not specified");
+		if (restoreFolder == null)
 			throw new BackBoxException("Restore path not specified");
-		}
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
@@ -442,10 +438,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public ArrayList<Transaction> backup(String backupFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
-		if (backupFolder == null) {
-			_log.log(Level.SEVERE, "Backup path not specified");
+		if (backupFolder == null)
 			throw new BackBoxException("Backup path not specified");
-		}
 		
 		ArrayList<Transaction> tt = new ArrayList<>();
 		
