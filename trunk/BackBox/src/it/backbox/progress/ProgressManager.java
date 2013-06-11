@@ -85,7 +85,7 @@ public class ProgressManager {
 	 *            Tokens to consume
 	 */
 	public void consume(String id, long tokens) {
-		if (getSpeed(id) > 0)
+		if ((getSpeed(id) > 0) && (tokens > 0))
 			getBucket(id).consume(tokens);
 	}
 	

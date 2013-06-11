@@ -24,27 +24,37 @@ public class InputStreamCounter extends FilterInputStream {
 		this.id = id;
 		manager = ProgressManager.getInstance();
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see java.io.FilterInputStream#read(byte[], int, int)
 	 */
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		int r = 0;
 		int speed = manager.getSpeed(id);
-		int plen = 0;
-		if (speed > 0) {
-			while (plen < (len - speed)) {
-				manager.consume(id, speed);
-				r += super.read(b, (off + plen), speed);
-				plen += speed;
-				if (manager.getListener(id) != null) manager.getListener(id).update(id, speed);
-			}
+		if ((speed <= 0) || (speed > len)) {
+			int r = super.read(b, off, len);
+			manager.consume(id, r);
+			if (r > 0)
+				if (manager.getListener(id) != null) manager.getListener(id).update(id, r);
+			return r;
 		}
-		manager.consume(id, len - plen);
-		r += super.read(b, (off + plen), (len - plen));
-		if (manager.getListener(id) != null) manager.getListener(id).update(id, len - plen);
+		int plen = 0;
+		int r = 0;
+		do {
+			if (speed < (len - plen))
+				r = super.read(b, (off + plen), speed);
+			else
+				r = super.read(b, (off + plen), (len - plen));
+			manager.consume(id, r);
+			if (r > 0) {
+				plen += r;
+				if (manager.getListener(id) != null) manager.getListener(id).update(id, r);
+			}
+		} while (r > 0);
+		
+		if (plen > 0)
+			return plen;
 		return r;
 	}
 
