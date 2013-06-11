@@ -45,17 +45,7 @@ public class BoxManagerTest {
 	}
 
 	@Test
-	public void testUploadByteArrayStringString1() throws Exception {
-		String id = bm.upload(TestUtil.filename);
-		assertNotNull(id);
-		
-		byte[] d = bm.download(id);
-		
-		assertTrue(Arrays.equals(plain, d));
-	}
-
-	@Test
-	public void testUploadStringString1() throws Exception {
+	public void testUploadDownload() throws Exception {
 		String id = bm.upload(TestUtil.filename);
 		assertNotNull(id);
 		

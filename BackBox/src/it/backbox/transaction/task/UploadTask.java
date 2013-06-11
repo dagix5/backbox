@@ -19,7 +19,7 @@ public class UploadTask extends BoxTask {
 	private String relativePath;
 	
 	/** Local operation variables */
-	private List<Chunk> splitted;
+	private List<Chunk> chunks;
 	
 	public void setInput(String hash, File file, String relativePath) {
 		this.hash = hash;
@@ -70,19 +70,19 @@ public class UploadTask extends BoxTask {
 		if (stop) return;
 		
 		if (data != null)
-			splitted = s.splitChunk(data, hash);
+			chunks = s.splitChunk(data, hash);
 		else
-			splitted = s.splitChunk(file.getCanonicalPath(), hash);
+			chunks = s.splitChunk(file.getCanonicalPath(), hash);
 		
 		if (stop) return;
 		
-		Utility.hashChunks(splitted);
+		Utility.hashChunks(chunks);
 		
 		if (stop) return;
 		
 		callBox();
 		
-		getDbManager().insert(file, relativePath, hash, splitted, isEncryptEnabled(), isCompressEnabled(), (splitted.size() > 1));
+		getDbManager().insert(file, relativePath, hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
 	}
 
 	public boolean isEncryptEnabled() {
@@ -103,7 +103,7 @@ public class UploadTask extends BoxTask {
 
 	@Override
 	protected void boxMethod() throws Exception {
-		getBoxManager().uploadChunk(splitted);
+		getBoxManager().uploadChunk(chunks);
 	}
 
 }
