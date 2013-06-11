@@ -279,7 +279,7 @@ public class BackBoxHelper {
 	public void logout() throws Exception {
 		if (dbm != null)
 			dbm.closeDB();
-		if ((sm != null) && dbExists()) {
+		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {
 			sm.encrypt(DB_FILE_TEMP, DB_FILE);
 			Files.delete(Paths.get(DB_FILE_TEMP));
 		}

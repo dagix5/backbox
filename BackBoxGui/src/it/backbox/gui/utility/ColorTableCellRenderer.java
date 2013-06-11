@@ -16,16 +16,15 @@ public class ColorTableCellRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         Component cr = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
+        cr.setForeground(Color.BLACK);
         if ((value != null) && (column == GuiConstant.RESULT_COLUM_INDEX))
         	if (((String) value).equals(GuiConstant.RESULT_ERROR))
         		cr.setForeground(Color.RED);
             else if (((String) value).equals(GuiConstant.RESULT_SUCCESS))
             	cr.setForeground(Color.GREEN);
-        else
-        	if (isSelected)
-        		cr.setForeground(Color.WHITE);
-        	else
-        		cr.setForeground(Color.BLACK);
+
+        if (isSelected)
+        	cr.setForeground(Color.WHITE);
 
         return cr;
     }

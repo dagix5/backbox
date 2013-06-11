@@ -837,13 +837,8 @@ public class BackBoxGui {
 
 		tablePreview.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					JTable target = (JTable) e.getSource();
-					int row = target.convertRowIndexToModel(target.getSelectedRow());
-					detailsDialog.updateDetails(tasksPending.get(row));
-					detailsDialog.setLocationRelativeTo(frmBackBox);
-					detailsDialog.setVisible(true);
-				}
+				if (e.getClickCount() == 2)
+					showDetails();
 			}
 		});
 		
@@ -858,31 +853,7 @@ public class BackBoxGui {
 		JMenuItem mntmDetails = new JMenuItem("Details");
 		mntmDetails.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (running) {
-					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				showLoading();
-				Thread worker = new Thread() {
-					public void run() {
-						try {
-							int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
-							detailsDialog.updateDetails(tasksPending.get(i));
-							detailsDialog.setLocationRelativeTo(frmBackBox);
-							detailsDialog.setVisible(true);
-						} catch (Exception e1) {
-							hideLoading();
-							GuiUtility.handleException(frmBackBox, "Error loading details", e1);
-						}
-						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	hideLoading();
-		                    }
-		                });
-					}
-				};
-				worker.start();
+				showDetails();
 			}
 		});
 		popupPreviewMenu.add(mntmDetails);
@@ -1045,6 +1016,34 @@ public class BackBoxGui {
 		popupMenu.add(mntmDownload);
 		
 		updateStatus();
+	}
+	
+	private void showDetails() {
+		if (running) {
+			JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		showLoading();
+		Thread worker = new Thread() {
+			public void run() {
+				try {
+					int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
+					detailsDialog.updateDetails(tasksPending.get(i));
+					detailsDialog.setLocationRelativeTo(frmBackBox);
+					detailsDialog.setVisible(true);
+				} catch (Exception e1) {
+					hideLoading();
+					GuiUtility.handleException(frmBackBox, "Error loading details", e1);
+				}
+				
+				SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                    	hideLoading();
+                    }
+                });
+			}
+		};
+		worker.start();
 	}
 
 }
