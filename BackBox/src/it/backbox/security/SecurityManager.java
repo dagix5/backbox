@@ -31,6 +31,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 
 public class SecurityManager implements ISecurityManager{
 	private static Logger _log = Logger.getLogger(SecurityManager.class.getCanonicalName());
@@ -90,7 +91,7 @@ public class SecurityManager implements ISecurityManager{
 				throw new BackBoxWrongPasswordException("Wrong Password");
 			generateKey(password, this.salt);
 		} else {
-			this.pwdDigest = Hex.encodeHexString(DigestManager.hash(password.getBytes(CHARSET)));
+			this.pwdDigest = DigestUtils.sha1Hex(password.getBytes(CHARSET));
 			generateKey(password);
 		}
 	}
@@ -109,7 +110,7 @@ public class SecurityManager implements ISecurityManager{
 		if (pwdDigest == null)
 			return false;
 		Charset cs = Charset.forName(CHARSET);
-		String pwdDigestCalc = Hex.encodeHexString(DigestManager.hash(password.getBytes(cs)));
+		String pwdDigestCalc = DigestUtils.sha1Hex(password.getBytes(cs));
 		return pwdDigestCalc.equals(pwdDigest);
 	}
 	

@@ -10,7 +10,6 @@ import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
-import it.backbox.security.DigestManager;
 import it.backbox.utility.Utility;
 
 import java.io.File;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.JsonFactory;
@@ -177,7 +176,7 @@ public class BoxManager implements IBoxManager {
 			
 			BoxFile file = null;
 			try {
-				file = client.upload(n, null, src.get(i), remotefolderID, Hex.encodeHexString(DigestManager.hash(src.get(i))));
+				file = client.upload(n, null, src.get(i), remotefolderID, DigestUtils.sha1Hex(src.get(i)));
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 409)) {
@@ -229,7 +228,7 @@ public class BoxManager implements IBoxManager {
 			byte[] content = Utility.read(name);
 			BoxFile file = null;
 			try {
-				file = client.upload(n, null, content, remotefolderID, Hex.encodeHexString(DigestManager.hash(content)));
+				file = client.upload(n, null, content, remotefolderID, DigestUtils.sha1Hex(content));
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 409)) {
@@ -309,12 +308,9 @@ public class BoxManager implements IBoxManager {
 		}
 	}
 
-	/**
-	 * Delete recursively a folder from Box.com
-	 * 
-	 * @param folderID
-	 *            ID of the folder to delete
-	 * @throws Exception
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#deleteFolder(java.lang.String)
 	 */
 	public void deleteFolder(String folderID) throws Exception {
 		client.delete(folderID, true);

@@ -5,7 +5,7 @@ import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.compress.Zipper;
-import it.backbox.security.DigestManager;
+import it.backbox.utility.Utility;
 
 import java.io.File;
 import java.util.List;
@@ -77,7 +77,7 @@ public class UploadTask extends BoxTask {
 		
 		if (stop) return;
 		
-		DigestManager.hashChunks(splitted);
+		Utility.hashChunks(splitted);
 		
 		if (stop) return;
 		

@@ -1,8 +1,8 @@
 package it.backbox.compare;
 
-import it.backbox.security.DigestManager;
-
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -10,12 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 public class FileCompare {
 	private static Logger _log = Logger.getLogger(FileCompare.class.getCanonicalName());
@@ -67,13 +68,10 @@ public class FileCompare {
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				String hash;
 				try {
-					hash = DigestManager.hash(file.toFile());
+					hash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file.toFile())));
 				} catch (IOException e) {
 					_log.log(Level.WARNING, file.toString() + " not accessible");
 					return FileVisitResult.CONTINUE;
-				} catch (NoSuchAlgorithmException e) {
-					_log.log(Level.SEVERE, "Error walking directory tree", e);
-					return FileVisitResult.TERMINATE;
 				}
 				String relativePath = rootPath.relativize(file).toString();
 				if (files.containsKey(hash))
