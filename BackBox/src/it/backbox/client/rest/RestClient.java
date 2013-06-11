@@ -123,7 +123,6 @@ public class RestClient implements IRestClient {
 			response = request.execute();
 		} catch (HttpResponseException e) {
 			String message = new StringBuilder(request.getRequestMethod()).append(" ").append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
-			_log.log(Level.SEVERE, message, e);
 			JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 			BoxError error = parser.parseAndClose(new StringReader(e.getContent()), BoxError.class);
 			throw new RestException(message, e, error);
