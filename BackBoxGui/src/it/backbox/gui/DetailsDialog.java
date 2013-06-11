@@ -13,17 +13,16 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
-import javax.swing.JScrollPane;
 
 public class DetailsDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	private static DetailsDialog dialog;
 	private final JPanel contentPanel = new JPanel();
 	private JLabel lblTransactionIdValue;
 	private JLabel lblTaskIdValue;
@@ -34,23 +33,13 @@ public class DetailsDialog extends JDialog {
 	private JLabel lblTotalTimeValue;
 	private JTextPane txtResult;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		try {
-			dialog = new DetailsDialog();
-			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			dialog.setVisible(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public void updateDetails(TableTask tbt) {
 		lblTransactionIdValue.setText(tbt.getTransaction().getId());
 		lblTaskIdValue.setText(tbt.getTask().getId());
-		lblFilenameValue.setText(tbt.getTask().getDescription());
+		String fn = tbt.getTask().getDescription();
+		if (fn.length() > 53)
+			fn = new StringBuilder(fn.substring(0, 24)).append("...").append(fn.substring(fn.length() - 25)).toString();
+		lblFilenameValue.setText(fn);
 		lblOperationValue.setText(GuiUtility.getTaskType(tbt.getTask()));
 		lblSizeValue.setText(GuiUtility.getTaskSize(tbt.getTask()).getHsize());
 		txtResult.setText("");
@@ -68,13 +57,14 @@ public class DetailsDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public DetailsDialog() {
+		setResizable(false);
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		setTitle("Details");
 		setBounds(100, 100, 450, 302);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new MigLayout("", "[125.00][322.00]", "[][][][][][][][][grow]"));
+		contentPanel.setLayout(new MigLayout("", "[125.00:125.00][:322.00:322.00]", "[][][][][][][][][grow]"));
 		
 		JLabel lblTransactionId = new JLabel("Transaction ID: ");
 		contentPanel.add(lblTransactionId, "cell 0 0,alignx right,growy");
