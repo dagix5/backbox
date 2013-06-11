@@ -33,10 +33,10 @@ public class TransactionThread implements Runnable {
 	 */
 	@Override
 	public void run() {
+		boolean inError = false;
 		for (Task task : t.getTasks()) {
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> start");
 			
-			boolean inError = false;
 			long start = new Date().getTime();
 			try {
 				if (stop)
@@ -45,7 +45,7 @@ public class TransactionThread implements Runnable {
 				
 				currentTask.run();
 				if (currentTask.isCountWeight())
-					tm.taskCompleted(currentTask.getWeight());
+					tm.weightCompleted(currentTask.getWeight());
 			} catch (Exception e) {
 				_log.log(Level.SEVERE, "Error", e);
 				StringBuilder error = new StringBuilder("Error during execution task ");
@@ -59,12 +59,13 @@ public class TransactionThread implements Runnable {
 			currentTask.setTotalTime(finish - start);
 			
 			if (inError)
-				return;
+				break;
 			
 			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> end");
 		}
-		t.setResultCode(Transaction.ESITO_OK);
-
+		if (!inError)
+			t.setResultCode(Transaction.ESITO_OK);
+		tm.taskCompleted(t);
 	}
 	
 	/**
