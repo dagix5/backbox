@@ -83,7 +83,7 @@
     </dependency>
     <dependency>
     	<groupId>it.backbox</groupId>
-    	<artifactId>backbox-head</artifactId>
+    	<artifactId>backbox</artifactId>
     	<version>0.1</version>
     </dependency>
   </dependencies>
