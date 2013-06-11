@@ -4,6 +4,8 @@ import it.backbox.gui.utility.ImagePanel;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -19,6 +21,18 @@ public class LoadingDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public LoadingDialog() {
+		addWindowFocusListener(new WindowFocusListener() {
+
+			@Override
+			public void windowLostFocus(WindowEvent arg0) {
+				requestFocus();
+			}
+			
+			@Override
+			public void windowGainedFocus(WindowEvent arg0) {
+				//nothing to do
+			}
+		});
 		setUndecorated(true);
 		setResizable(false);
 		setBounds(100, 100, 200, 150);
@@ -28,7 +42,7 @@ public class LoadingDialog extends JDialog {
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(label, "cell 0 1,growx,aligny top");
 		
-		Image image = this.getToolkit().createImage(getClass().getResource("/it/backbox/gui/images/loader.gif"));
+		Image image = this.getToolkit().createImage(getClass().getResource(GuiConstant.LOADING_IMG));
 		ImagePanel imgPanel = new ImagePanel(image);
 		imgPanel.setMaximumSize(new Dimension(66, 66));
 		imgPanel.setMinimumSize(new Dimension(66, 66));
