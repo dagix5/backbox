@@ -24,9 +24,11 @@ public class TransactionManager {
 	private LinkedList<Transaction> transactions;
 	private ExecutorService executor;
 	private boolean running;
-	private int completedTasks;
-	private long allTasks;
+	private int completedTasksWeight;
+	private long allTasksWeight;
 	private BBPhaser phaser;
+	
+	private List<CompleteTransactionListener> listeners;
 	
 	private IBoxManager boxManager;
 	private IDBManager dbManager;
@@ -79,7 +81,7 @@ public class TransactionManager {
 		if (executor.isShutdown())
 			start();
 		for (Task task : t.getTasks()) {
-			allTasks+=task.getWeight();
+			allTasksWeight+=task.getWeight();
 			
 			task.setBoxManager(boxManager);
 			task.setDbManager(dbManager);
@@ -134,28 +136,28 @@ public class TransactionManager {
 	}
 	
 	/**
-	 * Callback function to increment number of tasks completed
+	 * Callback method to increment weight of completed tasks
 	 */
-	public synchronized void taskCompleted(long weight) {
-		completedTasks+=weight;
+	public synchronized void weightCompleted(long weight) {
+		completedTasksWeight+=weight;
 	}
 	
 	/**
-	 * Get the number of completed tasks
+	 * Get the total weight of completed tasks
 	 * 
-	 * @return The number of completed tasks
+	 * @return The weight of completed tasks
 	 */
-	public int getCompletedTasks() {
-		return completedTasks;
+	public int getCompletedTasksWeight() {
+		return completedTasksWeight;
 	}
 	
 	/**
-	 * Get the number of all tasks in all the transactions
+	 * Get the total weight of all tasks in all the transactions
 	 * 
-	 * @return The total number of tasks
+	 * @return The total weight of all tasks
 	 */
-	public long getAllTasks() {
-		return allTasks;
+	public long getAllTasksWeight() {
+		return allTasksWeight;
 	}
 
 	/**
@@ -193,8 +195,8 @@ public class TransactionManager {
 	 * Clear all pending transactions
 	 */
 	public void clear() {
-		allTasks = 0;
-		completedTasks = 0;
+		allTasksWeight = 0;
+		completedTasksWeight = 0;
 		getTransactions().clear();
 	}
 	
@@ -227,5 +229,36 @@ public class TransactionManager {
 		
 		phaser = new BBPhaser();
 	}
+	
+	/**
+	 * Callback method to call listener of completed transactions
+	 */
+	public synchronized void taskCompleted(Transaction t) {
+		if ((listeners != null) && !listeners.isEmpty())
+			for (CompleteTransactionListener listener : listeners)
+				listener.transactionCompleted(t);
+	}
+	
+	/**
+	 * Add a listener to call when a task is completed
+	 * 
+	 * @param listener
+	 *            Listener to call
+	 */
+	public void addListener(CompleteTransactionListener listener) {
+		if (listeners == null)
+			listeners = new ArrayList<>();
+		listeners.add(listener);
+	}
 
+	/**
+	 * Listener to call when a transaction is completed
+	 */
+	public interface CompleteTransactionListener {
+		
+		/**
+		 * Callback method of completed transactions
+		 */
+		public void transactionCompleted(Transaction t);
+	}
 }
