@@ -5,7 +5,7 @@ import it.backbox.ISplitter;
 import it.backbox.bean.File;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
-import it.backbox.security.DigestManager;
+import it.backbox.utility.Utility;
 
 import java.util.List;
 
@@ -72,7 +72,7 @@ public class DownloadTask extends BoxTask {
 		
 		if (stop) return;
 			
-		if (!DigestManager.checkIntegrity(filename, file.getHash()))
+		if (!Utility.checkIntegrity(filename, file.getHash()))
 			throw new BackBoxException(filename + ": File integrity check failed");
 	}
 

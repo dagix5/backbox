@@ -1,7 +1,9 @@
 package it.backbox.utility;
 
-import it.backbox.security.DigestManager;
+import it.backbox.bean.Chunk;
+import it.backbox.exception.BackBoxException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,8 +12,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.math.RandomUtils;
 
 public class Utility {
@@ -22,11 +25,7 @@ public class Utility {
 	 * @return The ID
 	 */
 	public static String genID() {
-		try {
-			return Hex.encodeHexString(DigestManager.hash(String.valueOf(RandomUtils.nextInt(Integer.MAX_VALUE)).getBytes()));
-		} catch (NoSuchAlgorithmException | IOException e) {
-			return null;
-		}
+		return DigestUtils.sha1Hex(String.valueOf(RandomUtils.nextInt(Integer.MAX_VALUE)));
 	}
 	
 	/**
@@ -145,6 +144,40 @@ public class Utility {
 				FileChannel fout = fos.getChannel();) {
 			fin.transferTo(0, fin.size(), fout);
 		}
+	}
+	
+	/**
+	 * Fill the list of chunks with the chunkfile hash
+	 * 
+	 * @param chunks
+	 *            ArrayList of Chunks
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	public static void hashChunks(List<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
+		for (Chunk c : chunks)
+			c.setChunkhash(DigestUtils.sha1Hex(c.getContent()));
+	}
+
+	/**
+	 * Check the file integrity, comparing its digest with that one passed as
+	 * parameter
+	 * 
+	 * @param filename
+	 *            Name of the file to check
+	 * @param hash
+	 *            Hash to check
+	 * @return true if the file is intact, false otherwise
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 * @throws BackBoxException 
+	 */
+	public static boolean checkIntegrity(String filename, String hash) throws NoSuchAlgorithmException, IOException, BackBoxException {
+		File file = new File(filename);
+		if (!file.exists())
+			throw new BackBoxException("File not found");
+		String newHash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file)));
+		return hash.equals(newHash);
 	}
 
 }

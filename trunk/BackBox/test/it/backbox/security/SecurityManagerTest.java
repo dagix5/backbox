@@ -3,7 +3,7 @@ package it.backbox.security;
 import static org.junit.Assert.assertTrue;
 import it.backbox.util.TestUtil;
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,12 +20,12 @@ public class SecurityManagerTest {
 	
 	@Before
 	public void setUpBefore() throws Exception {
-		sm = new SecurityManager("passwordTest", Hex.encodeHexString(DigestManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
+		sm = new SecurityManager("passwordTest", DigestUtils.sha1Hex("passwordTest"), "1a700f3a263da985");
 	}
 	
 	@Test
 	public void testEncryptByteArray1() throws Exception {
-		SecurityManager sm = new SecurityManager("passwordTest", Hex.encodeHexString(DigestManager.hash("passwordTest".getBytes())), "1a700f3a263da985");
+		SecurityManager sm = new SecurityManager("passwordTest", DigestUtils.sha1Hex("passwordTest"), "1a700f3a263da985");
 		byte[] cypher = sm.encrypt(plain);
 		
 		byte[] newplain = sm.decrypt(cypher);
