@@ -1,6 +1,5 @@
 package it.backbox.transaction.task;
 
-import it.backbox.IBoxManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
@@ -104,8 +103,7 @@ public class UploadTask extends BoxTask {
 
 	@Override
 	protected void boxMethod() throws Exception {
-		IBoxManager bm = getBoxManager();
-		bm.uploadChunk(splitted, bm.getBackBoxFolderID());
+		getBoxManager().uploadChunk(splitted);
 	}
 
 }

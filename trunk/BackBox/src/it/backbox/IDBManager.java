@@ -3,9 +3,27 @@ package it.backbox;
 import it.backbox.bean.Chunk;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public interface IDBManager {
+	
+	/**
+	 * Open the jdbc connection
+	 * 
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 * 
+	 */
+	public void openDB() throws ClassNotFoundException, SQLException;
+	
+	/**
+	 * Close the jdbc connection
+	 * 
+	 * @throws SQLException
+	 */
+	public void closeDB() throws SQLException;
 	
 	/**
 	 * Delete file informations from database
@@ -45,6 +63,22 @@ public interface IDBManager {
 	 * @return The file record
 	 * @throws SQLException
 	 */
-	public it.backbox.bean.File getFileRecord(String key) throws Exception;
+	public it.backbox.bean.File getFileRecord(String key) throws SQLException;
+	
+	/**
+	 * Load all the files information from database
+	 * 
+	 * @return Hashmap with <Hash, it.backbox.bean.File> with files informations
+	 *         in database
+	 * @throws SQLException
+	 */
+	public Map<String, Map<String, it.backbox.bean.File>> loadDB() throws SQLException;
+	
+	/**
+	 * Reset or create the database and open the connection
+	 * 
+	 * @throws SQLException
+	 */
+	public void createDB() throws Exception;
 
 }

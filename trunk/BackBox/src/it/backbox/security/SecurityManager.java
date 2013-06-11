@@ -122,7 +122,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeySpecException 
 	 */
-	public void generateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+	private void generateKey(String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		if (password != null) {
 			SecureRandom random = SecureRandom.getInstance(RNG_ALGO);
 			salt = new byte[SALT_LENGTH];
@@ -142,7 +142,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws NoSuchAlgorithmException
 	 * @throws InvalidKeySpecException
 	 */
-	public void generateKey(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+	private void generateKey(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		if ((password != null) || (salt != null)) {
 			SecretKeyFactory factory = SecretKeyFactory.getInstance(GEN_KEY_ALGO);
 			KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, GEN_KEY_ITERATIONS, GEN_KEY_LENGTH);
@@ -321,20 +321,20 @@ public class SecurityManager implements ISecurityManager{
 		decrypt(in, out);
 	}
 
-	/**
-	 * Get pre-generated salt
-	 * 
-	 * @return The salt
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ISecurityManager#getSalt()
 	 */
+	@Override
 	public byte[] getSalt() {
 		return salt;
 	}
 
-	/**
-	 * Get the user password digest
-	 * 
-	 * @return The user password digest
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ISecurityManager#getPwdDigest()
 	 */
+	@Override
 	public String getPwdDigest() {
 		return pwdDigest;
 	}

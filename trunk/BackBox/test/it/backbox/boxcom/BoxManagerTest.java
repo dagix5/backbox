@@ -3,6 +3,7 @@ package it.backbox.boxcom;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import it.backbox.client.rest.RestClient;
 import it.backbox.progress.ProgressManager;
 import it.backbox.util.TestUtil;
 
@@ -19,7 +20,6 @@ public class BoxManagerTest {
 	private static Logger _log = Logger.getLogger("it.backbox");
 	
 	private static BoxManager bm;
-	private static String folderID;
 	
 	private static byte[] plain;
 
@@ -30,9 +30,9 @@ public class BoxManagerTest {
 		ch.setLevel(Level.ALL);
 		_log.setLevel(Level.ALL);
 		
-		bm = new BoxManager();
+		bm = new BoxManager(new RestClient());
 		
-		folderID = bm.getBoxID("Test");
+		String folderID = bm.getBoxID("Test");
 		if (folderID == null)
 			folderID = bm.mkdir("Test");
 		
@@ -46,49 +46,27 @@ public class BoxManagerTest {
 
 	@Test
 	public void testUploadByteArrayStringString1() throws Exception {
-		String id = bm.upload(plain, "testUploadByteArrayStringString1", folderID);
+		String id = bm.upload(TestUtil.filename);
 		assertNotNull(id);
 		
 		byte[] d = bm.download(id);
-		
-		assertTrue(Arrays.equals(plain, d));
-	}
-	
-	@Test
-	public void testUploadByteArrayStringString2() throws Exception {
-		String id = bm.upload(plain, "testUploadByteArrayStringString2", folderID);
-		assertNotNull(id);
-		
-		bm.download(id, TestUtil.folder + "testUploadByteArrayStringString2");
-		byte[] d = TestUtil.read(TestUtil.folder + "testUploadByteArrayStringString2");
 		
 		assertTrue(Arrays.equals(plain, d));
 	}
 
 	@Test
 	public void testUploadStringString1() throws Exception {
-		String id = bm.upload(TestUtil.filename, folderID);
+		String id = bm.upload(TestUtil.filename);
 		assertNotNull(id);
 		
 		byte[] d = bm.download(id);
 		
 		assertTrue(Arrays.equals(plain, d));
 	}
-	
-	@Test
-	public void testUploadStringString2() throws Exception {
-		String id = bm.upload(TestUtil.filename, folderID);
-		assertNotNull(id);
-		
-		bm.download(id, TestUtil.folder + "testUploadStringString2");
-		byte[] d = TestUtil.read(TestUtil.folder + "testUploadStringString2");
-		
-		assertTrue(Arrays.equals(plain, d));
-	}
 
 	@Test
 	public void testDelete() throws Exception {
-		String id = bm.upload(plain, "testDelete", folderID);
+		String id = bm.upload(TestUtil.filename);
 		assertNotNull(id);
 		
 		bm.delete(id);

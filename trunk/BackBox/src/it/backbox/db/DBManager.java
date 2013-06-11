@@ -45,12 +45,12 @@ public class DBManager implements IDBManager {
 		open = false;
 	}
 	
-	/**
-	 * Decrypt the database and open the jdbc connection
-	 * 
-	 * @throws Exception
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#openDB()
 	 */
-	public void openDB() throws Exception {
+	@Override
+	public void openDB() throws ClassNotFoundException, SQLException {
 		if (open)
 			return;
 
@@ -59,28 +59,26 @@ public class DBManager implements IDBManager {
 		open = true;
 	}
 
-	/**
-	 * Close the jdbc connection and encrypt the database
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#closeDB()
 	 */
-	public void closeDB() {
+	@Override
+	public void closeDB() throws SQLException {
 		if (!open)
 			return;
 		
-		try {
-			if (connection != null)
-				connection.close();
-		} catch (SQLException e) {
-			_log.log(Level.WARNING, "Error closing db connection", e);
-		}
+		if (connection != null)
+			connection.close();
 
 		open = false;
 	}
 
-	/**
-	 * Reset or create the database and open the connection
-	 * 
-	 * @throws SQLException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#createDB()
 	 */
+	@Override
 	public void createDB() throws Exception {
 		closeDB();
 		if(!open) {
@@ -187,13 +185,11 @@ public class DBManager implements IDBManager {
 		}
 	}
 	
-	/**
-	 * Load all the files information from database
-	 * 
-	 * @return Hashmap with <Hash, it.backbox.bean.File> with files informations
-	 *         in database
-	 * @throws SQLException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#loadDB()
 	 */
+	@Override
 	public Map<String, Map<String, it.backbox.bean.File>> loadDB() throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);

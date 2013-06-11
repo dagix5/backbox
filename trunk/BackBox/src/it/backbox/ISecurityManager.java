@@ -1,6 +1,20 @@
 package it.backbox;
 
 public interface ISecurityManager {
+	
+	/**
+	 * Get the user password digest
+	 * 
+	 * @return The user password digest
+	 */
+	public String getPwdDigest();
+	
+	/**
+	 * Get pre-generated salt
+	 * 
+	 * @return The salt
+	 */
+	public byte[] getSalt();
 
 	/**
 	 * Encrypt a byte array

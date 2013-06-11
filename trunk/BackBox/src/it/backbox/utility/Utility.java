@@ -129,6 +129,25 @@ public class Utility {
 	}
 	
 	/**
+	 * Create a new file with all the parent directories
+	 * 
+	 * @param filePath
+	 *            File path to create
+	 * @return The File created
+	 * @throws IOException
+	 */
+	public File getFileWithParents(String filePath) throws IOException {
+		File file = new File(filePath);
+		File parent = file.getParentFile();
+		if((parent != null) && !parent.exists() && !parent.mkdirs()){
+		    throw new IllegalStateException("Couldn't create dir: " + parent);
+		}
+		file.createNewFile();
+		
+		return file;
+	}
+	
+	/**
 	 * Copy file src content to file dest
 	 * 
 	 * @param src
