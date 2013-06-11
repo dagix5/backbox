@@ -9,6 +9,7 @@ import it.backbox.gui.utility.SizeTableRowSorter;
 import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
 import it.backbox.transaction.TransactionManager;
+import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 import it.backbox.utility.BackBoxHelper;
@@ -134,6 +135,14 @@ public class BackBoxGui {
 				if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
 					setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 				updateTable();
+				
+				helper.getTransactionManager().addListener(new CompleteTransactionListener() {
+					
+					@Override
+					public void transactionCompleted(Transaction tt) {
+						updateTableResult(tt);
+					}
+				});
 			} catch (Exception e1) {
 				GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
 			}
@@ -981,11 +990,11 @@ public class BackBoxGui {
 							partial += subpartial;
 							subpartial = 0;
 							
-							long b = tm.getAllTasks() - partial;
+							long b = tm.getAllTasksWeight() - partial;
 							lblEtaValue.setText(GuiUtility.getETAString(b, averagespeed));
 						}
 						
-						tm.taskCompleted(bytes);
+						tm.weightCompleted(bytes);
 					}
 				};
 				
@@ -1003,9 +1012,9 @@ public class BackBoxGui {
 					public void run() {
 						progressBar.setValue(0);
 						while (tm.isRunning()) {
-							if (_log.isLoggable(Level.FINEST)) _log.finest(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasks()).append("/").append(tm.getAllTasks()).toString());
-							if (tm.getAllTasks() > 0) {
-								int perc = (int) ((tm.getCompletedTasks() * 100) / tm.getAllTasks());
+							if (_log.isLoggable(Level.FINEST)) _log.finest(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append("/").append(tm.getAllTasksWeight()).toString());
+							if (tm.getAllTasksWeight() > 0) {
+								int perc = (int) ((tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight());
 								if ((perc > progressBar.getValue()) && (perc < 99))
 									progressBar.setValue(perc);
 							}
