@@ -3,6 +3,7 @@ package it.backbox.gui;
 import it.backbox.bean.File;
 import it.backbox.gui.bean.Size;
 import it.backbox.gui.bean.TableTask;
+import it.backbox.gui.utility.ColorTableCellRenderer;
 import it.backbox.gui.utility.GuiUtility;
 import it.backbox.gui.utility.SizeTableRowSorter;
 import it.backbox.progress.ProgressListener;
@@ -18,6 +19,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -65,8 +68,6 @@ import org.apache.commons.configuration.ConfigurationException;
 public class BackBoxGui {
 	private static Logger _log = Logger.getLogger("it.backbox");
 
-	protected static final String LOG_FILE = "backbox.log";
-	
 	private static BackBoxGui window;
 	private JFrame frmBackBox;
 	private JTable table;
@@ -216,20 +217,25 @@ public class BackBoxGui {
 	}
 	
 	private void showTableResult(List<Transaction> transactions) {
-		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		if (transactions == null)
 			return;
-		for (Transaction tt : transactions) {
-			for (Task t : tt.getTasks()) {
-				if (!taskKeys.containsKey(t.getId()))
-					break;
-				if (tt.getResultCode() == Transaction.ESITO_KO)
-					model.setValueAt("Error", taskKeys.get(t.getId()), 4);
-				else if (tt.getResultCode() == Transaction.ESITO_OK)
-					model.setValueAt("Success", taskKeys.get(t.getId()), 4);
-				tasksPending.get(taskKeys.get(t.getId())).setTask(t);
-				tasksPending.get(taskKeys.get(t.getId())).setTransaction(tt);
-			}
+		for (Transaction tt : transactions)
+			updateTableResult(tt);
+	}
+	
+	private void updateTableResult(Transaction transaction) {
+		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
+		if (transaction == null)
+			return;
+		for (Task t : transaction.getTasks()) {
+			if (!taskKeys.containsKey(t.getId()))
+				break;
+			if (transaction.getResultCode() == Transaction.ESITO_KO)
+				model.setValueAt(GuiConstant.RESULT_ERROR, taskKeys.get(t.getId()), 4);
+			else if (transaction.getResultCode() == Transaction.ESITO_OK)
+				model.setValueAt(GuiConstant.RESULT_SUCCESS, taskKeys.get(t.getId()), 4);
+			tasksPending.get(taskKeys.get(t.getId())).setTask(t);
+			tasksPending.get(taskKeys.get(t.getId())).setTransaction(transaction);
 		}
 	}
 	
@@ -325,11 +331,12 @@ public class BackBoxGui {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		// Logger configuration
 		ConsoleHandler ch = new ConsoleHandler();
 		ch.setLevel(Level.ALL);
 		_log.addHandler(ch);
 		try {
-			FileHandler fh = new FileHandler(LOG_FILE, 2097152, 3, true);
+			FileHandler fh = new FileHandler(GuiConstant.LOG_FILE, 20971520, 3, true);
 			fh.setFormatter(new SimpleFormatter());
 			fh.setLevel(Level.ALL);
 			_log.addHandler(fh);
@@ -507,7 +514,7 @@ public class BackBoxGui {
 				if (s != JOptionPane.OK_OPTION)
 					return;
 				pwdDialog.setLocationRelativeTo(frmBackBox);
-				pwdDialog.load(PasswordDialog.BUILDDB_MODE);
+				pwdDialog.load(GuiConstant.BUILDDB_MODE);
 				pwdDialog.setVisible(true);
 			}
 		});
@@ -713,7 +720,7 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				if (helper.confExists()) {
 					pwdDialog.setLocationRelativeTo(frmBackBox);
-					pwdDialog.load(PasswordDialog.LOGIN_MODE);
+					pwdDialog.load(GuiConstant.LOGIN_MODE);
 					pwdDialog.setVisible(true);
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Configuration not found", "Error", JOptionPane.ERROR_MESSAGE);
@@ -817,6 +824,19 @@ public class BackBoxGui {
 		tablePreview.getColumnModel().getColumn(4).setMaxWidth(100);
 		
 		tablePreview.setRowSorter(new SizeTableRowSorter(tablePreview.getModel()));
+		tablePreview.setDefaultRenderer(String.class, new ColorTableCellRenderer());
+
+		tablePreview.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					JTable target = (JTable) e.getSource();
+					int row = target.convertRowIndexToModel(target.getSelectedRow());
+					detailsDialog.updateDetails(tasksPending.get(row));
+					detailsDialog.setLocationRelativeTo(frmBackBox);
+					detailsDialog.setVisible(true);
+				}
+			}
+		});
 		
 		scrollPanePreview.setViewportView(tablePreview);
 		scrollPanePreview.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);

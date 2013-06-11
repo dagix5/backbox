@@ -27,10 +27,7 @@ public class PasswordDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	
-	private int mode = LOGIN_MODE;
-	
-	public static final int LOGIN_MODE = 0;
-	public static final int BUILDDB_MODE = 1;
+	private int mode = GuiConstant.LOGIN_MODE;
 	
 	private final JPanel contentPanel = new JPanel();
 	private JPasswordField passwordField;
@@ -74,13 +71,13 @@ public class PasswordDialog extends JDialog {
 					public void run() {
 						try {
 							lblPasswordErrata.setVisible(false);
-							if (mode == LOGIN_MODE) {
+							if (mode == GuiConstant.LOGIN_MODE) {
 								main.helper.login(new String(passwordField.getPassword()));
 								if (main.helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
 									ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
 								
 								main.connect();
-							} else if (mode == BUILDDB_MODE)
+							} else if (mode == GuiConstant.BUILDDB_MODE)
 								main.helper.buildDB(new String(passwordField.getPassword()));
 						} catch (BackBoxWrongPasswordException e) {
 							lblPasswordErrata.setVisible(true);

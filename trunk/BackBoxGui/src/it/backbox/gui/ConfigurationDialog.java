@@ -17,6 +17,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 public class ConfigurationDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
+	
 	private JTextField backupFolder;
 
 	/**

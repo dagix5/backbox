@@ -28,7 +28,8 @@ import net.miginfocom.swing.MigLayout;
 public class NewConfDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private final JPanel contentPanel = new JPanel();
+	
+	private JPanel contentPanel;
 	private JPasswordField passwordField;
 	private JPasswordField passwordField_1;
 	private JTextField textField;
@@ -38,6 +39,8 @@ public class NewConfDialog extends JDialog {
 	 * @param BackboxGui 
 	 */
 	public NewConfDialog(final BackBoxGui main) {
+		contentPanel = new JPanel();
+		
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setTitle("New configuration");
@@ -136,6 +139,7 @@ public class NewConfDialog extends JDialog {
 						} catch (Exception e) {
 							main.hideLoading();
 							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
+							main.disconnect();
 						}
 						
 						SwingUtilities.invokeLater(new Runnable() {

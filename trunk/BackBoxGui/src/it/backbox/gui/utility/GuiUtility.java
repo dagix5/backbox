@@ -1,5 +1,6 @@
 package it.backbox.gui.utility;
 
+import it.backbox.gui.BackBoxGui;
 import it.backbox.gui.bean.Size;
 import it.backbox.transaction.task.CopyTask;
 import it.backbox.transaction.task.DeleteBoxTask;
@@ -13,6 +14,8 @@ import it.backbox.transaction.task.UploadTask;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -20,11 +23,11 @@ import javax.swing.JTable;
 
 public class GuiUtility {
 	
-	//private static Logger _log = Logger.getLogger(BackBoxGui.class.getCanonicalName());
+	private static Logger _log = Logger.getLogger(BackBoxGui.class.getCanonicalName());
 	
 	public static void handleException(Component parent, String message, Exception e) {
-		//_log.log(Level.SEVERE, message, e);
-		JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+		_log.log(Level.SEVERE, message, e);
+		JOptionPane.showMessageDialog(parent, new StringBuilder(message).append(": ").append(e.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
 	}
 	
 	private static int[] getETA(long bytes, long speed) {
