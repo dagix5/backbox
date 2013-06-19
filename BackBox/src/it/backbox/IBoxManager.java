@@ -120,6 +120,15 @@ public interface IBoxManager {
 	public void uploadChunk(List<Chunk> chunks) throws Exception;
 	
 	/**
+	 * Upload a Chunk (contents) to Box.com
+	 * 
+	 * @param chunk
+	 *            Chunk to upload
+	 * @throws Exception 
+	 */
+	public void uploadChunk(Chunk chunk) throws Exception;
+	
+	/**
 	 * Get a map with all chunks for all the files in the remote folder with ID
 	 * <i>folderID</i>
 	 * 

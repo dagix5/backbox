@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.security.NoSuchAlgorithmException;
@@ -66,12 +67,7 @@ public class Utility {
 	 * @throws IOException
 	 */
 	public static OutputStream getOutputStream(String filename) throws IOException {
-		File file = new File(filename);
-		File parent = file.getParentFile();
-		if((parent != null) && !parent.exists() && !parent.mkdirs()){
-		    throw new IllegalStateException("Couldn't create dir: " + parent);
-		}
-		file.createNewFile();
+		File file = getFileWithParents(filename);
 		OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
 		return out;
 	}
@@ -121,9 +117,9 @@ public class Utility {
 
 		byte[] content = new byte[(int) file.length()];
 		
-		FileInputStream fin = new FileInputStream(file);
-		fin.read(content);
-		fin.close();
+		InputStream in = new BufferedInputStream(new FileInputStream(file));
+		in.read(content);
+		in.close();
 		
 		return content;
 	}
@@ -136,7 +132,7 @@ public class Utility {
 	 * @return The File created
 	 * @throws IOException
 	 */
-	public File getFileWithParents(String filePath) throws IOException {
+	public static File getFileWithParents(String filePath) throws IOException {
 		File file = new File(filePath);
 		File parent = file.getParentFile();
 		if((parent != null) && !parent.exists() && !parent.mkdirs()){

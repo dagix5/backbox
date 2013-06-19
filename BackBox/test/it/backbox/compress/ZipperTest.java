@@ -2,6 +2,7 @@ package it.backbox.compress;
 
 import static org.junit.Assert.assertTrue;
 import it.backbox.util.TestUtil;
+import it.backbox.utility.Utility;
 
 import java.io.IOException;
 
@@ -17,7 +18,7 @@ public class ZipperTest {
 	public static void setUpBeforeClass() throws IOException {
 		z = new Zipper();
 		
-		in = TestUtil.read(TestUtil.filename);
+		in = Utility.read(TestUtil.filename);
 	}
 	
 	@Test
@@ -109,7 +110,7 @@ public class ZipperTest {
 	public void testCompressByteArrayStringString2() throws Exception {
 		z.compress(in, "entry", TestUtil.folder + "testCompressByteArrayStringString2");
 		
-		byte[] d = z.decompress(TestUtil.read(TestUtil.folder + "testCompressByteArrayStringString2"), "entry");
+		byte[] d = z.decompress(Utility.read(TestUtil.folder + "testCompressByteArrayStringString2"), "entry");
 
 		assertTrue(TestUtil.checkTest(in, d));
 	}
@@ -127,7 +128,7 @@ public class ZipperTest {
 	public void testCompressByteArrayStringString4() throws Exception {
 		z.compress(in, "entry", TestUtil.folder + "testCompressByteArrayStringString4");
 		
-		z.decompress(TestUtil.read(TestUtil.folder + "testCompressByteArrayStringString4"), "entry", TestUtil.folder + "testCompressByteArrayStringString4d");
+		z.decompress(Utility.read(TestUtil.folder + "testCompressByteArrayStringString4"), "entry", TestUtil.folder + "testCompressByteArrayStringString4d");
 
 		assertTrue(TestUtil.checkTest(in, TestUtil.folder + "testCompressByteArrayStringString4d"));
 	}
@@ -145,7 +146,7 @@ public class ZipperTest {
 	public void testCompressStringStringString2() throws Exception {
 		z.compress(TestUtil.filename, TestUtil.folder + "testCompressStringStringString2", "entry");
 		
-		byte[] d = z.decompress(TestUtil.read(TestUtil.folder + "testCompressStringStringString2"), "entry");
+		byte[] d = z.decompress(Utility.read(TestUtil.folder + "testCompressStringStringString2"), "entry");
 
 		assertTrue(TestUtil.checkTest(in, d));
 	}
@@ -163,7 +164,7 @@ public class ZipperTest {
 	public void testCompressStringStringString4() throws Exception {
 		z.compress(TestUtil.filename, TestUtil.folder + "testCompressStringStringString4", "entry");
 		
-		z.decompress(TestUtil.read(TestUtil.folder + "testCompressStringStringString4"), "entry", TestUtil.folder + "testCompressStringStringString4d");
+		z.decompress(Utility.read(TestUtil.folder + "testCompressStringStringString4"), "entry", TestUtil.folder + "testCompressStringStringString4d");
 
 		assertTrue(TestUtil.checkTest(in, TestUtil.folder + "testCompressStringStringString4d"));
 	}

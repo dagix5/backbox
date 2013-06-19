@@ -221,6 +221,21 @@ public class BoxManager implements IBoxManager {
 		return result;
 	}
 	
+	/**
+	 * Upload a file to Box.com
+	 * 
+	 * @param name
+	 *            Name of the file to upload
+	 * @param content
+	 *            Content to upload
+	 * @param remotefolderID
+	 *            Folder ID where upload the file
+	 * @param hash
+	 *            File content digest
+	 * @return Box file informations
+	 * @throws IOException
+	 * @throws RestException
+	 */
 	private BoxFile upload(String name, byte[] content, String remotefolderID, String hash) throws IOException, RestException {
 		BoxFile file = null;
 		try {
@@ -247,25 +262,32 @@ public class BoxManager implements IBoxManager {
 	}
 
 	/**
-	 * Upload a list of Chunk (contents) to Box.com
+	 * Upload a Chunk (contents) to Box.com
 	 * 
 	 * @param chunks
-	 *            List of Chunk to upload
+	 *            Chunk to upload
 	 * @param remotefolderID
 	 *            ID of the folder where upload the chunks
 	 * @throws Exception 
 	 */
-	private void uploadChunk(List<Chunk> chunks, String remotefolderID) throws Exception {
-		for (Chunk c : chunks) {
-			String name = c.getChunkname();
-			String[] ns = name.split("\\\\");
-			String n = ns[ns.length - 1];
-			
-			BoxFile file = upload(n, c.getContent(), remotefolderID, c.getChunkhash());
-			String id = ((file != null) ? file.id : null);
-			if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
-			c.setBoxid(id);
-		}
+	private void uploadChunk(Chunk chunk, String remotefolderID) throws Exception {
+		String name = chunk.getChunkname();
+		String[] ns = name.split("\\\\");
+		String n = ns[ns.length - 1];
+		
+		BoxFile file = upload(n, chunk.getContent(), remotefolderID, chunk.getChunkhash());
+		String id = ((file != null) ? file.id : null);
+		if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
+		chunk.setBoxid(id);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk)
+	 */
+	@Override
+	public void uploadChunk(Chunk chunk) throws Exception {
+		uploadChunk(chunk, getBackBoxFolderID());
 	}
 	
 	/*
@@ -274,7 +296,8 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public void uploadChunk(List<Chunk> chunks) throws Exception {
-		uploadChunk(chunks, getBackBoxFolderID());
+		for (Chunk c : chunks)
+			uploadChunk(c, getBackBoxFolderID());
 	}
 	
 	/*
