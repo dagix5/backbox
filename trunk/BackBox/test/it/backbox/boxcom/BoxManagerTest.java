@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import it.backbox.client.rest.RestClient;
 import it.backbox.progress.ProgressManager;
 import it.backbox.util.TestUtil;
+import it.backbox.utility.Utility;
 
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
@@ -39,7 +40,7 @@ public class BoxManagerTest {
 		bm.setBackBoxFolderID(folderID);
 		assertNotNull(bm.getBackBoxFolderID());
 		
-		plain = TestUtil.read(TestUtil.filename);
+		plain = Utility.read(TestUtil.filename);
 		
 		ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, 200*1024);
 	}

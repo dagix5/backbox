@@ -2,6 +2,7 @@ package it.backbox.security;
 
 import static org.junit.Assert.assertTrue;
 import it.backbox.util.TestUtil;
+import it.backbox.utility.Utility;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
@@ -15,7 +16,7 @@ public class SecurityManagerTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		plain = TestUtil.read(TestUtil.filename);
+		plain = Utility.read(TestUtil.filename);
 	}
 	
 	@Before
@@ -104,7 +105,7 @@ public class SecurityManagerTest {
 	public void testEncryptStringString1() throws Exception {
 		sm.encrypt(TestUtil.filename, TestUtil.folder + "testEncryptStringString1c");
 		
-		byte[] newplain = sm.decrypt(TestUtil.read(TestUtil.folder + "testEncryptStringString1c"));
+		byte[] newplain = sm.decrypt(Utility.read(TestUtil.folder + "testEncryptStringString1c"));
 		
 		assertTrue(TestUtil.checkTest(plain, newplain));
 	}
@@ -122,7 +123,7 @@ public class SecurityManagerTest {
 	public void testEncryptStringString3() throws Exception {
 		sm.encrypt(TestUtil.filename, TestUtil.folder + "testEncryptStringString3c");
 		
-		sm.decrypt(TestUtil.read(TestUtil.folder + "testEncryptStringString3c"), TestUtil.folder + "testEncryptStringString3p");
+		sm.decrypt(Utility.read(TestUtil.folder + "testEncryptStringString3c"), TestUtil.folder + "testEncryptStringString3p");
 		
 		assertTrue(TestUtil.checkTest(plain, TestUtil.folder + "testEncryptStringString3p"));	
 	}
@@ -140,7 +141,7 @@ public class SecurityManagerTest {
 	public void testEncryptByteArrayString1() throws Exception {
 		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString1c");
 		
-		byte[] newplain = sm.decrypt(TestUtil.read(TestUtil.folder + "testEncryptByteArrayString1c"));
+		byte[] newplain = sm.decrypt(Utility.read(TestUtil.folder + "testEncryptByteArrayString1c"));
 		
 		assertTrue(TestUtil.checkTest(plain, newplain));
 	}
@@ -158,7 +159,7 @@ public class SecurityManagerTest {
 	public void testEncryptByteArrayString3() throws Exception {
 		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString3c");
 		
-		sm.decrypt(TestUtil.read(TestUtil.folder + "testEncryptByteArrayString3c"), TestUtil.folder + "testEncryptByteArrayString3p");
+		sm.decrypt(Utility.read(TestUtil.folder + "testEncryptByteArrayString3c"), TestUtil.folder + "testEncryptByteArrayString3p");
 		
 		assertTrue(TestUtil.checkTest(plain, TestUtil.folder + "testEncryptByteArrayString3p"));
 	}

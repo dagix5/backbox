@@ -3,6 +3,7 @@ package it.backbox.progress.stream;
 import static org.junit.Assert.assertTrue;
 import it.backbox.progress.ProgressManager;
 import it.backbox.util.TestUtil;
+import it.backbox.utility.Utility;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,7 +22,7 @@ public class InputStreamCounterTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-		plain = TestUtil.read(TestUtil.filename);
+		plain = Utility.read(TestUtil.filename);
 		
 		ProgressManager.getInstance().setSpeed(ID, 1024*1024);
 	}

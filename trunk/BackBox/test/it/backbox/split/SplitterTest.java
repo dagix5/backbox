@@ -3,6 +3,7 @@ package it.backbox.split;
 import static org.junit.Assert.assertTrue;
 import it.backbox.bean.Chunk;
 import it.backbox.util.TestUtil;
+import it.backbox.utility.Utility;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class SplitterTest {
 	public static void setUpBeforeClass() throws IOException {
 		s = new Splitter(1024*1024);
 		
-		in = TestUtil.read(TestUtil.filename);
+		in = Utility.read(TestUtil.filename);
 	}
 	
 	@Test
@@ -137,7 +138,7 @@ public class SplitterTest {
 		
 		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
-			splitted.add(TestUtil.read(s));
+			splitted.add(Utility.read(s));
 		
 		byte[] merged = s.merge(splitted);
 		
@@ -150,7 +151,7 @@ public class SplitterTest {
 		
 		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
-			splitted.add(TestUtil.read(s));
+			splitted.add(Utility.read(s));
 		
 		s.merge(splitted, TestUtil.folder + "\\mergedByteArrayFileFile");
 		
@@ -165,7 +166,7 @@ public class SplitterTest {
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
-			chunk.setContent(TestUtil.read(chunkNames.get(i)));
+			chunk.setContent(Utility.read(chunkNames.get(i)));
 			chunks.add(chunk);
 		}
 		
@@ -182,7 +183,7 @@ public class SplitterTest {
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
-			chunk.setContent(TestUtil.read(chunkNames.get(i)));
+			chunk.setContent(Utility.read(chunkNames.get(i)));
 			chunks.add(chunk);
 		}
 		
@@ -197,7 +198,7 @@ public class SplitterTest {
 		
 		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
-			splitted.add(TestUtil.read(s));
+			splitted.add(Utility.read(s));
 		
 		byte[] merged = s.merge(splitted);
 		
@@ -210,7 +211,7 @@ public class SplitterTest {
 		
 		List<byte[]> splitted = new ArrayList<>();
 		for (String s : chunkNames)
-			splitted.add(TestUtil.read(s));
+			splitted.add(Utility.read(s));
 		
 		s.merge(splitted, TestUtil.folder + "\\mergedFileFileFile");
 		
@@ -225,7 +226,7 @@ public class SplitterTest {
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
-			chunk.setContent(TestUtil.read(chunkNames.get(i)));
+			chunk.setContent(Utility.read(chunkNames.get(i)));
 			chunks.add(chunk);
 		}
 		
@@ -242,7 +243,7 @@ public class SplitterTest {
 		for(int i = 0; i < chunkNames.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname(chunkNames.get(i));
-			chunk.setContent(TestUtil.read(chunkNames.get(i)));
+			chunk.setContent(Utility.read(chunkNames.get(i)));
 			chunks.add(chunk);
 		}
 		
