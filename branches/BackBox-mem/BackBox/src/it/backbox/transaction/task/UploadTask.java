@@ -1,15 +1,27 @@
 package it.backbox.transaction.task;
 
+import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.compress.Zipper;
 import it.backbox.utility.Utility;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.DeferredFileOutputStream;
+
 public class UploadTask extends BoxTask {
+	
+	private static final String PREFIX = "BB_UPLOAD-";
+	private static final String SUFFIX = ".temp";
 
 	private boolean encryptEnabled = true;
 	private boolean compressEnabled = true;
@@ -19,7 +31,7 @@ public class UploadTask extends BoxTask {
 	private String relativePath;
 	
 	/** Local operation variables */
-	private List<Chunk> chunks;
+	private Chunk chunk;
 	
 	public void setInput(String hash, File file, String relativePath) {
 		this.hash = hash;
@@ -44,45 +56,69 @@ public class UploadTask extends BoxTask {
 
 	@Override
 	public void run() throws Exception {
+		InputStream in = new BufferedInputStream(new FileInputStream(file));
+		int threshold = 1024*1024*100;
+		DeferredFileOutputStream out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+		
+		long size = file.length();
+		List<Chunk> chunks = new ArrayList<>();
+		
 		ISplitter s = getSplitter();
 		
-		if (stop) return;
-		
-		byte[] data = null;
+		if (stop) { in.close(); out.close(); return; }
 		
 		if (isCompressEnabled()) {
-			Zipper z = new Zipper();
-			data = z.compress(file.getCanonicalPath(), null);
+			ICompress z = new Zipper();
+			String filename = file.getCanonicalPath();
+			String name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
+			z.compress(in, out, name);
+			
+			size = out.getByteCount();
+			
+			in = Utility.getInputStream(out);
+			out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
 		}
 		
-		if (stop) return;
+		if (stop) { in.close(); out.close(); return; }
 		
 		if (isEncryptEnabled()) {
 			ISecurityManager sm = getSecurityManager();
-			byte[] encrypted = null;
-			if (isCompressEnabled())			
-				encrypted = sm.encrypt(data);
-			else
-				encrypted = sm.encrypt(file.getCanonicalPath());
-			data = encrypted;
+			sm.encrypt(in, out);
+			
+			size = out.getByteCount();
+			
+			in = Utility.getInputStream(out);
+			out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
 		}
 		
-		if (stop) return;
-		
-		if (data != null)
-			chunks = s.splitChunk(data, hash);
-		else
-			chunks = s.splitChunk(file.getCanonicalPath(), hash);
-		
-		if (stop) return;
-		
-		Utility.hashChunks(chunks);
-		
-		if (stop) return;
-		
-		callBox();
+		int totalBytesRead = 0;
+		int i = 0;
+		while (totalBytesRead < size) {
+			if (stop) { in.close(); out.close(); return; }
+			
+			byte[] c = s.splitNextChunk(in, size, totalBytesRead);
+			totalBytesRead += c.length;
+			
+			chunk = new Chunk();
+			chunk.setChunkname(Utility.buildChunkName(hash, i++));
+			chunk.setContent(c);
+			chunk.setChunkhash(DigestUtils.sha1Hex(c));
+			chunk.setSize(c.length);
+			
+			callBox();
+			
+			chunk.setContent(null);
+			chunks.add(chunk);
+		}
 		
 		getDbManager().insert(file, relativePath, hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
+		
+		if (stop) { in.close(); out.close(); return; }
+		
+		in.close();
+		out.close();
+		
+		FileUtils.deleteDirectory(tempDir);
 	}
 
 	public boolean isEncryptEnabled() {
@@ -103,7 +139,7 @@ public class UploadTask extends BoxTask {
 
 	@Override
 	protected void boxMethod() throws Exception {
-		getBoxManager().uploadChunk(chunks);
+		getBoxManager().uploadChunk(chunk);
 	}
 
 }

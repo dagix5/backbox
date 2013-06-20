@@ -1,21 +1,31 @@
 package it.backbox.transaction.task;
 
+import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
+import it.backbox.bean.Chunk;
 import it.backbox.bean.File;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
 
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.apache.commons.io.output.DeferredFileOutputStream;
 
 public class DownloadTask extends BoxTask {
 
+	private static final String PREFIX = "BB_DOWNLOAD-";
+	private static final String SUFFIX = ".temp";
+	
 	private String path;
 	private File file;
 	
 	/** Local operation variables */
-	private List<byte[]> chunks;
+	private byte[] chunkContent;
+	private Chunk chunk;
 	
 	public void setInput(String path, File file) {
 		this.path = path;
@@ -39,35 +49,52 @@ public class DownloadTask extends BoxTask {
 	
 	@Override
 	public void run() throws Exception {
-		byte[] data = null;
+		ISplitter s = getSplitter();
+		
 		String filename = new StringBuilder(path).append("\\").append(file.getFilename()).toString();
 		
-		callBox();
+		int threshold = 1024*1024*100;
+		OutputStream out;
+		DeferredFileOutputStream dfout = null;
+		OutputStream fout = Utility.getOutputStream(filename);
 		
-		if (stop) return;
+		if (file.isCompressed() || file.isEncrypted()) {
+			dfout = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+			out = dfout;
+		} else
+			out = fout;
 		
-		ISplitter s = getSplitter();
-		if (!file.isEncrypted() && !file.isCompressed())
-			s.merge(chunks, filename);
-		else
-			data = s.merge(chunks);
+		if (stop) { out.close(); return; }
 		
-		if (stop) return;
+		for (Chunk c : file.getChunks()) {
+			if (stop) return;
+			chunk = c;
+			callBox();
+			s.mergeNextChunk(new ByteArrayInputStream(chunkContent), out);
+		}
+		
+		if (stop) { out.close(); return; }
 		
 		if (file.isEncrypted()) {
-			ISecurityManager sm = getSecurityManager();
-			if (file.isCompressed()) {
-				byte[] decrypted = sm.decrypt(data);
-				data = decrypted;
+			InputStream in = Utility.getInputStream(dfout);
+			
+			if (file.isCompressed() || file.isEncrypted()) {
+				dfout = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+				out = dfout;
 			} else
-				sm.decrypt(data, filename);
+				out = fout;
+			
+			ISecurityManager sm = getSecurityManager();
+			sm.decrypt(in, out);
 		}
 		
 		if (stop) return;
 		
 		if (file.isCompressed()) {
-			Zipper z = new Zipper();
-			z.decompress(data, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()), filename);
+			InputStream in = Utility.getInputStream(dfout);
+			
+			ICompress z = new Zipper();
+			z.decompress(in, fout, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
 		}
 		
 		if (stop) return;
@@ -78,7 +105,7 @@ public class DownloadTask extends BoxTask {
 
 	@Override
 	protected void boxMethod() throws Exception {
-		chunks = getBoxManager().downloadChunk(file.getChunks());
+		chunkContent = getBoxManager().downloadChunk(chunk);
 	}
 
 }

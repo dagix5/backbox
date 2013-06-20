@@ -8,7 +8,10 @@ import it.backbox.ISplitter;
 import it.backbox.transaction.BBPhaser;
 import it.backbox.utility.Utility;
 
+import java.io.File;
 import java.util.logging.Logger;
+
+import com.google.common.io.Files;
 
 public abstract class Task {
 	protected static Logger _log = Logger.getLogger(Task.class.getCanonicalName());
@@ -27,9 +30,12 @@ public abstract class Task {
 	private ICompress zipper;
 	
 	private BBPhaser phaser;
+	
+	protected File tempDir;
 
 	public Task() {
 		setId(Utility.genID());
+		tempDir = Files.createTempDir();
 	}
 	
 	public IBoxManager getBoxManager() {
