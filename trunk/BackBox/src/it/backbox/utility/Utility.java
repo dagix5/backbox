@@ -20,6 +20,8 @@ import org.apache.commons.lang.math.RandomUtils;
 
 public class Utility {
 	
+	public static final int BUFFER = 4096;
+	
 	/**
 	 * Generate a random String that can be used as ID
 	 * 
@@ -89,21 +91,6 @@ public class Utility {
 	    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 
-	/**
-	 * Write content to file
-	 * 
-	 * @param content
-	 *            Bytes to write in file
-	 * @param file
-	 *            File to be written
-	 * @throws IOException
-	 */
-	public static void write(byte[] content, File file) throws IOException {
-		FileOutputStream fout = new FileOutputStream(file);
-		fout.write(content);
-		fout.close();
-	}
-	
 	/**
 	 * Read bytes from file
 	 * 
@@ -193,6 +180,52 @@ public class Utility {
 			throw new BackBoxException("File not found");
 		String newHash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file)));
 		return hash.equals(newHash);
+	}
+	
+	/**
+	 * Get the chunk names
+	 * 
+	 * @param chunkprefix
+	 *            Prefix of chunk names
+	 * @param index
+	 *            Chunk index
+	 * @return The chunk name
+	 */
+	public static String buildChunkName(String chunkprefix, int index) {
+		StringBuilder name = new StringBuilder(chunkprefix);
+		name.append(it.backbox.bean.File.EXT);
+		if (index < 10)
+			name.append(0);
+		name.append(index);
+		return name.toString();
+	}
+	
+	/**
+	 * Build a string with memory status informations
+	 * 
+	 * @return Memory status informations
+	 */
+	public static String getMemoryStats() {
+		int mb = 1024*1024;
+        
+        //Getting the runtime reference from system
+        Runtime runtime = Runtime.getRuntime();
+         
+        StringBuilder s = new StringBuilder("##### Heap utilization statistics [MB] #####");
+         
+        //Print used memory
+        s.append("\nUsed Memory: ").append((runtime.totalMemory() - runtime.freeMemory()) / mb);
+ 
+        //Print free memory
+        s.append("\nFree Memory: ").append(runtime.freeMemory() / mb);
+         
+        //Print total available memory
+        s.append("\nTotal Memory: ").append(runtime.totalMemory() / mb);
+ 
+        //Print Maximum available memory
+        s.append("\nMax Memory: ").append(runtime.maxMemory() / mb);
+        
+        return s.toString();
 	}
 
 }
