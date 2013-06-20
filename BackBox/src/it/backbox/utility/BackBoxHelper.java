@@ -195,7 +195,7 @@ public class BackBoxHelper {
 		_log.fine("TransactionManager init OK");
 		
 		getConfiguration().setProperty(FOLDER_ID, folderID);
-		getConfiguration().setProperty(CHUNK_SIZE, s.getChunkSize());
+		getConfiguration().setProperty(CHUNK_SIZE, chunksize);
 		
 		saveConfiguration();
 		_log.fine("Configuration saved");
@@ -260,7 +260,7 @@ public class BackBoxHelper {
 		String id = bm.getBoxID(DB_FILE);
 		if (id == null)
 			throw new BackBoxException("DB file not found");
-		Utility.write(bm.download(id), new File(name));
+		Files.write(Paths.get(name), bm.download(id));
 		File f = new File(name);
 		if (f.exists() && (f.length() > 0))
 			Files.move(Paths.get(name), Paths.get(DB_FILE), StandardCopyOption.REPLACE_EXISTING);
