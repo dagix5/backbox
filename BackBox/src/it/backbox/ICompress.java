@@ -67,5 +67,18 @@ public interface ICompress {
 	 * @throws IOException
 	 */
 	public void compress(InputStream in, OutputStream out, String name) throws Exception;
+	
+	/**
+	 * UnZip an InputStream to an OutputStream
+	 * 
+	 * @param in
+	 *            InputStream to unzip
+	 * @param out
+	 *            OutputStream unzipped
+	 * @param name
+	 *            Zip entry name
+	 * @throws IOException
+	 */
+	public void decompress(InputStream in, OutputStream out, String name) throws Exception;
 
 }
