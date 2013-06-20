@@ -44,7 +44,6 @@ public class SecurityManager implements ISecurityManager{
 	private static final int GEN_KEY_LENGTH = 128;
 	private static final int SALT_LENGTH = 8;
 	private static final int IV_LENGTH = 16;
-	private static final int BUFFER_LENGTH = 1024;
 	private static final String CHARSET = "UTF-8";
 	
 	private Key key;
@@ -153,16 +152,12 @@ public class SecurityManager implements ISecurityManager{
 			_log.severe("Password/Salt null: key not generated");
 	}
 
-	/**
-	 * Encrypt an InputStream to an OutputStream
-	 * 
-	 * @param in
-	 *            InputStream to encrypt
-	 * @param out
-	 *            Encrypted OutputStream
-	 * @throws Exception
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ISecurityManager#encrypt(java.io.InputStream, java.io.OutputStream)
 	 */
-	private void encrypt(InputStream in, OutputStream out) throws Exception {
+	@Override
+	public void encrypt(InputStream in, OutputStream out) throws Exception {
 		try {
 			Cipher c = Cipher.getInstance(ENCRYPT_ALGO);
 			c.init(Cipher.ENCRYPT_MODE, key);
@@ -172,7 +167,7 @@ public class SecurityManager implements ISecurityManager{
 
 			out.write(iv);
 			
-			byte[] buf = new byte[BUFFER_LENGTH];
+			byte[] buf = new byte[Utility.BUFFER];
 			int count = in.read(buf);
 			while (count >= 0) {
 				out.write(c.update(buf, 0, count)); 
@@ -228,25 +223,10 @@ public class SecurityManager implements ISecurityManager{
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#encrypt(byte[], java.lang.String)
+	 * @see it.backbox.ISecurityManager#decrypt(java.io.InputStream, java.io.OutputStream)
 	 */
 	@Override
-	public void encrypt(byte[] src, String destfilename) throws Exception {
-		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
-		OutputStream out = Utility.getOutputStream(destfilename);
-		encrypt(in, out);
-	}
-
-	/**
-	 * Decrypt an InputStream to an OutputStream
-	 * 
-	 * @param in
-	 *            InputStream to decrypt
-	 * @param out
-	 *            Decrypted OutputStream
-	 * @throws Exception
-	 */
-	private void decrypt(InputStream in, OutputStream out) throws Exception {
+	public void decrypt(InputStream in, OutputStream out) throws Exception {
 		try {
 			byte[] iv = new byte[IV_LENGTH];
 			int count = in.read(iv, 0, IV_LENGTH);
@@ -256,7 +236,7 @@ public class SecurityManager implements ISecurityManager{
 			Cipher c = Cipher.getInstance(ENCRYPT_ALGO);
 			c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
 			
-			byte[] buf = new byte[1024];
+			byte[] buf = new byte[Utility.BUFFER];
 			count = in.read(buf);
 
 			while (count >= 0) {

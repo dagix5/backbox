@@ -137,40 +137,4 @@ public class SecurityManagerTest {
 		assertTrue(TestUtil.checkTest(plain, TestUtil.folder + "testEncryptStringString4p"));
 	}
 
-	@Test
-	public void testEncryptByteArrayString1() throws Exception {
-		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString1c");
-		
-		byte[] newplain = sm.decrypt(Utility.read(TestUtil.folder + "testEncryptByteArrayString1c"));
-		
-		assertTrue(TestUtil.checkTest(plain, newplain));
-	}
-	
-	@Test
-	public void testEncryptByteArrayString2() throws Exception {
-		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString2c");
-		
-		byte[] newplain = sm.decrypt(TestUtil.folder + "testEncryptByteArrayString2c");
-		
-		assertTrue(TestUtil.checkTest(plain, newplain));
-	}
-	
-	@Test
-	public void testEncryptByteArrayString3() throws Exception {
-		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString3c");
-		
-		sm.decrypt(Utility.read(TestUtil.folder + "testEncryptByteArrayString3c"), TestUtil.folder + "testEncryptByteArrayString3p");
-		
-		assertTrue(TestUtil.checkTest(plain, TestUtil.folder + "testEncryptByteArrayString3p"));
-	}
-	
-	@Test
-	public void testEncryptByteArrayString4() throws Exception {
-		sm.encrypt(plain, TestUtil.folder + "testEncryptByteArrayString4c");
-		
-		sm.decrypt(TestUtil.folder + "testEncryptByteArrayString4c", TestUtil.folder + "testEncryptByteArrayString4p");
-		
-		assertTrue(TestUtil.checkTest(plain, TestUtil.folder + "testEncryptByteArrayString4p"));
-	}
-
 }

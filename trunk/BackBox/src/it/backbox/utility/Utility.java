@@ -32,35 +32,6 @@ public class Utility {
 	}
 	
 	/**
-	 * Clean temp folder
-	 * 
-	 * @param folder
-	 *            Folder to clean
-	 */
-	public static void cleanFolder(String folder) {
-		File temp = new File(folder);
-		File[] files = temp.listFiles();
-		if (files == null)
-			return;
-		for (File c : files)
-			delete(c);
-	}
-	
-	/**
-	 * Delete all the file in a directory
-	 * 
-	 * @param f
-	 *            Root folder (or file)
-	 */
-	private static void delete(File f) {
-		if (f.isDirectory())
-			for (File s : f.listFiles())
-				delete(s);
-		else
-			f.delete();
-	}
-	
-	/**
 	 * Get the output stream of a file, even if the parent folders don't exist
 	 * 
 	 * @param filename

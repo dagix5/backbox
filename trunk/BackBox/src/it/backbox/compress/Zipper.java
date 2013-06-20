@@ -20,26 +20,18 @@ import java.util.zip.ZipOutputStream;
 public class Zipper implements ICompress{
 	private static Logger _log = Logger.getLogger(Zipper.class.getCanonicalName());
 	
-	private static final int BUFFER = 1024;
-
-	/**
-	 * Zip an InputStream to an OutputStream
-	 * 
-	 * @param in
-	 *            InputStream to zip
-	 * @param out
-	 *            OutputStream zipped
-	 * @param name
-	 *            Zip entry name
-	 * @throws IOException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ICompress#zip(java.io.InputStream, java.io.OutputStream, java.lang.String)
 	 */
-	private static void zip(InputStream in, OutputStream out, String name) throws Exception {
+	@Override
+	public void compress(InputStream in, OutputStream out, String name) throws Exception {
 		ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(out));
 		
 		ZipEntry entry = new ZipEntry(name);
 		zout.putNextEntry(entry);
 		
-		byte[] buffer = new byte[BUFFER];
+		byte[] buffer = new byte[Utility.BUFFER];
 	    int len;
 
 	    while((len = in.read(buffer)) >= 0)
@@ -63,14 +55,14 @@ public class Zipper implements ICompress{
 	 *            Zip entry name
 	 * @throws IOException
 	 */
-	private static void unzip(InputStream in, OutputStream out, String name) throws Exception {
+	public void decompress(InputStream in, OutputStream out, String name) throws Exception {
 		ZipInputStream zin = new ZipInputStream(in);
 		ZipEntry zipEntry = null;
 		do {
 			zipEntry = zin.getNextEntry();
 		} while ((zipEntry != null) && !zipEntry.getName().equals(name));
 		
-		byte[] buffer = new byte[BUFFER];
+		byte[] buffer = new byte[Utility.BUFFER];
 	    int len;
 
 	    while((len = zin.read(buffer)) >= 0)
@@ -92,7 +84,7 @@ public class Zipper implements ICompress{
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		zip(in, out, name);
+		compress(in, out, name);
 		
 		return out.toByteArray();
 	}
@@ -109,36 +101,9 @@ public class Zipper implements ICompress{
 		if (name == null)
 			name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
 		
-		zip(in, out, name);
+		compress(in, out, name);
 		
 		return out.toByteArray();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IZipper#compress(java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void compress(String srcfilename, String destfilename, String name) throws Exception {
-		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
-		OutputStream out = Utility.getOutputStream(destfilename);
-		
-		if (name == null)
-			name = destfilename.substring(destfilename.lastIndexOf("\\") + 1, destfilename.length());
-		
-		zip(in, out, name);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IZipper#compress(byte[], java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void compress(byte[] src, String name, String destfilename) throws Exception {
-		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
-		OutputStream out = Utility.getOutputStream(destfilename);
-		
-		zip(in, out, name);
 	}
 
 	/*
@@ -150,24 +115,7 @@ public class Zipper implements ICompress{
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		unzip(in, out, name);
-		
-		return out.toByteArray();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IZipper#decompress(java.lang.String, java.lang.String)
-	 */
-	@Override
-	public byte[] decompress(String filename, String name) throws Exception {
-		InputStream in = new BufferedInputStream(new FileInputStream(filename));
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		
-		if (name == null)
-			name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
-		
-		unzip(in, out, name);
+		decompress(in, out, name);
 		
 		return out.toByteArray();
 	}
@@ -181,24 +129,8 @@ public class Zipper implements ICompress{
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		OutputStream out = Utility.getOutputStream(destfilename);
 		
-		unzip(in, out, name);
+		decompress(in, out, name);
 		
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IZipper#decompress(java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-	public void decompress(String srcfilename, String destfilename, String name) throws Exception {
-		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
-		OutputStream out = Utility.getOutputStream(destfilename);
-		
-		if (name == null)
-			name = destfilename.substring(destfilename.lastIndexOf("\\") + 1, destfilename.length());
-		
-		unzip(in, out, name);
-		
-	}
-	
 }
