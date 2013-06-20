@@ -8,7 +8,6 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
@@ -44,17 +43,11 @@ public class Zipper implements ICompress{
 	    out.close();
 	}
 	
-	/**
-	 * UnZip an InputStream to an OutputStream
-	 * 
-	 * @param in
-	 *            InputStream to unzip
-	 * @param out
-	 *            OutputStream unzipped
-	 * @param name
-	 *            Zip entry name
-	 * @throws IOException
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ICompress#decompress(java.io.InputStream, java.io.OutputStream, java.lang.String)
 	 */
+	@Override
 	public void decompress(InputStream in, OutputStream out, String name) throws Exception {
 		ZipInputStream zin = new ZipInputStream(in);
 		ZipEntry zipEntry = null;
