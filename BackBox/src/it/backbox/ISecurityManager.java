@@ -1,5 +1,8 @@
 package it.backbox;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+
 public interface ISecurityManager {
 	
 	/**
@@ -48,17 +51,6 @@ public interface ISecurityManager {
 	public void encrypt(String srcfilename, String destfilename) throws Exception;
 
 	/**
-	 * Encrypt a byte array content in a file
-	 * 
-	 * @param src
-	 *            Byte array to encrypt
-	 * @param destfilename
-	 *            Encrypted file
-	 * @throws Exception 
-	 */
-	public void encrypt(byte[] src, String destfilename) throws Exception;
-
-	/**
 	 * Decrypt a byte array
 	 * 
 	 * @param src
@@ -99,4 +91,26 @@ public interface ISecurityManager {
 	 * @throws Exception 
 	 */
 	public void decrypt(byte[] src, String destfilename) throws Exception;
+	
+	/**
+	 * Encrypt an InputStream to an OutputStream
+	 * 
+	 * @param in
+	 *            InputStream to encrypt
+	 * @param out
+	 *            Encrypted OutputStream
+	 * @throws Exception
+	 */
+	public void encrypt(InputStream in, OutputStream out) throws Exception;
+	
+	/**
+	 * Decrypt an InputStream to an OutputStream
+	 * 
+	 * @param in
+	 *            InputStream to decrypt
+	 * @param out
+	 *            Decrypted OutputStream
+	 * @throws Exception
+	 */
+	public void decrypt(InputStream in, OutputStream out) throws Exception;
 }
