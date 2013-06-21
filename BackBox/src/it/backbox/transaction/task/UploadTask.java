@@ -1,5 +1,6 @@
 package it.backbox.transaction.task;
 
+import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
@@ -51,7 +52,7 @@ public class UploadTask extends BoxTask {
 		byte[] data = null;
 		
 		if (isCompressEnabled()) {
-			Zipper z = new Zipper();
+			ICompress z = new Zipper();
 			data = z.compress(file.getCanonicalPath(), null);
 		}
 		
