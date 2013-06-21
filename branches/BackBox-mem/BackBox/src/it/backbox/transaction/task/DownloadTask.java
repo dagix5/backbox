@@ -51,7 +51,7 @@ public class DownloadTask extends BoxTask {
 	public void run() throws Exception {
 		ISplitter s = getSplitter();
 		
-		String filename = new StringBuilder(path).append("\\").append(file.getFilename()).toString();
+		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
 		
 		int threshold = 1024*1024*100;
 		OutputStream out;

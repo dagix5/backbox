@@ -113,16 +113,16 @@ public class DBManager implements IDBManager {
 			query.append(digest).append("','");
 			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
 			query.append(file.lastModified()).append("',");
-			query.append(file.length()).append(",");
-			query.append(encrypted ? 1 : 0).append(",");
-			query.append(compressed ? 1 : 0).append(",");
-			query.append(splitted ? 1 : 0).append(")");
+			query.append(file.length()).append(',');
+			query.append(encrypted ? 1 : 0).append(',');
+			query.append(compressed ? 1 : 0).append(',');
+			query.append(splitted ? 1 : 0).append(')');
 
 			statement.executeUpdate(query.toString());
 
 			query = new StringBuilder("select filehash from chunks where filehash = '");
 			query.append(digest);
-			query.append("'");
+			query.append('\'');
 
 			ResultSet rs = statement.executeQuery(query.toString());
 
@@ -134,7 +134,7 @@ public class DBManager implements IDBManager {
 					query.append(chunks.get(i).getChunkname()).append("','");
 					query.append(chunks.get(i).getChunkhash()).append("','");
 					query.append(chunks.get(i).getBoxid()).append("','");
-					query.append(chunks.get(i).getSize()).append("'");
+					query.append(chunks.get(i).getSize()).append('\'');
 					if (i < (chunks.size() - 1))
 						query.append(" union ");
 				}
@@ -160,7 +160,7 @@ public class DBManager implements IDBManager {
 			statement.setQueryTimeout(QUERY_TIMEOUT);
 	
 			query = new StringBuilder("select hash from files where hash = '");
-			query.append(digest).append("'");
+			query.append(digest).append('\'');
 			ResultSet rs = statement.executeQuery(query.toString());
 	
 			int i = 0;
@@ -169,13 +169,13 @@ public class DBManager implements IDBManager {
 	
 			if (i <= 1) {
 				query = new StringBuilder("delete from chunks where filehash = '");
-				query.append(digest).append("'");
+				query.append(digest).append('\'');
 	
 				statement.executeUpdate(query.toString());
 			}
 	
 			query = new StringBuilder("delete from files where hash = '");
-			query.append(digest).append("' and filename = '").append(filename).append("'");
+			query.append(digest).append("' and filename = '").append(filename).append('\'');
 	
 			statement.executeUpdate(query.toString());
 			
@@ -210,7 +210,7 @@ public class DBManager implements IDBManager {
 
 			StringBuilder query = new StringBuilder("select * from chunks where filehash like '");
 			query.append(rs.getString("hash"));
-			query.append("'");
+			query.append('\'');
 			//query.append("order by chunkname");
 
 			Statement statement2 = connection.createStatement();
@@ -247,7 +247,7 @@ public class DBManager implements IDBManager {
 		statement.setQueryTimeout(QUERY_TIMEOUT);
 
 		StringBuilder query = new StringBuilder("select * from files where hash like '");
-		query.append(key).append("'");
+		query.append(key).append('\'');
 		ResultSet rs = statement.executeQuery(query.toString());
 
 		if (!rs.next()) 
@@ -263,8 +263,7 @@ public class DBManager implements IDBManager {
 		file.setSplitted(rs.getBoolean("splitted"));
 
 		query = new StringBuilder("select * from chunks where filehash like '");
-		query.append(key);
-		query.append("'");
+		query.append(key).append('\'');
 
 		rs = statement.executeQuery(query.toString());
 

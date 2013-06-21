@@ -238,7 +238,6 @@ public class SecurityManager implements ISecurityManager{
 			
 			byte[] buf = new byte[Utility.BUFFER];
 			count = in.read(buf);
-
 			while (count >= 0) {
 				out.write(c.update(buf, 0, count)); 
 				count = in.read(buf);
