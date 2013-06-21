@@ -1,5 +1,6 @@
 package it.backbox.transaction.task;
 
+import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.File;
@@ -40,7 +41,7 @@ public class DownloadTask extends BoxTask {
 	@Override
 	public void run() throws Exception {
 		byte[] data = null;
-		String filename = new StringBuilder(path).append("\\").append(file.getFilename()).toString();
+		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
 		
 		callBox();
 		
@@ -66,7 +67,7 @@ public class DownloadTask extends BoxTask {
 		if (stop) return;
 		
 		if (file.isCompressed()) {
-			Zipper z = new Zipper();
+			ICompress z = new Zipper();
 			z.decompress(data, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()), filename);
 		}
 		
