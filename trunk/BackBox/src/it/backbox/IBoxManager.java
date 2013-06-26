@@ -109,6 +109,15 @@ public interface IBoxManager {
 	 * @return List of byte arrays chunks contents
 	 */
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception;
+	
+	/**
+	 * Download a chunk from Box.com
+	 * 
+	 * @param chunk
+	 *            Chunk to download
+	 * @return Byte array chunk content
+	 */
+	public byte[] downloadChunk(Chunk chunk) throws Exception;
 
 	/**
 	 * Upload a list of Chunk (contents) to Box.com

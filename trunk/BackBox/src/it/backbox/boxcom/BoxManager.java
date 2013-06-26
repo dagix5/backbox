@@ -217,8 +217,17 @@ public class BoxManager implements IBoxManager {
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception {
 		List<byte[]> result = new ArrayList<>();
 		for(Chunk c : chunks)
-			result.add(download(c.getBoxid()));
+			result.add(downloadChunk(c));
 		return result;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#downloadChunk(it.backbox.bean.Chunk)
+	 */
+	@Override
+	public byte[] downloadChunk(Chunk chunk) throws Exception {
+		return download(chunk.getBoxid());
 	}
 	
 	/**

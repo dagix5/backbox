@@ -5,8 +5,10 @@ import it.backbox.exception.BackBoxException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang.math.RandomUtils;
 
 public class Utility {
@@ -197,6 +200,23 @@ public class Utility {
         s.append("\nMax Memory: ").append(runtime.maxMemory() / mb);
         
         return s.toString();
+	}
+	
+	/**
+	 * Return the InputStream of data written in a DeferredFileOutputStream. You
+	 * haven't to be aware if the data are in a file or in a byte arrray.
+	 * 
+	 * @param out
+	 *            The DeferredFileOutputStream
+	 * @return Data InputStream
+	 * @throws FileNotFoundException
+	 */
+	public static InputStream getInputStream(DeferredFileOutputStream out)
+			throws FileNotFoundException {
+		if (out.isInMemory())
+			return new BufferedInputStream(new ByteArrayInputStream(out.getData()));
+		else
+			return new BufferedInputStream(new FileInputStream(out.getFile()));
 	}
 
 }
