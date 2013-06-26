@@ -251,9 +251,8 @@ public class BoxManager implements IBoxManager {
 						(error.context_info.conflicts != null) &&
 						!error.context_info.conflicts.isEmpty()) {
 					String id = error.context_info.conflicts.get(0).id;
-					String sha1 = error.context_info.conflicts.get(0).sha1;
 					_log.fine("upload: 409 Conflict, fileID " + id);
-					file = client.upload(name, id, content, remotefolderID, sha1);
+					file = client.upload(name, id, content, remotefolderID, hash);
 				} else
 					throw e;
 			}
