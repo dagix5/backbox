@@ -101,7 +101,7 @@ public class RestClient implements IRestClient {
 			HTTP_TRANSPORT = new NetHttpTransport.Builder().setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address, port))).build();
 		}
 		
-		credential = OAuth2Client.getCredential();
+		credential = OAuth2Client.getCredential(HTTP_TRANSPORT);
 		requestFactory = HTTP_TRANSPORT.createRequestFactory(new RestHttpRequestInitializer());
 		_log.fine("Rest Client init ok");
 	}
