@@ -23,6 +23,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -133,17 +134,30 @@ public class PreferencesDialog extends JDialog {
 		JButton okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
-				if (newLevel != null)
-					Logger.getLogger("it.backbox").setLevel(newLevel);
+				main.showLoading();
 				
-				try {
-					ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
-					main.helper.setProxyConfiguration(pc);
-				} catch (Exception e) {
-					GuiUtility.handleException(panel, "Error setting proxy", e);
-				}
-				setVisible(false);
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
+							if (newLevel != null)
+								Logger.getLogger("it.backbox").setLevel(newLevel);
+							
+							ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
+							main.helper.setProxyConfiguration(pc);
+							setVisible(false);
+						} catch (Exception e) {
+							GuiUtility.handleException(panel, "Error setting preferences", e);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	main.hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
 			}
 		});
 		okButton.setActionCommand("OK");
