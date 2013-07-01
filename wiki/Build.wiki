@@ -20,12 +20,12 @@ mvn package
 
 After you need to create a local Maven repository and deploy to it the core jar:
 {{{
-mvn deploy:deploy-file -DgroupId=it.backbox -DartifactId=backbox -Dversion=0.1 -Dpackaging=jar -Dfile=target/${project.artifactId}-${project.version}.jar -Durl=file://${project.basedir}/target -DrepositoryId=local-project-libraries
+cd ../BackBoxGui
+mvn deploy:deploy-file -DgroupId=it.backbox -DartifactId=backbox -Dversion=0.1 -Dpackaging=jar -Dfile=../Backbox/target/backbox-${project.version}.jar -Durl=file://${project.basedir}/target -DrepositoryId=local-project-libraries
 }}}
 
 Now you can build the gui project:
 {{{
-cd ../BackBoxGui
 mvn package
 }}}
 
