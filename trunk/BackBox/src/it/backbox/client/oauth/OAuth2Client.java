@@ -22,7 +22,6 @@ import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.extensions.java7.auth.oauth2.FileCredentialStoreJava7;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
@@ -36,18 +35,15 @@ public class OAuth2Client {
 	private static final String USER_ID = "Box";
 	private static final String CREDENTIAL_STORE_FILENAME = "credentialStore.json";
 	
-	/** Global instance of the HTTP transport. */
-	private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	
 	private static CredentialStore store;
 
-	public static Credential getCredential() throws Exception {
+	public static Credential getCredential(HttpTransport httpTransport) throws Exception {
 		store = new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY);
 		AuthorizationCodeFlow codeFlow = new AuthorizationCodeFlow.Builder(
-				BearerToken.authorizationHeaderAccessMethod(), HTTP_TRANSPORT,
+				BearerToken.authorizationHeaderAccessMethod(), httpTransport,
 				JSON_FACTORY, new GenericUrl(TOKEN_SERVER_URL),
 				new ClientParametersAuthentication(CLIENT_ID, CLIENT_SECRET),
 				CLIENT_ID, AUTHORIZATION_SERVER_URL)

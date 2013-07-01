@@ -114,8 +114,11 @@ public class BackBoxHelper {
 		sm = new SecurityManager(password, getConfiguration().getString(PWD_DIGEST), getConfiguration().getString(SALT));
 		_log.fine("SecurityManager init OK");
 
+		//try to instantiate the rest client before the boxmanager, because it can fail
+		RestClient client = new RestClient(getProxyConfiguration());
+		
 		bm = new BoxManager();
-		bm.setRestClient(new RestClient(getProxyConfiguration()));
+		bm.setRestClient(client);
 		String folderID = getConfiguration().getString(FOLDER_ID);
 		if ((folderID == null) || folderID.isEmpty()) {
 			folderID = bm.getBoxID(BoxManager.UPLOAD_FOLDER);
