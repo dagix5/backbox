@@ -9,8 +9,8 @@ import java.util.Arrays;
 
 public class TestUtil {
 	
-	public static String folder = "put_folder_name";
-	public static String filename = "put_file_name";
+	public static String folder = "C:\\Users\\daniele.giardino\\Desktop\\test\\";
+	public static String filename = "C:\\Users\\daniele.giardino\\Downloads\\ccsetup400.exe";
 	
 	public static void write(byte[] content, String filename) throws IOException {
 		File file = new File(filename);

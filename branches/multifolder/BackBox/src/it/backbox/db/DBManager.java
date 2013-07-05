@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +93,7 @@ public class DBManager implements IDBManager {
 
 		statement.executeUpdate("drop table if exists files");
 		statement.executeUpdate("drop table if exists chunks");
-		statement.executeUpdate("create table files (hash string, filename string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename))");
+		statement.executeUpdate("create table files (hash string, filename string, folder string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename))");
 		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string, size INTEGER, foreign key(filehash) references files(hash))");
 		
 		statement.executeUpdate("PRAGMA journal_mode = OFF");
@@ -101,9 +102,10 @@ public class DBManager implements IDBManager {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.util.List, boolean, boolean, boolean)
+	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.lang.String, java.util.List, boolean, boolean, boolean)
 	 */
-	public void insert(File file, String relativePath, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+	@Override
+	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
 		StringBuilder query = null;
 		try {
 			Statement statement = connection.createStatement();
@@ -112,11 +114,12 @@ public class DBManager implements IDBManager {
 			query = new StringBuilder("insert into files values('");
 			query.append(digest).append("','");
 			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
+			query.append(folder).append("','");
 			query.append(file.lastModified()).append("',");
-			query.append(file.length()).append(',');
-			query.append(encrypted ? 1 : 0).append(',');
-			query.append(compressed ? 1 : 0).append(',');
-			query.append(splitted ? 1 : 0).append(')');
+            query.append(file.length()).append(',');
+            query.append(encrypted ? 1 : 0).append(',');
+            query.append(compressed ? 1 : 0).append(',');
+            query.append(splitted ? 1 : 0).append(')');
 
 			statement.executeUpdate(query.toString());
 
@@ -149,10 +152,58 @@ public class DBManager implements IDBManager {
 		}
 	}
 
+	public void insert(Date lastModified, long size, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+		StringBuilder query = null;
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(QUERY_TIMEOUT);
+
+			query = new StringBuilder("insert into files values('");
+			query.append(digest).append("','");
+			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
+			query.append(folder).append("','");
+			query.append(lastModified).append("',");
+            query.append(size).append(',');
+            query.append(encrypted ? 1 : 0).append(',');
+            query.append(compressed ? 1 : 0).append(',');
+            query.append(splitted ? 1 : 0).append(')');
+
+			statement.executeUpdate(query.toString());
+
+			query = new StringBuilder("select filehash from chunks where filehash = '");
+			query.append(digest);
+			query.append('\'');
+
+			ResultSet rs = statement.executeQuery(query.toString());
+
+			if (!rs.next()) {
+				query = new StringBuilder("insert into chunks ");
+				for (int i = 0; i < chunks.size(); i++) {
+					query.append("select '");
+					query.append(digest).append("','");
+					query.append(chunks.get(i).getChunkname()).append("','");
+					query.append(chunks.get(i).getChunkhash()).append("','");
+					query.append(chunks.get(i).getBoxid()).append("','");
+					query.append(chunks.get(i).getSize()).append('\'');
+					if (i < (chunks.size() - 1))
+						query.append(" union ");
+				}
+
+				statement.executeUpdate(query.toString());
+			}
+			
+			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
+
+		} catch (SQLException e) {
+			throw new BackBoxException(e, (query != null) ? query.toString() : "");
+		}
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IDBManager#delete(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void delete(String filename, String digest) throws BackBoxException {
 		StringBuilder query = null;
 		try {
@@ -187,14 +238,14 @@ public class DBManager implements IDBManager {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IDBManager#loadDB()
+	 * @see it.backbox.IDBManager#getFolderRecords(java.lang.String)
 	 */
 	@Override
-	public Map<String, Map<String, it.backbox.bean.File>> loadDB() throws SQLException {
+	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder) throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);
 
-		ResultSet rs = statement.executeQuery("select * from files");
+		ResultSet rs = statement.executeQuery(new StringBuilder("select * from files where folder like'").append(folder).append('\'').toString());
 
 		Map<String, Map<String, it.backbox.bean.File>> records = new HashMap<>();
 
@@ -202,6 +253,7 @@ public class DBManager implements IDBManager {
 			it.backbox.bean.File file = new it.backbox.bean.File();
 			file.setHash(rs.getString("hash"));
 			file.setFilename(rs.getString("filename").replaceAll("''", "'"));
+			file.setFolder(rs.getString("folder"));
 			file.setTimestamp(rs.getDate("timestamp"));
 			file.setSize(rs.getLong("size"));
 			file.setEncrypted(rs.getBoolean("encrypted"));
@@ -242,6 +294,7 @@ public class DBManager implements IDBManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IDBManager#getFileRecord(java.lang.String)
 	 */
+	@Override
 	public it.backbox.bean.File getFileRecord(String key) throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);
@@ -257,6 +310,7 @@ public class DBManager implements IDBManager {
 		file.setHash(rs.getString("hash"));
 		file.setFilename(rs.getString("filename").replaceAll("''", "'"));
 		file.setTimestamp(rs.getDate("timestamp"));
+		file.setFolder(rs.getString("folder"));
 		file.setSize(rs.getLong("size"));
 		file.setEncrypted(rs.getBoolean("encrypted"));
 		file.setCompressed(rs.getBoolean("compressed"));

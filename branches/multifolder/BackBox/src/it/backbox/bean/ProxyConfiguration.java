@@ -1,13 +1,21 @@
-package it.backbox.client.rest.bean;
+package it.backbox.bean;
+
+import com.google.api.client.util.Key;
 
 public class ProxyConfiguration {
 
+	@Key
 	private boolean enabled;
+	@Key
 	private String address;
+	@Key
 	private int port;
+	
+	public ProxyConfiguration() {
+		
+	}
 
 	public ProxyConfiguration(boolean enabled, String address, int port) {
-		super();
 		this.enabled = enabled;
 		this.address = address;
 		this.port = port;

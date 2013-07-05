@@ -1,6 +1,7 @@
 package it.backbox.client.rest;
 
 import it.backbox.IRestClient;
+import it.backbox.bean.ProxyConfiguration;
 import it.backbox.client.http.MultipartContent.MultipartFormDataContent;
 import it.backbox.client.oauth.OAuth2Client;
 import it.backbox.client.rest.bean.BoxError;
@@ -9,7 +10,6 @@ import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.client.rest.bean.BoxUploadedFile;
-import it.backbox.client.rest.bean.ProxyConfiguration;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 import it.backbox.progress.ProgressManager;
@@ -224,14 +224,17 @@ public class RestClient implements IRestClient {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#mkdir(java.lang.String)
+	 * @see it.backbox.IRestClient#mkdir(java.lang.String, java.lang.String)
 	 */
-	public BoxFolder mkdir(String name) throws IOException, RestException {
+	public BoxFolder mkdir(String name, String parentFolderID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "folders");
 		GenericData data = new GenericData();
         data.put("name", name);
         GenericData parentData = new GenericData();
-        parentData.put("id", "0");
+        if (parentFolderID == null)
+        	parentData.put("id", "0");
+        else
+        	parentData.put("id", parentFolderID);
         data.put("parent", parentData);
 		HttpRequest request = requestFactory.buildPostRequest(url, new JsonHttpContent(JSON_FACTORY, data));
 		_log.fine("MkDir: " + request.getUrl().toString());
