@@ -65,8 +65,6 @@ import javax.swing.table.DefaultTableModel;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.apache.commons.configuration.ConfigurationException;
-
 public class BackBoxGui {
 	private static Logger _log = Logger.getLogger("it.backbox");
 
@@ -102,7 +100,6 @@ public class BackBoxGui {
 	private boolean running = false;
 	private boolean pending = false;
 	private boolean pendingDone = false;
-	private String backupFolder;
 
 	/**
 	 * Launch the application.
@@ -133,9 +130,7 @@ public class BackBoxGui {
 		
 		if (connected) {
 			try {
-				backupFolder = helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER);
-				if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-					setSpeed(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+				setSpeed(helper.getConfiguration().getDefaultUploadSpeed());
 				updateTable();
 				
 				helper.getTransactionManager().addListener(new CompleteTransactionListener() {
@@ -184,10 +179,10 @@ public class BackBoxGui {
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			for (SimpleEntry<String, File> entry : map) {
 				File f = entry.getValue();
-				model.addRow(new Object[] { f.getFilename(), f.getHash(), new Size(f.getSize()), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
+				model.addRow(new Object[] { new StringBuilder(f.getFolder()).append('\\').append(f.getFilename()).toString(), f.getHash(), new Size(f.getSize()), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
 				fileKeys.add(entry.getKey());
 			}
-		} catch (SQLException e) {
+		} catch (SQLException | IOException e) {
 			GuiUtility.handleException(frmBackBox, "Error updating table", e);
 		}
 	}
@@ -287,33 +282,23 @@ public class BackBoxGui {
 		JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	public void setConfiguration(String backupFolder) {
-		try {
-			helper.getConfiguration().setProperty(BackBoxHelper.BACKUP_FOLDER, backupFolder);
-			helper.saveConfiguration();
-			
-			this.backupFolder = backupFolder;
-		} catch (ConfigurationException e) {
-			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
-		}
-	}
-	
 	public void setPreferences(Integer defaultUploadSpeed) {
 		try {
-			helper.getConfiguration().setProperty(BackBoxHelper.DEFAULT_UPLOAD_SPEED, defaultUploadSpeed);
+			helper.getConfiguration().setDefaultUploadSpeed(defaultUploadSpeed);
 			helper.saveConfiguration();
 			
 			setSpeed(defaultUploadSpeed);
-		} catch (ConfigurationException e) {
+		} catch (IOException e) {
 			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
 		}
 	}
 	
 	/**
 	 * Create the application.
+	 * @throws IOException 
 	 * @throws Exception 
 	 */
-	public BackBoxGui() {
+	public BackBoxGui() throws IOException {
 		helper = new BackBoxHelper();
 		
 		initialize();
@@ -340,8 +325,9 @@ public class BackBoxGui {
 	
 	/**
 	 * Initialize the contents of the frame.
+	 * @throws IOException 
 	 */
-	private void initialize() {
+	private void initialize() throws IOException {
 		// Logger configuration
 		ConsoleHandler ch = new ConsoleHandler();
 		ch.setLevel(Level.ALL);
@@ -354,7 +340,7 @@ public class BackBoxGui {
 		} catch (SecurityException | IOException e2) {
 			GuiUtility.handleException(frmBackBox, "Error open logging file", e2);
 		}
-		_log.setLevel(Level.SEVERE);
+		_log.setLevel(helper.getConfiguration().getLogLevel());
 		
 		frmBackBox = new JFrame();
 		frmBackBox.setLocationRelativeTo(null);
@@ -432,6 +418,7 @@ public class BackBoxGui {
 							helper.uploadConf();
 							if (connected)
 								disconnect();
+							JOptionPane.showMessageDialog(frmBackBox, "Configuration uploaded successfully", "Upload configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error uploading configuration", e1);
@@ -467,6 +454,7 @@ public class BackBoxGui {
 							helper.downloadConf();
 							if (connected)
 								disconnect();
+							JOptionPane.showMessageDialog(frmBackBox, "Configuration downloaded successfully", "Download configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error downloading configuration", e1);
@@ -504,7 +492,7 @@ public class BackBoxGui {
 					try {
 						configurationDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 						configurationDialog.setLocationRelativeTo(frmBackBox);
-						configurationDialog.load(helper.getConfiguration().getString(BackBoxHelper.BACKUP_FOLDER));
+						configurationDialog.load(helper.getConfiguration().getBackupFolders());
 						configurationDialog.setVisible(true);
 					} catch (Exception e1) {
 						GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
@@ -538,8 +526,7 @@ public class BackBoxGui {
 				try {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 					preferencesDialog.setLocationRelativeTo(frmBackBox);
-					if (helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-						preferencesDialog.load(helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED), helper.getProxyConfiguration(), !running);
+					preferencesDialog.load(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getProxyConfiguration(), !running, helper.getConfiguration().getLogLevel());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
@@ -695,7 +682,7 @@ public class BackBoxGui {
 						public void run() {
 							ArrayList<Transaction> tt = null;
 							try {
-								tt = helper.backup(backupFolder, false);
+								tt = helper.backup(false);
 							} catch (Exception e) {
 								hideLoading();
 								GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);

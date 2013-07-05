@@ -30,28 +30,13 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 public class BoxManager implements IBoxManager {
 	private static Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
 
-	public static final String UPLOAD_FOLDER = "BackBox";
+	public static final String ROOT_FOLDER_NAME = "BackBox";
 	
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
-	private String backBoxFolderID;
 	private IRestClient client;
 
-	/**
-	 * Costructor
-	 * 
-	 * @param backBoxFolderID
-	 *            App folder ID
-	 * @param client
-	 *            Rest Client
-	 */
-	public BoxManager(String backBoxFolderID, IRestClient client) {
-		this.backBoxFolderID = backBoxFolderID;
-		if (_log.isLoggable(Level.FINE)) _log.fine("BoxManager created with folder id: " + backBoxFolderID);
-		this.client = client;
-	}
-	
 	/**
 	 * Costructor
 	 * 
@@ -80,30 +65,12 @@ public class BoxManager implements IBoxManager {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#setBackBoxFolderID(java.lang.String)
+	 * @see it.backbox.IBoxManager#mkdir(java.lang.String, java.lang.String)
 	 */
-	@Override
-	public void setBackBoxFolderID(String backBoxFolderID) {
-		this.backBoxFolderID = backBoxFolderID;
-	}
-
-	/**
-	 * Get the app folder ID
-	 * 
-	 * @return App folder ID
-	 */
-	public String getBackBoxFolderID() {
-		return backBoxFolderID;
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#mkdir(java.lang.String)
-	 */
-	public String mkdir(String folderName) throws IOException, RestException {
+	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException {
 		BoxFolder folder;
 		try {
-			folder = client.mkdir(folderName);
+			folder = client.mkdir(folderName, parentFolderID);
 			if (folder != null) {
 				if (_log.isLoggable(Level.FINE)) _log.fine("Folder created id: " + folder.id);
 				return folder.id;
@@ -141,36 +108,22 @@ public class BoxManager implements IBoxManager {
 		return null;
 	}
 	
-	/**
-	 * Upload a file to Box.com
-	 * 
-	 * @param filename
-	 *            Name of the file to upload
-	 * @param remotefolderID
-	 *            ID of the folder where upload the chunks
-	 * @return Uploaded file ID
-	 * @throws Exception 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String)
 	 */
-	private String upload(String filename, String remotefolderID) throws Exception {
+	@Override
+	public String upload(String filename, String folderID) throws Exception {
 		String[] ns = filename.split("\\\\");
 		String n = ns[ns.length - 1];
 		
 		byte[] content = Utility.read(filename);
-		BoxFile file = upload(n, content, remotefolderID, DigestUtils.sha1Hex(content));
+		BoxFile file = upload(n, content, folderID, DigestUtils.sha1Hex(content));
 		String id = ((file != null) ? file.id : null);
 		if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
 		return id;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.lang.String)
-	 */
-	@Override
-	public String upload(String filename) throws Exception {
-		return upload(filename, getBackBoxFolderID());
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#download(java.lang.String)
@@ -237,7 +190,7 @@ public class BoxManager implements IBoxManager {
 	 *            Name of the file to upload
 	 * @param content
 	 *            Content to upload
-	 * @param remotefolderID
+	 * @param folderID
 	 *            Folder ID where upload the file
 	 * @param hash
 	 *            File content digest
@@ -245,10 +198,10 @@ public class BoxManager implements IBoxManager {
 	 * @throws IOException
 	 * @throws RestException
 	 */
-	private BoxFile upload(String name, byte[] content, String remotefolderID, String hash) throws IOException, RestException {
+	private BoxFile upload(String name, byte[] content, String folderID, String hash) throws IOException, RestException {
 		BoxFile file = null;
 		try {
-			file = client.upload(name, null, content, remotefolderID, hash);
+			file = client.upload(name, null, content, folderID, hash);
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
@@ -261,7 +214,7 @@ public class BoxManager implements IBoxManager {
 						!error.context_info.conflicts.isEmpty()) {
 					String id = error.context_info.conflicts.get(0).id;
 					_log.fine("upload: 409 Conflict, fileID " + id);
-					file = client.upload(name, id, content, remotefolderID, hash);
+					file = client.upload(name, id, content, folderID, hash);
 				} else
 					throw e;
 			}
@@ -269,43 +222,20 @@ public class BoxManager implements IBoxManager {
 		return file;
 	}
 
-	/**
-	 * Upload a Chunk (contents) to Box.com
-	 * 
-	 * @param chunks
-	 *            Chunk to upload
-	 * @param remotefolderID
-	 *            ID of the folder where upload the chunks
-	 * @throws Exception 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk, java.lang.String)
 	 */
-	private void uploadChunk(Chunk chunk, String remotefolderID) throws Exception {
+	@Override
+	public void uploadChunk(Chunk chunk, String folderID) throws Exception {
 		String name = chunk.getChunkname();
 		String[] ns = name.split("\\\\");
 		String n = ns[ns.length - 1];
 		
-		BoxFile file = upload(n, chunk.getContent(), remotefolderID, chunk.getChunkhash());
+		BoxFile file = upload(n, chunk.getContent(), folderID, chunk.getChunkhash());
 		String id = ((file != null) ? file.id : null);
 		if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
 		chunk.setBoxid(id);
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk)
-	 */
-	@Override
-	public void uploadChunk(Chunk chunk) throws Exception {
-		uploadChunk(chunk, getBackBoxFolderID());
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#uploadChunk(java.util.List)
-	 */
-	@Override
-	public void uploadChunk(List<Chunk> chunks) throws Exception {
-		for (Chunk c : chunks)
-			uploadChunk(c, getBackBoxFolderID());
 	}
 	
 	/*

@@ -32,10 +32,13 @@ public interface IRestClient {
 	 * 
 	 * @param name
 	 *            Folder name
+	 * @param parentFolderID
+	 *            ID of the parent folder
 	 * @return New folder info
-	 * @throws IOException, RestException
+	 * @throws IOException
+	 *             , RestException
 	 */
-	public BoxFolder mkdir(String name) throws IOException, RestException;
+	public BoxFolder mkdir(String name, String parentFolderID) throws IOException, RestException;
 	
 	/**
 	 * Search remote items

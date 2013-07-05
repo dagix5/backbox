@@ -1,6 +1,6 @@
 package it.backbox.gui;
 
-import it.backbox.client.rest.bean.ProxyConfiguration;
+import it.backbox.bean.ProxyConfiguration;
 import it.backbox.gui.utility.GuiUtility;
 
 import java.awt.BorderLayout;
@@ -13,6 +13,7 @@ import java.awt.event.ItemListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.naming.ConfigurationException;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -31,8 +32,6 @@ import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.apache.commons.configuration.ConfigurationException;
 
 public class PreferencesDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -135,18 +134,25 @@ public class PreferencesDialog extends JDialog {
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				main.showLoading();
-				
+				setVisible(false);
 				Thread worker = new Thread() {
 					public void run() {
 						try {
 							main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
-							if (newLevel != null)
+							if (newLevel != null) {
 								Logger.getLogger("it.backbox").setLevel(newLevel);
+								main.helper.getConfiguration().setLogLevel(newLevel);
+							}
 							
 							ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
 							main.helper.setProxyConfiguration(pc);
+							
+							main.helper.getConfiguration().setProxyConfiguration(pc);
+							main.helper.saveConfiguration();
+							
 							setVisible(false);
 						} catch (Exception e) {
+							setVisible(true);
 							GuiUtility.handleException(panel, "Error setting preferences", e);
 						}
 						
@@ -165,7 +171,7 @@ public class PreferencesDialog extends JDialog {
 		getRootPane().setDefaultButton(okButton);
 	}
 
-	public void load(int uploadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled) {
+	public void load(int uploadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, Level logLevel) {
 		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
 		chckbxProxy.setEnabled(proxyChcbxEnabled);
 		if (pc != null) {
@@ -178,18 +184,17 @@ public class PreferencesDialog extends JDialog {
 			txtProxyPort.setText("");
 		}
 		
-		Level level = Logger.getLogger("it.backbox").getLevel();
-		if (level.equals(Level.ALL))
+		if (logLevel.equals(Level.ALL))
 			comboBox.setSelectedIndex(0);
-		else if (level.equals(Level.FINE))
+		else if (logLevel.equals(Level.FINE))
 			comboBox.setSelectedIndex(1);
-		else if (level.equals(Level.INFO))
+		else if (logLevel.equals(Level.INFO))
 			comboBox.setSelectedIndex(2);
-		else if (level.equals(Level.WARNING))
+		else if (logLevel.equals(Level.WARNING))
 			comboBox.setSelectedIndex(3);
-		else if (level.equals(Level.SEVERE))
+		else if (logLevel.equals(Level.SEVERE))
 			comboBox.setSelectedIndex(4);
-		else if (level.equals(Level.OFF))
+		else if (logLevel.equals(Level.OFF))
 			comboBox.setSelectedIndex(5);
 	}
 	

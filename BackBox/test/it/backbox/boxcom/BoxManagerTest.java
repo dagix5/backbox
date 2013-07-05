@@ -23,6 +23,7 @@ public class BoxManagerTest {
 	private static BoxManager bm;
 	
 	private static byte[] plain;
+	private static String folderID;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -33,12 +34,11 @@ public class BoxManagerTest {
 		
 		bm = new BoxManager(new RestClient());
 		
-		String folderID = bm.getBoxID("Test");
+		folderID = bm.getBoxID("Test");
 		if (folderID == null)
-			folderID = bm.mkdir("Test");
+			folderID = bm.mkdir("Test", null);
 		
-		bm.setBackBoxFolderID(folderID);
-		assertNotNull(bm.getBackBoxFolderID());
+		assertNotNull(folderID);
 		
 		plain = Utility.read(TestUtil.filename);
 		
@@ -47,7 +47,7 @@ public class BoxManagerTest {
 
 	@Test
 	public void testUploadDownload() throws Exception {
-		String id = bm.upload(TestUtil.filename);
+		String id = bm.upload(TestUtil.filename, folderID);
 		assertNotNull(id);
 		
 		byte[] d = bm.download(id);
@@ -57,7 +57,7 @@ public class BoxManagerTest {
 
 	@Test
 	public void testDelete() throws Exception {
-		String id = bm.upload(TestUtil.filename);
+		String id = bm.upload(TestUtil.filename, folderID);
 		assertNotNull(id);
 		
 		bm.delete(id);

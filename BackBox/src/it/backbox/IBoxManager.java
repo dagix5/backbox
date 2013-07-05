@@ -10,14 +10,6 @@ import java.util.Map;
 public interface IBoxManager {
 	
 	/**
-	 * Set the app folder ID
-	 * 
-	 * @param backBoxFolderID
-	 *            The app folder ID
-	 */
-	public void setBackBoxFolderID(String backBoxFolderID);
-	
-	/**
 	 * Set the client to use for rest operations
 	 * 
 	 * @param client
@@ -48,21 +40,25 @@ public interface IBoxManager {
 	 * 
 	 * @param folderName
 	 *            Folder name
+	 * @param parentFolderID
+	 * 			  ID of the parent folder
 	 * @return ID of the folder created
 	 * @throws IOException
 	 * @throws RestException 
 	 */
-	public String mkdir(String folderName) throws IOException, RestException;
+	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException;
 
 	/**
 	 * Upload a file to Box.com
 	 * 
 	 * @param filename
 	 *            Name of the file to upload
+	 * @param folderID
+	 *            ID of the folder where upload the chunks
 	 * @return Uploaded file ID
 	 * @throws Exception 
 	 */
-	public String upload(String filename) throws Exception;
+	public String upload(String filename, String folderID) throws Exception;
 
 	/**
 	 * Download a file from Box.com
@@ -118,24 +114,17 @@ public interface IBoxManager {
 	 * @return Byte array chunk content
 	 */
 	public byte[] downloadChunk(Chunk chunk) throws Exception;
-
-	/**
-	 * Upload a list of Chunk (contents) to Box.com
-	 * 
-	 * @param chunks
-	 *            List of Chunk to upload
-	 * @throws Exception 
-	 */
-	public void uploadChunk(List<Chunk> chunks) throws Exception;
 	
 	/**
 	 * Upload a Chunk (contents) to Box.com
 	 * 
-	 * @param chunk
+	 * @param chunks
 	 *            Chunk to upload
+	 * @param folderID
+	 *            ID of the folder where upload the chunks
 	 * @throws Exception 
 	 */
-	public void uploadChunk(Chunk chunk) throws Exception;
+	public void uploadChunk(Chunk chunk, String folderID) throws Exception;
 	
 	/**
 	 * Get a map with all chunks for all the files in the remote folder with ID

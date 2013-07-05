@@ -97,11 +97,6 @@
 			<classifier>swing</classifier>
 		</dependency>
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.9</version>
-		</dependency>
-		<dependency>
 			<groupId>it.backbox</groupId>
 			<artifactId>backbox</artifactId>
 			<version>0.1</version>
@@ -140,6 +135,12 @@
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
 			<version>3.7.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
