@@ -3,7 +3,6 @@ package it.backbox.gui;
 import it.backbox.exception.BackBoxWrongPasswordException;
 import it.backbox.gui.utility.GuiUtility;
 import it.backbox.progress.ProgressManager;
-import it.backbox.utility.BackBoxHelper;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -18,8 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-
-import org.apache.commons.configuration.ConfigurationException;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -73,8 +70,7 @@ public class PasswordDialog extends JDialog {
 							lblPasswordErrata.setVisible(false);
 							if (mode == GuiConstant.LOGIN_MODE) {
 								main.helper.login(new String(passwordField.getPassword()));
-								if (main.helper.getConfiguration().containsKey(BackBoxHelper.DEFAULT_UPLOAD_SPEED))
-									ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getInt(BackBoxHelper.DEFAULT_UPLOAD_SPEED));
+								ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getDefaultUploadSpeed());
 								
 								main.connect();
 							} else if (mode == GuiConstant.BUILDDB_MODE)
@@ -83,8 +79,6 @@ public class PasswordDialog extends JDialog {
 							lblPasswordErrata.setVisible(true);
 							passwordField.setText("");
 							setVisible(true);
-						} catch (ConfigurationException e) {
-							GuiUtility.handleException(contentPanel, "Error loading configuration", e);
 						} catch (Exception e) {
 							GuiUtility.handleException(contentPanel, "Error logging in", e);
 						}
