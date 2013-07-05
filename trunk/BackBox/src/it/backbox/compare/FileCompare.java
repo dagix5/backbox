@@ -8,7 +8,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,7 @@ public class FileCompare {
 	private Map<String, Map<String, it.backbox.bean.File>> recordsNotInFiles = null;
 	private Map<String, Map<String, File>> filesNotInRecords = null;
 	
-	private String root;
+	private Path folder;
 	private List<String> exclusions;
 	
 	/**
@@ -40,10 +39,10 @@ public class FileCompare {
 	 *            Folders/files to exclude
 	 * 
 	 */
-	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, String root, List<String> exclusions) {
+	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, Path root, List<String> exclusions) {
 		this.records = records;
         
-		this.root = root;
+		this.folder = root;
 		this.exclusions = exclusions;
 	}
 	
@@ -55,9 +54,7 @@ public class FileCompare {
 	public void load() throws IOException {
 		getFiles().clear();
 		
-		final Path rootPath = Paths.get(root);
-		
-		Files.walkFileTree(rootPath, new FileVisitor<Path>() {
+		Files.walkFileTree(folder, new FileVisitor<Path>() {
 			
 			@Override
 			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
@@ -73,7 +70,7 @@ public class FileCompare {
 					_log.log(Level.WARNING, file.toString() + " not accessible");
 					return FileVisitResult.CONTINUE;
 				}
-				String relativePath = rootPath.relativize(file).toString();
+				String relativePath = folder.relativize(file).toString();
 				if (files.containsKey(hash))
 					files.get(hash).put(relativePath, file.toFile());
 				else {
@@ -97,7 +94,7 @@ public class FileCompare {
 			
 			@Override
 			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-				if (exclusions.contains(rootPath.relativize(dir).toString()))
+				if (exclusions.contains(folder.relativize(dir).toString()))
 					return FileVisitResult.SKIP_SUBTREE;
 				return FileVisitResult.CONTINUE;
 			}

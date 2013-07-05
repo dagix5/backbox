@@ -43,6 +43,8 @@ public interface IDBManager {
 	 *            New file
 	 * @param relativePath
 	 *            File relative path
+	 * @param folder
+	 *            Folder where the file is
 	 * @param digest
 	 *            New file hash
 	 * @param chunks
@@ -53,7 +55,7 @@ public interface IDBManager {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void insert(File file, String relativePath, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws Exception;
+	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws Exception;
 	
 	/**
 	 * Get the record of a file
@@ -68,11 +70,14 @@ public interface IDBManager {
 	/**
 	 * Load all the files information from database
 	 * 
+	 * @param folder
+	 *            Files folder
+	 * 
 	 * @return Hashmap with <Hash, it.backbox.bean.File> with files informations
 	 *         in database
 	 * @throws SQLException
 	 */
-	public Map<String, Map<String, it.backbox.bean.File>> loadDB() throws SQLException;
+	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder) throws SQLException;
 	
 	/**
 	 * Reset or create the database and open the connection

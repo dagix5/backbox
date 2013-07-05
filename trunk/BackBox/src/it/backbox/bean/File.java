@@ -8,6 +8,7 @@ public class File {
 	
 	private String hash;
 	private String filename;
+	private String folder;
 	private Date timestamp;
 	private long size;
 	private boolean encrypted;
@@ -79,6 +80,14 @@ public class File {
 
 	public void setSize(long size) {
 		this.size = size;
+	}
+
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
+		this.folder = folder;
 	}
 
 }

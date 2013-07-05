@@ -4,6 +4,7 @@ import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
+import it.backbox.bean.Folder;
 import it.backbox.compress.Zipper;
 import it.backbox.utility.Utility;
 
@@ -28,23 +29,25 @@ public class UploadTask extends BoxTask {
 	private String hash;
 	private File file;
 	private String relativePath;
+	private Folder folder;
 	
 	/** Local operation variables */
 	private Chunk chunk;
 	
-	public void setInput(String hash, File file, String relativePath) {
+	public void setInput(String hash, File file, String relativePath, Folder folder) {
 		this.hash = hash;
 		this.file = file;
 		this.relativePath = relativePath;
+		this.folder = folder;
 	}
 	
 	public UploadTask() {
 		super();
 	}
 	
-	public UploadTask(String hash, File file, String relativePath) {
+	public UploadTask(String hash, File file, String relativePath, Folder folder) {
 		super();
-		setInput(hash, file, relativePath);
+		setInput(hash, file, relativePath, folder);
 	}
 	
 	public Long getSize() {
@@ -109,7 +112,7 @@ public class UploadTask extends BoxTask {
 			chunks.add(chunk);
 		}
 		
-		getDbManager().insert(file, relativePath, hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
+		getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
 		
 		in.close();
 		out.close();
@@ -119,6 +122,11 @@ public class UploadTask extends BoxTask {
 		FileUtils.deleteDirectory(tempDir);
 	}
 
+	@Override
+	protected void boxMethod() throws Exception {
+		getBoxManager().uploadChunk(chunk, folder.getId());
+	}
+	
 	public boolean isEncryptEnabled() {
 		return encryptEnabled;
 	}
@@ -133,11 +141,6 @@ public class UploadTask extends BoxTask {
 
 	public void setCompressEnabled(boolean compressEnabled) {
 		this.compressEnabled = compressEnabled;
-	}
-
-	@Override
-	protected void boxMethod() throws Exception {
-		getBoxManager().uploadChunk(chunk);
 	}
 
 }
