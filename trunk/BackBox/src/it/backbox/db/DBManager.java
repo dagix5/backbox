@@ -10,7 +10,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ public class DBManager implements IDBManager {
 	private Connection connection;
 
 	private boolean open;
-	private static String filename;
+	private String filename;
 	
 	/**
 	 * Constructor
@@ -42,7 +41,7 @@ public class DBManager implements IDBManager {
 	public DBManager(String filename) throws BackBoxException {
 		if (filename == null)
 			throw new BackBoxException("DB filename null");
-		DBManager.filename = filename;
+		this.filename = filename;
 		open = false;
 	}
 	
@@ -117,53 +116,6 @@ public class DBManager implements IDBManager {
 			query.append(folder).append("','");
 			query.append(file.lastModified()).append("',");
             query.append(file.length()).append(',');
-            query.append(encrypted ? 1 : 0).append(',');
-            query.append(compressed ? 1 : 0).append(',');
-            query.append(splitted ? 1 : 0).append(')');
-
-			statement.executeUpdate(query.toString());
-
-			query = new StringBuilder("select filehash from chunks where filehash = '");
-			query.append(digest);
-			query.append('\'');
-
-			ResultSet rs = statement.executeQuery(query.toString());
-
-			if (!rs.next()) {
-				query = new StringBuilder("insert into chunks ");
-				for (int i = 0; i < chunks.size(); i++) {
-					query.append("select '");
-					query.append(digest).append("','");
-					query.append(chunks.get(i).getChunkname()).append("','");
-					query.append(chunks.get(i).getChunkhash()).append("','");
-					query.append(chunks.get(i).getBoxid()).append("','");
-					query.append(chunks.get(i).getSize()).append('\'');
-					if (i < (chunks.size() - 1))
-						query.append(" union ");
-				}
-
-				statement.executeUpdate(query.toString());
-			}
-			
-			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
-
-		} catch (SQLException e) {
-			throw new BackBoxException(e, (query != null) ? query.toString() : "");
-		}
-	}
-
-	public void insert(Date lastModified, long size, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
-		StringBuilder query = null;
-		try {
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT);
-
-			query = new StringBuilder("insert into files values('");
-			query.append(digest).append("','");
-			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
-			query.append(folder).append("','");
-			query.append(lastModified).append("',");
-            query.append(size).append(',');
             query.append(encrypted ? 1 : 0).append(',');
             query.append(compressed ? 1 : 0).append(',');
             query.append(splitted ? 1 : 0).append(')');
