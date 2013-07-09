@@ -59,6 +59,8 @@ public class BackBoxHelper {
 	
 	public static final String CONFIG_FILE = "config.json";
 	
+	private static final int DEFAULT_LOG_SIZE = 2097152;
+	
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private Configuration configuration;
 	
@@ -87,12 +89,15 @@ public class BackBoxHelper {
 	public Configuration getConfiguration() throws IOException {
 		if (configuration == null) {
 			try {
-				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-				configuration = parser.parseAndClose(new FileReader(CONFIG_FILE), Configuration.class);
+				if (Files.exists(Paths.get(CONFIG_FILE))) {
+					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
+					configuration = parser.parseAndClose(new FileReader(CONFIG_FILE), Configuration.class);
+					return configuration;
+				}
 			} catch (FileNotFoundException e) {
-				_log.log(Level.WARNING, "Configuration file not found", e);
-				configuration = new Configuration();
+				_log.log(Level.SEVERE, "Configuration file not found", e);
 			}
+			configuration = new Configuration();
 		}
 		return configuration;
 	}
@@ -368,6 +373,8 @@ public class BackBoxHelper {
 		_log.fine("TransactionManager init OK");
 		
 		getConfiguration().setChunkSize(chunksize);
+		
+		getConfiguration().setLogSize(DEFAULT_LOG_SIZE);
 		
 		saveConfiguration();
 	}

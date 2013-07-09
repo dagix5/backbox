@@ -3,9 +3,8 @@ package it.backbox.gui;
 import it.backbox.gui.utility.ImagePanel;
 
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Image;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -16,23 +15,10 @@ import net.miginfocom.swing.MigLayout;
 public class LoadingDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-
-	/**
-	 * Create the dialog.
-	 */
-	public LoadingDialog() {
-		addWindowFocusListener(new WindowFocusListener() {
-
-			@Override
-			public void windowLostFocus(WindowEvent arg0) {
-				requestFocus();
-			}
-			
-			@Override
-			public void windowGainedFocus(WindowEvent arg0) {
-				//nothing to do
-			}
-		});
+	
+	public LoadingDialog(Frame owner, boolean modal) {
+		super(owner, modal);
+		
 		setUndecorated(true);
 		setResizable(false);
 		setBounds(100, 100, 200, 150);
@@ -48,7 +34,5 @@ public class LoadingDialog extends JDialog {
 		imgPanel.setMinimumSize(new Dimension(66, 66));
 		imgPanel.setPreferredSize(new Dimension(66, 66));
 		getContentPane().add(imgPanel, "cell 0 0,alignx center,aligny center");
-
 	}
-
 }

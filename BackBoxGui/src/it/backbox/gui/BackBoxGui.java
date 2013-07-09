@@ -296,7 +296,6 @@ public class BackBoxGui {
 	/**
 	 * Create the application.
 	 * @throws IOException 
-	 * @throws Exception 
 	 */
 	public BackBoxGui() throws IOException {
 		helper = new BackBoxHelper();
@@ -305,21 +304,21 @@ public class BackBoxGui {
 		
 		pwdDialog = new PasswordDialog(this);
 		newConfDialog = new NewConfDialog(this);
-		loadingDialog = new LoadingDialog();
+		loadingDialog = new LoadingDialog(frmBackBox, false);
 		detailsDialog = new DetailsDialog();
 		preferencesDialog = new PreferencesDialog(this);
 		configurationDialog = new ConfigurationDialog(this);
 	}
 
 	public void showLoading() {
+		frmBackBox.setEnabled(false);
 		loadingDialog.setLocationRelativeTo(frmBackBox);
 		loadingDialog.setVisible(true);
-        frmBackBox.setEnabled(false);
 	}
 	
 	public void hideLoading() {
 		loadingDialog.setVisible(false);
-        frmBackBox.setEnabled(true);
+		frmBackBox.setEnabled(true);
         frmBackBox.toFront();
 	}
 	
@@ -333,14 +332,14 @@ public class BackBoxGui {
 		ch.setLevel(Level.ALL);
 		_log.addHandler(ch);
 		try {
-			FileHandler fh = new FileHandler(GuiConstant.LOG_FILE, 20971520, 3, true);
+			FileHandler fh = new FileHandler(GuiConstant.LOG_FILE, helper.getConfiguration().getLogSize(), 3, true);
 			fh.setFormatter(new SimpleFormatter());
 			fh.setLevel(Level.ALL);
 			_log.addHandler(fh);
 		} catch (SecurityException | IOException e2) {
 			GuiUtility.handleException(frmBackBox, "Error open logging file", e2);
 		}
-		_log.setLevel(helper.getConfiguration().getLogLevel());
+		_log.setLevel(Level.parse(helper.getConfiguration().getLogLevel()));
 		
 		frmBackBox = new JFrame();
 		frmBackBox.setLocationRelativeTo(null);
@@ -348,17 +347,34 @@ public class BackBoxGui {
 		frmBackBox.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				try {
-					if (connected)
-						helper.logout();
-				} catch (Exception e1) {
-					GuiUtility.handleException(frmBackBox, "Error in logout", e1);
-				}
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							if (connected)
+								helper.logout();
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error in logout", e1);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    	if (!running) {
+		                    		System.exit(1);
+		                    	} else
+									JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+		                    }
+		                });
+					}
+				};
+				worker.start();
 			}
 		});
 		frmBackBox.setTitle("BackBox");
 		frmBackBox.setBounds(100, 100, 732, 692);
-		frmBackBox.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmBackBox.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmBackBox.setJMenuBar(menuBar);
@@ -526,7 +542,7 @@ public class BackBoxGui {
 				try {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 					preferencesDialog.setLocationRelativeTo(frmBackBox);
-					preferencesDialog.load(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getProxyConfiguration(), !running, helper.getConfiguration().getLogLevel());
+					preferencesDialog.load(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getProxyConfiguration(), !running, Level.parse(helper.getConfiguration().getLogLevel()), helper.getConfiguration().getLogSize());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);

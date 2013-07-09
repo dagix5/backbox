@@ -2,7 +2,6 @@ package it.backbox.bean;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import com.google.api.client.util.Key;
 
@@ -19,8 +18,11 @@ public class Configuration {
 	private int chunkSize;
 	@Key
 	private String rootFolderID;
+	
 	@Key
-	private Level logLevel;
+	private String logLevel;
+	@Key
+	private int logSize;
 	
 	@Key
 	private List<Folder> backupFolders;
@@ -91,12 +93,20 @@ public class Configuration {
 		return (pwdDigest == null) || pwdDigest.isEmpty();
 	}
 
-	public Level getLogLevel() {
+	public String getLogLevel() {
 		return logLevel;
 	}
 
-	public void setLogLevel(Level logLevel) {
+	public void setLogLevel(String logLevel) {
 		this.logLevel = logLevel;
+	}
+
+	public int getLogSize() {
+		return logSize;
+	}
+
+	public void setLogSize(int logSize) {
+		this.logSize = logSize;
 	}
 
 }
