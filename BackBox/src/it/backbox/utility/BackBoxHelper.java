@@ -98,6 +98,10 @@ public class BackBoxHelper {
 				_log.log(Level.SEVERE, "Configuration file not found", e);
 			}
 			configuration = new Configuration();
+			
+			// setting default values
+			configuration.setLogLevel(Level.OFF.getName());
+			configuration.setLogSize(2097152);
 		}
 		return configuration;
 	}
