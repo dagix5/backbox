@@ -15,9 +15,9 @@ public interface ISplitter {
 	 * @param src
 	 *            Byte array to split
 	 * @return List of byte array chunks
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public List<byte[]> split(byte[] src) throws Exception;
+	public List<byte[]> split(byte[] src) throws IOException;
 
 	/**
 	 * Merge a list of byte arrays
@@ -25,9 +25,9 @@ public interface ISplitter {
 	 * @param chunks
 	 *            List of byte arrays to merge
 	 * @return Merged byte array
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public byte[] merge(List<byte[]> chunks) throws Exception;
+	public byte[] merge(List<byte[]> chunks) throws IOException;
 
 	/**
 	 * Merge a list of byte array in a file
@@ -36,9 +36,9 @@ public interface ISplitter {
 	 *            List of byte array to merge
 	 * @param destfilename
 	 *            Merged file
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public void merge(List<byte[]> chunks, String destfilename) throws Exception;
+	public void merge(List<byte[]> chunks, String destfilename) throws IOException;
 	
 	/**
 	 * Split a byte array in Chunk(s)
@@ -48,9 +48,9 @@ public interface ISplitter {
 	 * @param chunkprefix
 	 *            Prefix to append a progressive to create a chunk name
 	 * @return List of Chunk
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public List<Chunk> splitChunk(byte[] src, String chunkprefix) throws Exception;
+	public List<Chunk> splitChunk(byte[] src, String chunkprefix) throws IOException;
 	
 	/**
 	 * Split a file in Chunk(s)
@@ -60,8 +60,9 @@ public interface ISplitter {
 	 * @param chunkprefix
 	 *            Prefix to append a progressive to create a chunk name
 	 * @return List of Chunk
+	 * @throws IOException
 	 */
-	public List<Chunk> splitChunk(String filename, String chunkprefix) throws Exception;
+	public List<Chunk> splitChunk(String filename, String chunkprefix) throws IOException;
 
 
 	/**
@@ -71,8 +72,9 @@ public interface ISplitter {
 	 *            List of Chunk to merge
 	 * @param destfilename
 	 *            Merged file
+	 * @throws IOException
 	 */
-	public void mergeChunk(List<Chunk> chunks, String destfilename) throws Exception;
+	public void mergeChunk(List<Chunk> chunks, String destfilename) throws IOException;
 	
 	/**
 	 * Get the next chunk content
@@ -96,8 +98,8 @@ public interface ISplitter {
 	 *            InputStream chunk
 	 * @param out
 	 *            Merged file OutputStream
-	 * @throws Exception
+	 * @throws IOException
 	 */
-	public void mergeNextChunk(InputStream in, OutputStream out) throws Exception;
+	public void mergeNextChunk(InputStream in, OutputStream out) throws IOException;
 
 }

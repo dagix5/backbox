@@ -103,7 +103,6 @@ public class BackBoxGui {
 
 	/**
 	 * Launch the application.
-	 * @throws Exception 
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -140,8 +139,8 @@ public class BackBoxGui {
 						updateTableResult(tt);
 					}
 				});
-			} catch (Exception e1) {
-				GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
+			} catch (IOException e) {
+				GuiUtility.handleException(frmBackBox, "Error loading configuration", e);
 			}
 		}
 		
@@ -295,9 +294,8 @@ public class BackBoxGui {
 	
 	/**
 	 * Create the application.
-	 * @throws IOException 
 	 */
-	public BackBoxGui() throws IOException {
+	public BackBoxGui() {
 		helper = new BackBoxHelper();
 		
 		initialize();
@@ -324,9 +322,8 @@ public class BackBoxGui {
 	
 	/**
 	 * Initialize the contents of the frame.
-	 * @throws IOException 
 	 */
-	private void initialize() throws IOException {
+	private void initialize() {
 		// Logger configuration
 		ConsoleHandler ch = new ConsoleHandler();
 		ch.setLevel(Level.ALL);
@@ -336,10 +333,14 @@ public class BackBoxGui {
 			fh.setFormatter(new SimpleFormatter());
 			fh.setLevel(Level.ALL);
 			_log.addHandler(fh);
-		} catch (SecurityException | IOException e2) {
-			GuiUtility.handleException(frmBackBox, "Error open logging file", e2);
+		} catch (SecurityException | IOException e) {
+			GuiUtility.handleException(frmBackBox, "Error open logging file", e);
 		}
-		_log.setLevel(Level.parse(helper.getConfiguration().getLogLevel()));
+		try {
+			_log.setLevel(Level.parse(helper.getConfiguration().getLogLevel()));
+		} catch (SecurityException | IllegalArgumentException | IOException e) {
+			GuiUtility.handleException(frmBackBox, "Error setting logging level", e);
+		}
 		
 		frmBackBox = new JFrame();
 		frmBackBox.setLocationRelativeTo(null);
@@ -1031,15 +1032,10 @@ public class BackBoxGui {
 		showLoading();
 		Thread worker = new Thread() {
 			public void run() {
-				try {
-					int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
-					detailsDialog.updateDetails(tasksPending.get(i));
-					detailsDialog.setLocationRelativeTo(frmBackBox);
-					detailsDialog.setVisible(true);
-				} catch (Exception e1) {
-					hideLoading();
-					GuiUtility.handleException(frmBackBox, "Error loading details", e1);
-				}
+				int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
+				detailsDialog.updateDetails(tasksPending.get(i));
+				detailsDialog.setLocationRelativeTo(frmBackBox);
+				detailsDialog.setVisible(true);
 				
 				SwingUtilities.invokeLater(new Runnable() {
                     public void run() {

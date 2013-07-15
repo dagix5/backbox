@@ -14,15 +14,20 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
 import java.util.logging.Logger;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
@@ -157,7 +162,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#encrypt(java.io.InputStream, java.io.OutputStream)
 	 */
 	@Override
-	public void encrypt(InputStream in, OutputStream out) throws Exception {
+	public void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidParameterSpecException, IOException, IllegalBlockSizeException, BadPaddingException {
 		try {
 			Cipher c = Cipher.getInstance(ENCRYPT_ALGO);
 			c.init(Cipher.ENCRYPT_MODE, key);
@@ -191,7 +196,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#encrypt(byte[])
 	 */
 	@Override
-	public byte[] encrypt(byte[] src) throws Exception {
+	public byte[] encrypt(byte[] src) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		encrypt(in, out);
@@ -203,7 +208,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#ecnrypt(java.lang.String)
 	 */
 	@Override
-	public byte[] encrypt(String filename) throws Exception {
+	public byte[] encrypt(String filename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		encrypt(in, out);
@@ -215,7 +220,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#encrypt(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void encrypt(String srcfilename, String destfilename) throws Exception {
+	public void encrypt(String srcfilename, String destfilename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
 		OutputStream out = Utility.getOutputStream(destfilename);
 		encrypt(in, out);
@@ -226,7 +231,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#decrypt(java.io.InputStream, java.io.OutputStream)
 	 */
 	@Override
-	public void decrypt(InputStream in, OutputStream out) throws Exception {
+	public void decrypt(InputStream in, OutputStream out) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		try {
 			byte[] iv = new byte[IV_LENGTH];
 			int count = in.read(iv, 0, IV_LENGTH);
@@ -259,7 +264,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#decrypt(byte[])
 	 */
 	@Override
-	public byte[] decrypt(byte[] src) throws Exception {
+	public byte[] decrypt(byte[] src) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		decrypt(in, out);
@@ -271,7 +276,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#decrypt(java.lang.String)
 	 */
 	@Override
-	public byte[] decrypt(String filename) throws Exception {
+	public byte[] decrypt(String filename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		decrypt(in, out);
@@ -283,7 +288,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#decrypt(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void decrypt(String srcfilename, String destfilename) throws Exception {
+	public void decrypt(String srcfilename, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
 		OutputStream out = Utility.getOutputStream(destfilename);
 		decrypt(in, out);
@@ -294,7 +299,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @see it.backbox.ISecurityManager#decrypt(byte[], java.lang.String)
 	 */
 	@Override
-	public void decrypt(byte[] src, String destfilename) throws Exception {
+	public void decrypt(byte[] src, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		OutputStream out = Utility.getOutputStream(destfilename);
 		decrypt(in, out);

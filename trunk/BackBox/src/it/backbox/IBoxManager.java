@@ -26,7 +26,7 @@ public interface IBoxManager {
 	 * @throws IOException
 	 * @throws RestException 
 	 */
-	public String getBoxID(String filename) throws Exception;
+	public String getBoxID(String filename) throws IOException, RestException;
 	
 	/**
 	 * Check if the token to access to Box.com is valid
@@ -58,7 +58,7 @@ public interface IBoxManager {
 	 * @return Uploaded file ID
 	 * @throws Exception 
 	 */
-	public String upload(String filename, String folderID) throws Exception;
+	public String upload(String filename, String folderID) throws IOException, RestException;
 
 	/**
 	 * Download a file from Box.com
@@ -68,7 +68,7 @@ public interface IBoxManager {
 	 * @return Byte array downloaded file content
 	 * @throws Exception 
 	 */
-	public byte[] download(String fileID) throws Exception;
+	public byte[] download(String fileID) throws IOException, RestException;
 
 	/**
 	 * Delete a folder from Box.com
@@ -77,7 +77,7 @@ public interface IBoxManager {
 	 *            ID of the folder to delete
 	 * @throws Exception 
 	 */
-	public void deleteFolder(String folderID) throws Exception;
+	public void deleteFolder(String folderID) throws IOException, RestException;
 	
 	/**
 	 * Delete a file from Box.com
@@ -86,7 +86,7 @@ public interface IBoxManager {
 	 *            ID of the file to delete
 	 * @throws Exception 
 	 */
-	public void delete(String fileID) throws Exception;
+	public void delete(String fileID) throws IOException, RestException;
 	
 	/**
 	 * Delete a list of Chunk from Box.com
@@ -95,7 +95,7 @@ public interface IBoxManager {
 	 *            List of Chunk to delete
 	 * @throws Exception 
 	 */
-	public void deleteChunk(List<Chunk> chunks) throws Exception;
+	public void deleteChunk(List<Chunk> chunks) throws IOException, RestException;
 
 	/**
 	 * Download a list of Chunk from Box.com
@@ -104,7 +104,7 @@ public interface IBoxManager {
 	 *            List of Chunk to download
 	 * @return List of byte arrays chunks contents
 	 */
-	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception;
+	public List<byte[]> downloadChunk(List<Chunk> chunks) throws IOException, RestException;
 	
 	/**
 	 * Download a chunk from Box.com
@@ -113,7 +113,7 @@ public interface IBoxManager {
 	 *            Chunk to download
 	 * @return Byte array chunk content
 	 */
-	public byte[] downloadChunk(Chunk chunk) throws Exception;
+	public byte[] downloadChunk(Chunk chunk) throws IOException, RestException;
 	
 	/**
 	 * Upload a Chunk (contents) to Box.com
@@ -124,7 +124,7 @@ public interface IBoxManager {
 	 *            ID of the folder where upload the chunks
 	 * @throws Exception 
 	 */
-	public void uploadChunk(Chunk chunk, String folderID) throws Exception;
+	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException;
 	
 	/**
 	 * Get a map with all chunks for all the files in the remote folder with ID
@@ -135,6 +135,6 @@ public interface IBoxManager {
 	 * @return Map with <File hash, List of Chunks>
 	 * @throws Exception
 	 */
-	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws Exception;
+	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException;
 
 }

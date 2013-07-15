@@ -14,9 +14,9 @@ public interface ICompress {
 	 * @param name
 	 *            Zip entry name
 	 * @return Byte array compressed
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public byte[] compress(byte[] src, String name) throws Exception;
+	public byte[] compress(byte[] src, String name) throws IOException;
 
 	/**
 	 * Compress a file
@@ -26,9 +26,9 @@ public interface ICompress {
 	 * @param name
 	 *            Zip entry name
 	 * @return Compressed file content byte array
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public byte[] compress(String filename, String name) throws Exception;
+	public byte[] compress(String filename, String name) throws IOException;
 
 	/**
 	 * Decompress a byte array content
@@ -38,9 +38,9 @@ public interface ICompress {
 	 * @param name
 	 *            Zip entry name
 	 * @return Byte array decompressed
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public byte[] decompress(byte[] src, String name) throws Exception;
+	public byte[] decompress(byte[] src, String name) throws IOException;
 
 	/**
 	 * Decompress a byte array in a file
@@ -51,9 +51,9 @@ public interface ICompress {
 	 *            Zip entry name
 	 * @param destfilename
 	 *            File decompressed
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public void decompress(byte[] src, String name, String destfilename) throws Exception;
+	public void decompress(byte[] src, String name, String destfilename) throws IOException;
 	
 	/**
 	 * Compress an InputStream to an OutputStream
@@ -66,7 +66,7 @@ public interface ICompress {
 	 *            Entry name
 	 * @throws IOException
 	 */
-	public void compress(InputStream in, OutputStream out, String name) throws Exception;
+	public void compress(InputStream in, OutputStream out, String name) throws IOException;
 	
 	/**
 	 * UnZip an InputStream to an OutputStream
@@ -79,6 +79,6 @@ public interface ICompress {
 	 *            Zip entry name
 	 * @throws IOException
 	 */
-	public void decompress(InputStream in, OutputStream out, String name) throws Exception;
+	public void decompress(InputStream in, OutputStream out, String name) throws IOException;
 
 }

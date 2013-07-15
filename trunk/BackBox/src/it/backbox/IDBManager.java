@@ -1,6 +1,7 @@
 package it.backbox;
 
 import it.backbox.bean.Chunk;
+import it.backbox.exception.BackBoxException;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -32,9 +33,9 @@ public interface IDBManager {
 	 *            Name of the file to delete
 	 * @param digest
 	 *            File hash to delete
-	 * @throws SQLException
+	 * @throws BackBoxException
 	 */
-	public void delete(String filename, String digest) throws Exception;
+	public void delete(String filename, String digest) throws BackBoxException;
 	
 	/**
 	 * Insert new file informations in database
@@ -52,10 +53,9 @@ public interface IDBManager {
 	 * @param encrypted
 	 * @param compressed
 	 * @param splitted
-	 * @throws SQLException
-	 * @throws IOException
+	 * @throws BackBoxException
 	 */
-	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws Exception;
+	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException;
 	
 	/**
 	 * Get the record of a file
@@ -83,7 +83,8 @@ public interface IDBManager {
 	 * Reset or create the database and open the connection
 	 * 
 	 * @throws SQLException
+	 * @throws ClassNotFoundException
 	 */
-	public void createDB() throws Exception;
+	public void createDB() throws SQLException, ClassNotFoundException;
 
 }

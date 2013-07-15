@@ -98,28 +98,27 @@ public class NewConfDialog extends JDialog {
 				setVisible(false);
 				Thread worker = new Thread() {
 					public void run() {
-						try {
-							lblSetFolderTo.setVisible(false);
-							lblPasswordErrata.setVisible(false);
-							
-							if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
-								main.hideLoading();
-								setVisible(true);
-								lblPasswordErrata.setVisible(true);
-								return;
-							}
-							
-							List<Folder> folders = foldersPanel.getFolders();
-							if (folders.isEmpty()) {
-								main.hideLoading();
-								setVisible(true);
-								lblSetFolderTo.setVisible(true);
-								return;
-							}
-							
+						
+						lblSetFolderTo.setVisible(false);
+						lblPasswordErrata.setVisible(false);
+						
+						if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
+							main.hideLoading();
+							setVisible(true);
+							lblPasswordErrata.setVisible(true);
+							return;
+						}
+						
+						List<Folder> folders = foldersPanel.getFolders();
+						if (folders.isEmpty()) {
+							main.hideLoading();
+							setVisible(true);
+							lblSetFolderTo.setVisible(true);
+							return;
+						}
+						
+						try {	
 							main.helper.register(new String(passwordField.getPassword()), folders, (int) spinnerChunksize.getValue() * 1024);
-							passwordField.setText("");
-							passwordField_1.setText("");
 							lblPasswordErrata.setVisible(false);
 							main.connect();	
 						} catch (Exception e) {
@@ -128,6 +127,9 @@ public class NewConfDialog extends JDialog {
 							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
 							main.disconnect();
 						}
+						
+						passwordField.setText("");
+						passwordField_1.setText("");
 						
 						SwingUtilities.invokeLater(new Runnable() {
 		                    public void run() {

@@ -79,7 +79,7 @@ public class DBManager implements IDBManager {
 	 * @see it.backbox.IDBManager#createDB()
 	 */
 	@Override
-	public void createDB() throws Exception {
+	public void createDB() throws SQLException, ClassNotFoundException {
 		closeDB();
 		if(!open) {
 			Class.forName("org.sqlite.JDBC");

@@ -23,7 +23,8 @@ public interface IRestClient {
 	 * @param fileID
 	 *            ID file to download
 	 * @return File content
-	 * @throws IOException, RestException
+	 * @throws IOException
+	 * @throws RestException
 	 */
 	public byte[] download(String fileID) throws IOException, RestException;
 	
@@ -36,7 +37,7 @@ public interface IRestClient {
 	 *            ID of the parent folder
 	 * @return New folder info
 	 * @throws IOException
-	 *             , RestException
+	 * @throws RestException
 	 */
 	public BoxFolder mkdir(String name, String parentFolderID) throws IOException, RestException;
 	
@@ -46,7 +47,8 @@ public interface IRestClient {
 	 * @param query
 	 *            Search query to execute
 	 * @return Search result
-	 * @throws IOException, RestException
+	 * @throws IOException
+	 * @throws RestException
 	 */
 	public BoxSearchResult search(String query) throws IOException, RestException;
 	
@@ -64,7 +66,8 @@ public interface IRestClient {
 	 * @param sha1
 	 *            Hash of the file content
 	 * @return New remote file info
-	 * @throws IOException, RestException
+	 * @throws IOException
+	 * @throws RestException
 	 */
 	public BoxFile upload(String name, String fileID, byte[] content, String folderID, String sha1) throws IOException, RestException;
 	
@@ -75,7 +78,8 @@ public interface IRestClient {
 	 *            ID of the file to delete
 	 * @param isFolder
 	 *            True if the item to delete is a folder, false otherwise
-	 * @throws IOException, RestException
+	 * @throws IOException
+	 * @throws RestException
 	 */
 	public void delete(String fileID, boolean isFolder) throws IOException, RestException;
 	
@@ -86,6 +90,7 @@ public interface IRestClient {
 	 *            ID of the folder
 	 * @return Items in the folder
 	 * @throws IOException
+	 * @throws RestException
 	 */
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException;
 
