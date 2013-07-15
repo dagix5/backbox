@@ -8,6 +8,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
@@ -24,7 +25,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.ICompress#zip(java.io.InputStream, java.io.OutputStream, java.lang.String)
 	 */
 	@Override
-	public void compress(InputStream in, OutputStream out, String name) throws Exception {
+	public void compress(InputStream in, OutputStream out, String name) throws IOException {
 		ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(out));
 		
 		ZipEntry entry = new ZipEntry(name);
@@ -48,7 +49,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.ICompress#decompress(java.io.InputStream, java.io.OutputStream, java.lang.String)
 	 */
 	@Override
-	public void decompress(InputStream in, OutputStream out, String name) throws Exception {
+	public void decompress(InputStream in, OutputStream out, String name) throws IOException {
 		ZipInputStream zin = new ZipInputStream(in);
 		ZipEntry zipEntry = null;
 		do {
@@ -73,7 +74,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.IZipper#compress(byte[], java.lang.String)
 	 */
 	@Override
-	public byte[] compress(byte[] src, String name) throws Exception {
+	public byte[] compress(byte[] src, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
@@ -87,7 +88,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.IZipper#compress(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public byte[] compress(String filename, String name) throws Exception {
+	public byte[] compress(String filename, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
@@ -104,7 +105,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.IZipper#decompress(byte[], java.lang.String)
 	 */
 	@Override
-	public byte[] decompress(byte[] src, String name) throws Exception {
+	public byte[] decompress(byte[] src, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
@@ -118,7 +119,7 @@ public class Zipper implements ICompress{
 	 * @see it.backbox.IZipper#decompress(byte[], java.lang.String)
 	 */
 	@Override
-	public void decompress(byte[] src, String name, String destfilename) throws Exception {
+	public void decompress(byte[] src, String name, String destfilename) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		OutputStream out = Utility.getOutputStream(destfilename);
 		

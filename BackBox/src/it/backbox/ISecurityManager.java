@@ -1,7 +1,16 @@
 package it.backbox;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidParameterSpecException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 public interface ISecurityManager {
 	
@@ -25,9 +34,15 @@ public interface ISecurityManager {
 	 * @param src
 	 *            Byte array to encrypt
 	 * @return Encrypted byte array
-	 * @throws Exception 
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidParameterSpecException
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
 	 */
-	public byte[] encrypt(byte[] src) throws Exception;
+	public byte[] encrypt(byte[] src) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidParameterSpecException, IOException, IllegalBlockSizeException, BadPaddingException;
 
 	/**
 	 * Encrypt a file
@@ -35,9 +50,15 @@ public interface ISecurityManager {
 	 * @param filename
 	 *            Name of the file to encrypt
 	 * @return Encrypted file content byte array
-	 * @throws Exception 
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidParameterSpecException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws IOException
 	 */
-	public byte[] encrypt(String filename) throws Exception;
+	public byte[] encrypt(String filename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException;
 
 	/**
 	 * Encrypt a file
@@ -46,9 +67,15 @@ public interface ISecurityManager {
 	 *            File to encrypt
 	 * @param destfilename
 	 *            Encrypted file
-	 * @throws Exception 
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidParameterSpecException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws IOException
 	 */
-	public void encrypt(String srcfilename, String destfilename) throws Exception;
+	public void encrypt(String srcfilename, String destfilename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException;
 
 	/**
 	 * Decrypt a byte array
@@ -56,9 +83,15 @@ public interface ISecurityManager {
 	 * @param src
 	 *            Byte array to decrypt
 	 * @return Decrypted byte array
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws BadPaddingException
 	 */
-	public byte[] decrypt(byte[] src) throws Exception;
+	public byte[] decrypt(byte[] src) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException;
 
 	/**
 	 * Decrypt a file
@@ -66,9 +99,15 @@ public interface ISecurityManager {
 	 * @param filename
 	 *            File to decrypt
 	 * @return Decrypted byte array
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws BadPaddingException 
 	 */
-	public byte[] decrypt(String filename) throws Exception;
+	public byte[] decrypt(String filename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException;
 
 	/**
 	 * Decrypt a file
@@ -77,9 +116,15 @@ public interface ISecurityManager {
 	 *            File to decrypt
 	 * @param destfilename
 	 *            Decrypted file
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws BadPaddingException
 	 */
-	public void decrypt(String srcfilename, String destfilename) throws Exception;
+	public void decrypt(String srcfilename, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException;
 
 	/**
 	 * Decrypt a byte array content in a file
@@ -88,9 +133,15 @@ public interface ISecurityManager {
 	 *            Byte array to decrypt
 	 * @param destfilename
 	 *            Decrypted file
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws BadPaddingException
 	 */
-	public void decrypt(byte[] src, String destfilename) throws Exception;
+	public void decrypt(byte[] src, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException;
 	
 	/**
 	 * Encrypt an InputStream to an OutputStream
@@ -99,9 +150,15 @@ public interface ISecurityManager {
 	 *            InputStream to encrypt
 	 * @param out
 	 *            Encrypted OutputStream
-	 * @throws Exception
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidParameterSpecException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws IOException
 	 */
-	public void encrypt(InputStream in, OutputStream out) throws Exception;
+	public void encrypt(InputStream in, OutputStream out) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException;
 	
 	/**
 	 * Decrypt an InputStream to an OutputStream
@@ -110,7 +167,13 @@ public interface ISecurityManager {
 	 *            InputStream to decrypt
 	 * @param out
 	 *            Decrypted OutputStream
-	 * @throws Exception
+	 * @throws IOException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws BadPaddingException
 	 */
-	public void decrypt(InputStream in, OutputStream out) throws Exception;
+	public void decrypt(InputStream in, OutputStream out) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException;
 }

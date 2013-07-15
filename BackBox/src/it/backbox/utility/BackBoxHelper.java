@@ -37,6 +37,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidParameterSpecException;
 import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -44,6 +47,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -214,9 +221,11 @@ public class BackBoxHelper {
 	 * 			  Configuration index of the folder to remove
 	 * @param folderID
 	 *            ID of the folder to remove
-	 * @throws Exception 
+	 * @throws RestException 
+	 * @throws IOException 
+	 * @throws BackBoxException 
 	 */
-	private void removeBackupFolder(int index, String folderID) throws Exception {
+	private void removeBackupFolder(int index, String folderID) throws IOException, RestException, BackBoxException {
 		if (bm == null)
 			throw new BackBoxException("BoxManager null");
 
@@ -231,9 +240,11 @@ public class BackBoxHelper {
 	 * 
 	 * @param folders
 	 *            New list of folders to backup
-	 * @throws Exception
+	 * @throws IOException 
+	 * @throws BackBoxException 
+	 * @throws RestException 
 	 */
-	public void updateBackupFolders(List<Folder> folders) throws Exception {
+	public void updateBackupFolders(List<Folder> folders) throws IOException, RestException, BackBoxException {
 		for (Folder f1 : folders) {
 			boolean found = false;
 			for (Folder f2 : getConfiguration().getBackupFolders()) {
@@ -386,9 +397,16 @@ public class BackBoxHelper {
 	/**
 	 * Close the connection
 	 * 
-	 * @throws Exception
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws InvalidParameterSpecException
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
 	 */
-	public void logout() throws Exception {
+	public void logout() throws SQLException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		if (dbm != null)
 			dbm.closeDB();
 		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {

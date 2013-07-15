@@ -98,7 +98,7 @@ public class BoxManager implements IBoxManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#getBoxID(java.lang.String)
 	 */
-	public String getBoxID(String filename) throws Exception {
+	public String getBoxID(String filename) throws IOException, RestException {
 		BoxSearchResult results = client.search(filename);
 		if ((results != null) && (results.entries != null) && !results.entries.isEmpty()) {
 			if (_log.isLoggable(Level.FINE)) _log.fine(filename + " found");
@@ -113,7 +113,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public String upload(String filename, String folderID) throws Exception {
+	public String upload(String filename, String folderID) throws IOException, RestException {
 		String[] ns = filename.split("\\\\");
 		String n = ns[ns.length - 1];
 		
@@ -129,7 +129,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#download(java.lang.String)
 	 */
 	@Override
-	public byte[] download(String fileID) throws Exception {
+	public byte[] download(String fileID) throws IOException, RestException {
 		byte[] file = client.download(fileID);
 		if (_log.isLoggable(Level.FINE)) _log.fine(fileID + " downloaded");
 		return file;
@@ -139,7 +139,7 @@ public class BoxManager implements IBoxManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#deleteFolder(java.lang.String)
 	 */
-	public void deleteFolder(String folderID) throws Exception {
+	public void deleteFolder(String folderID) throws IOException, RestException {
 		client.delete(folderID, true);
 	}
 	
@@ -148,7 +148,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#delete(java.lang.String)
 	 */
 	@Override
-	public void delete(String fileID) throws Exception {
+	public void delete(String fileID) throws IOException, RestException {
 		client.delete(fileID, false);
 	}
 
@@ -157,7 +157,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManagerChunk#deleteChunk(java.util.List)
 	 */
 	@Override
-	public void deleteChunk(List<Chunk> chunks) throws Exception {
+	public void deleteChunk(List<Chunk> chunks) throws IOException, RestException {
 		for(Chunk c : chunks)
 			client.delete(c.getBoxid(), false);
 	}
@@ -167,7 +167,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.List)
 	 */
 	@Override
-	public List<byte[]> downloadChunk(List<Chunk> chunks) throws Exception {
+	public List<byte[]> downloadChunk(List<Chunk> chunks) throws IOException, RestException {
 		List<byte[]> result = new ArrayList<>();
 		for(Chunk c : chunks)
 			result.add(downloadChunk(c));
@@ -179,7 +179,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#downloadChunk(it.backbox.bean.Chunk)
 	 */
 	@Override
-	public byte[] downloadChunk(Chunk chunk) throws Exception {
+	public byte[] downloadChunk(Chunk chunk) throws IOException, RestException {
 		return download(chunk.getBoxid());
 	}
 	
@@ -227,7 +227,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk, java.lang.String)
 	 */
 	@Override
-	public void uploadChunk(Chunk chunk, String folderID) throws Exception {
+	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException {
 		String name = chunk.getChunkname();
 		String[] ns = name.split("\\\\");
 		String n = ns[ns.length - 1];
@@ -242,7 +242,7 @@ public class BoxManager implements IBoxManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#getFolderChunks(java.lang.String)
 	 */
-	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws Exception {
+	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException {
 		Map<String, List<Chunk>> info = new HashMap<>();
 		BoxItemCollection items = client.getFolderItems(folderID);
 		List<BoxFile> files = items.entries;

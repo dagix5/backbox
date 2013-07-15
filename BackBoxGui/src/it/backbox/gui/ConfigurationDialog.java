@@ -1,6 +1,8 @@
 package it.backbox.gui;
 
 import it.backbox.bean.Folder;
+import it.backbox.exception.BackBoxException;
+import it.backbox.exception.RestException;
 import it.backbox.gui.utility.FoldersPanel;
 import it.backbox.gui.utility.GuiUtility;
 
@@ -8,6 +10,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -56,7 +59,7 @@ public class ConfigurationDialog extends JDialog {
 					public void run() {
 						try {
 							main.helper.updateBackupFolders(foldersPanel.getFolders());
-						} catch (Exception e) {
+						} catch (IOException | RestException | BackBoxException e) {
 							main.hideLoading();
 							setVisible(true);
 							GuiUtility.handleException(getContentPane(), "Error updating configuration", e);
