@@ -71,6 +71,7 @@ public class PasswordDialog extends JDialog {
 							if (mode == GuiConstant.LOGIN_MODE) {
 								main.helper.login(new String(passwordField.getPassword()));
 								ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getDefaultUploadSpeed());
+								ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, main.helper.getConfiguration().getDefaultDownloadSpeed());
 								
 								main.connect();
 							} else if (mode == GuiConstant.BUILDDB_MODE)
