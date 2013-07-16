@@ -36,6 +36,7 @@ public class PreferencesDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 
 	private JSpinner defaultUploadSpeed;
+	private JSpinner defaultDownloadSpeed;
 	private JComboBox<Level> comboBox;
 	private JTextField txtProxyPort;
 	private JTextField txtProxyAddress;
@@ -52,7 +53,7 @@ public class PreferencesDialog extends JDialog {
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		
 		setTitle("Preferences");
-		setBounds(100, 100, 450, 241);
+		setBounds(100, 100, 450, 270);
 		getContentPane().setLayout(new BorderLayout());
 		
 		JPanel buttonPane = new JPanel();
@@ -69,7 +70,7 @@ public class PreferencesDialog extends JDialog {
 
 		final JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
-		panel.setLayout(new MigLayout("", "[120px:120px][90px:90px][150px:n,grow]", "[][][][][][]"));
+		panel.setLayout(new MigLayout("", "[120px:120px][90px:90px][150px:n,grow]", "[][][][][][][][]"));
 		
 		JLabel lblDefaultUploadSpeed = new JLabel("Default upload speed");
 		panel.add(lblDefaultUploadSpeed, "cell 0 0,alignx right");
@@ -80,8 +81,17 @@ public class PreferencesDialog extends JDialog {
 		JLabel lblKbsset = new JLabel("KB\\s (set 0 for unlmited)");
 		panel.add(lblKbsset, "cell 2 0");
 		
+		JLabel lblDefaultDownloadSpeed = new JLabel("Default download speed");
+		panel.add(lblDefaultDownloadSpeed, "cell 0 1,alignx right,growy");
+		
+		defaultDownloadSpeed = new JSpinner();
+		panel.add(defaultDownloadSpeed, "cell 1 1,growx");
+		
+		JLabel lblKbsset2 = new JLabel("KB\\s (set 0 for unlmited)");
+		panel.add(lblKbsset2, "cell 2 1");
+		
 		JLabel lblLogLevel = new JLabel("Log level");
-		panel.add(lblLogLevel, "cell 0 1,alignx trailing");
+		panel.add(lblLogLevel, "cell 0 3,alignx trailing");
 		
 		comboBox = new JComboBox<Level>();
 		comboBox.addItemListener(new ItemListener() {
@@ -96,31 +106,31 @@ public class PreferencesDialog extends JDialog {
 		comboBox.addItem(Level.SEVERE);
 		comboBox.addItem(Level.OFF);
 		
-		panel.add(comboBox, "cell 1 1 2 1,growx");
+		panel.add(comboBox, "cell 1 3 2 1,growx");
 		
 		JLabel lblLogSize = new JLabel("Log size");
-		panel.add(lblLogSize, "cell 0 2,alignx right");
+		panel.add(lblLogSize, "cell 0 4,alignx right");
 		
 		logSize = new JSpinner();
-		panel.add(logSize, "cell 1 2,grow");
+		panel.add(logSize, "cell 1 4,grow");
 		
 		JLabel lblKb = new JLabel("KB");
-		panel.add(lblKb, "cell 2 2,alignx left,growy");
+		panel.add(lblKb, "cell 2 4,alignx left,growy");
 		
 		JLabel lblProxyAddress = new JLabel("Proxy Address");
-		panel.add(lblProxyAddress, "cell 0 4,alignx trailing");
+		panel.add(lblProxyAddress, "cell 0 6,alignx trailing");
 		
 		txtProxyAddress = new JTextField();
 		txtProxyAddress.setEnabled(false);
-		panel.add(txtProxyAddress, "cell 1 4 2 1,growx");
+		panel.add(txtProxyAddress, "cell 1 6 2 1,growx");
 		txtProxyAddress.setColumns(10);
 		
 		JLabel lblProxyPort = new JLabel("Proxy Port");
-		panel.add(lblProxyPort, "cell 0 5,alignx trailing");
+		panel.add(lblProxyPort, "cell 0 7,alignx trailing");
 		
 		txtProxyPort = new JTextField();
 		txtProxyPort.setEnabled(false);
-		panel.add(txtProxyPort, "cell 1 5 2 1,growx");
+		panel.add(txtProxyPort, "cell 1 7 2 1,growx");
 		Document doc = txtProxyPort.getDocument();
 		if (doc instanceof AbstractDocument) {
 			AbstractDocument abDoc = (AbstractDocument) doc;
@@ -134,7 +144,7 @@ public class PreferencesDialog extends JDialog {
 				txtProxyPort.setEnabled(chckbxProxy.isSelected());
 			}
 		});
-		panel.add(chckbxProxy, "cell 0 3,alignx right");
+		panel.add(chckbxProxy, "cell 0 5,alignx right");
 		
 		JButton okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
@@ -144,7 +154,14 @@ public class PreferencesDialog extends JDialog {
 				Thread worker = new Thread() {
 					public void run() {
 						try {
-							main.setPreferences(((Integer) defaultUploadSpeed.getValue()) * 1024);
+							int upSpeed = ((int) defaultUploadSpeed.getValue()) * 1024;
+							int downSpeed = ((int) defaultDownloadSpeed.getValue()) * 1024;
+							
+							main.helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
+							main.helper.getConfiguration().setDefaultDownloadSpeed(downSpeed);
+							
+							main.setSpeed(upSpeed, downSpeed);
+							
 							if (newLevel != null) {
 								Logger.getLogger("it.backbox").setLevel(newLevel);
 								main.helper.getConfiguration().setLogLevel(newLevel.getName());
@@ -179,9 +196,12 @@ public class PreferencesDialog extends JDialog {
 		getRootPane().setDefaultButton(okButton);
 	}
 
-	public void load(int uploadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, Level logLevel, int logSize) {
+	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, Level logLevel, int logSize) {
 		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
+		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, new Integer(0), null, new Integer(1)));
+		
 		this.logSize.setModel(new SpinnerNumberModel((logSize > 1024) ? logSize / 1024 : 1, new Integer(1), null, new Integer(1)));
+		
 		chckbxProxy.setEnabled(proxyChcbxEnabled);
 		if (pc != null) {
 			chckbxProxy.setSelected(pc.isEnabled());

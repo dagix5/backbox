@@ -15,15 +15,17 @@ public class Configuration {
 	@Key
 	private int defaultUploadSpeed;
 	@Key
+	private int defaultDownloadSpeed;
+	@Key
 	private int chunkSize;
 	@Key
 	private String rootFolderID;
-	
+
 	@Key
 	private String logLevel;
 	@Key
 	private int logSize;
-	
+
 	@Key
 	private List<Folder> backupFolders;
 	@Key
@@ -51,6 +53,14 @@ public class Configuration {
 
 	public void setDefaultUploadSpeed(int defaultUploadSpeed) {
 		this.defaultUploadSpeed = defaultUploadSpeed;
+	}
+
+	public int getDefaultDownloadSpeed() {
+		return defaultDownloadSpeed;
+	}
+
+	public void setDefaultDownloadSpeed(int defaultDownloadSpeed) {
+		this.defaultDownloadSpeed = defaultDownloadSpeed;
 	}
 
 	public int getChunkSize() {
@@ -88,7 +98,7 @@ public class Configuration {
 	public void setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
 		this.proxyConfiguration = proxyConfiguration;
 	}
-	
+
 	public boolean isEmpty() {
 		return (pwdDigest == null) || pwdDigest.isEmpty();
 	}
