@@ -118,10 +118,10 @@ public class BackBoxGui {
 		});
 	}
 	
-	private void setSpeed(int uploadSpeed) {
+	public void setSpeed(int uploadSpeed, int downloadSpeed) {
 		spnCurrentUploadSpeed.setValue(uploadSpeed / 1024);
 		ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, uploadSpeed);
-		ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, uploadSpeed);
+		ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, downloadSpeed);
 	}
 	
 	public void connect() {
@@ -129,7 +129,7 @@ public class BackBoxGui {
 		
 		if (connected) {
 			try {
-				setSpeed(helper.getConfiguration().getDefaultUploadSpeed());
+				setSpeed(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getDefaultDownloadSpeed());
 				updateTable();
 				
 				helper.getTransactionManager().addListener(new CompleteTransactionListener() {
@@ -279,17 +279,6 @@ public class BackBoxGui {
 		}
 		
 		JOptionPane.showMessageDialog(frmBackBox, "Operation completed", "BackBox", JOptionPane.INFORMATION_MESSAGE);
-	}
-	
-	public void setPreferences(Integer defaultUploadSpeed) {
-		try {
-			helper.getConfiguration().setDefaultUploadSpeed(defaultUploadSpeed);
-			helper.saveConfiguration();
-			
-			setSpeed(defaultUploadSpeed);
-		} catch (IOException e) {
-			GuiUtility.handleException(frmBackBox, "Error saving preferences", e);
-		}
 	}
 	
 	/**
@@ -543,7 +532,12 @@ public class BackBoxGui {
 				try {
 					preferencesDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 					preferencesDialog.setLocationRelativeTo(frmBackBox);
-					preferencesDialog.load(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getProxyConfiguration(), !running, Level.parse(helper.getConfiguration().getLogLevel()), helper.getConfiguration().getLogSize());
+					preferencesDialog.load(helper.getConfiguration().getDefaultUploadSpeed(), 
+											helper.getConfiguration().getDefaultDownloadSpeed(), 
+											helper.getConfiguration().getProxyConfiguration(), 
+											!running, 
+											Level.parse(helper.getConfiguration().getLogLevel()), 
+											helper.getConfiguration().getLogSize());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);
@@ -621,6 +615,8 @@ public class BackBoxGui {
 								int[] ii = table.getSelectedRows();
 								for (int i : ii)
 									tt.add(helper.downloadFile(fileKeys.get(table.convertRowIndexToModel(i)), fc.getSelectedFile().getCanonicalPath(), false));
+								
+								spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultDownloadSpeed() / 1024);
 							} catch (Exception e1) {
 								hideLoading();
 								GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
@@ -700,12 +696,15 @@ public class BackBoxGui {
 							ArrayList<Transaction> tt = null;
 							try {
 								tt = helper.backup(false);
+								
+								spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultUploadSpeed() / 1024);
 							} catch (Exception e) {
 								hideLoading();
 								GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
 							} finally {
 								clearPreviewTable();
 								updatePreviewTable(tt);
+								
 								if ((tt == null) ||	tt.isEmpty()) {
 									hideLoading();
 									JOptionPane.showMessageDialog(frmBackBox, "No files to backup", "Info", JOptionPane.INFORMATION_MESSAGE);
@@ -765,6 +764,8 @@ public class BackBoxGui {
 								ArrayList<Transaction> tt = null;
 								try {
 									tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), false);
+									
+									spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultDownloadSpeed() / 1024);
 								} catch (Exception e) {
 									hideLoading();
 									GuiUtility.handleException(frmBackBox, "Error building restore transactions", e);
