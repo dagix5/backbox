@@ -178,7 +178,7 @@ public class DBManager implements IDBManager {
 			}
 	
 			query = new StringBuilder("delete from files where hash = '");
-			query.append(digest).append("' and filename = '").append(filename).append('\'');
+			query.append(digest).append("' and filename = '").append(StringEscapeUtils.escapeSql(filename)).append('\'');
 	
 			statement.executeUpdate(query.toString());
 			
