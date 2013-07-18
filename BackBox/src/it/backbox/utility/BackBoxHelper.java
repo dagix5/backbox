@@ -731,4 +731,17 @@ public class BackBoxHelper {
 		logout();
 	}
 	
+	/**
+	 * Get the free space
+	 * 
+	 * @return Free space in bytes
+	 * @throws IOException
+	 * @throws RestException
+	 * @throws BackBoxException
+	 */
+	public long getFreeSpace() throws IOException, RestException, BackBoxException {
+		if (bm != null)
+			return bm.getFreeSpace();
+		throw new BackBoxException("BoxManager null");
+	}
 }

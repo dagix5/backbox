@@ -4,6 +4,7 @@ import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
+import it.backbox.client.rest.bean.BoxUserInfo;
 import it.backbox.exception.RestException;
 
 import java.io.IOException;
@@ -93,5 +94,14 @@ public interface IRestClient {
 	 * @throws RestException
 	 */
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException;
-
+	
+	/**
+	 * Retrieves information about the user who is currently logged in, such as
+	 * login name, space used, etc.
+	 * 
+	 * @return User informations
+	 * @throws IOException
+	 * @throws RestException
+	 */
+	public BoxUserInfo getUserInfo() throws IOException, RestException;
 }

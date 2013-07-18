@@ -1,6 +1,8 @@
 package it.backbox.gui;
 
 import it.backbox.bean.File;
+import it.backbox.exception.BackBoxException;
+import it.backbox.exception.RestException;
 import it.backbox.gui.bean.Size;
 import it.backbox.gui.bean.TableTask;
 import it.backbox.gui.utility.ColorTableCellRenderer;
@@ -13,6 +15,7 @@ import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 import it.backbox.utility.BackBoxHelper;
+import it.backbox.utility.Utility;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -91,6 +94,7 @@ public class BackBoxGui {
 	private JSpinner spnCurrentUploadSpeed;
 	private JMenuItem mntmNewConfiguration;
 	private JMenuItem mntmConfiguration;
+	private JLabel lblFreeSpaceValue;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -253,6 +257,7 @@ public class BackBoxGui {
 			lblStatus.setText("Connected");
 		else
 			lblStatus.setText("Not connected");
+		
 		btnConnect.setEnabled(!connected);
 		btnBackup.setEnabled(connected && !running);
 		btnRestore.setEnabled(connected && !running);
@@ -263,6 +268,16 @@ public class BackBoxGui {
 		mntmDownloadDb.setEnabled(!running);
 		mntmNewConfiguration.setEnabled(!running);
 		mntmConfiguration.setEnabled(connected && !running);
+		
+		if (connected)
+			try {
+				lblFreeSpaceValue.setText(Utility.humanReadableByteCount(helper.getFreeSpace(), false));
+			} catch (IOException | RestException | BackBoxException e) {
+				lblFreeSpaceValue.setText("Error");
+				_log.log(Level.WARNING, "Error retrieving free space");
+			}
+		else
+			lblFreeSpaceValue.setText("");
 	}
 	
 	private void showResult(List<Transaction> result) {
@@ -677,7 +692,7 @@ public class BackBoxGui {
 		
 		JPanel panel = new JPanel();
 		frmBackBox.getContentPane().add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new MigLayout("", "[70px][70px][70px][35px][35px][117.00,grow][31.00][70px]", "[20px][282.00][]"));
+		panel.setLayout(new MigLayout("", "[70px][70px][70px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][70px]", "[20px][282.00][]"));
 		
 		btnBackup = new JButton("Backup");
 		btnBackup.setMnemonic('B');
@@ -797,11 +812,17 @@ public class BackBoxGui {
 		});
 		panel.add(btnRestore, "cell 2 0,grow");
 		
+		JLabel lblFreeSpace = new JLabel("Free Space:");
+		panel.add(lblFreeSpace, "cell 5 0,alignx right,growy");
+		
+		lblFreeSpaceValue = new JLabel("");
+		panel.add(lblFreeSpaceValue, "cell 6 0,alignx left,growy");
+		
 		lblStatus = new JLabel("");
-		panel.add(lblStatus, "cell 5 0 3 1,alignx right");
+		panel.add(lblStatus, "cell 7 0 2 1,alignx right");
 		
 		JScrollPane scrollPanePreview = new JScrollPane();
-		panel.add(scrollPanePreview, "cell 0 1 8 1,grow");
+		panel.add(scrollPanePreview, "cell 0 1 9 1,grow");
 		
 		tablePreview = new JTable();
 		tablePreview.setAutoCreateRowSorter(true);
@@ -892,7 +913,7 @@ public class BackBoxGui {
 
 		final JProgressBar progressBar = new JProgressBar();
 		progressBar.setStringPainted(true);
-		panel.add(progressBar, "cell 5 2,grow");
+		panel.add(progressBar, "cell 5 2 2 1,grow");
 		
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -1015,10 +1036,10 @@ public class BackBoxGui {
 		panel.add(btnStart, "cell 0 2,grow");
 		
 		JLabel lblEta = new JLabel("ETA:");
-		panel.add(lblEta, "cell 6 2,alignx right");
+		panel.add(lblEta, "cell 7 2,alignx right");
 		
 		lblEtaValue = new JLabel("");
-		panel.add(lblEtaValue, "cell 7 2");
+		panel.add(lblEtaValue, "cell 8 2");
 		
 		popupMenu.add(mntmDownload);
 		
