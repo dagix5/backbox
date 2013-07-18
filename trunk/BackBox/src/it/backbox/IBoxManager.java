@@ -136,5 +136,14 @@ public interface IBoxManager {
 	 * @throws Exception
 	 */
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException;
+	
+	/**
+	 * Get the space available on Box.com account
+	 * 
+	 * @return The free space
+	 * @throws IOException
+	 * @throws RestException
+	 */
+	public long getFreeSpace() throws IOException, RestException;
 
 }

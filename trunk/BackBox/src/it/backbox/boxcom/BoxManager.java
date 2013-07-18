@@ -8,6 +8,7 @@ import it.backbox.client.rest.bean.BoxFile;
 import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
+import it.backbox.client.rest.bean.BoxUserInfo;
 import it.backbox.exception.RestException;
 import it.backbox.utility.Utility;
 
@@ -273,4 +274,13 @@ public class BoxManager implements IBoxManager {
 		return client.isAccessTokenValid();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#getFreeSpace()
+	 */
+	@Override
+	public long getFreeSpace() throws IOException, RestException {
+		BoxUserInfo userInfo = client.getUserInfo();
+		return userInfo.space_amount - userInfo.space_used;
+	}
 }
