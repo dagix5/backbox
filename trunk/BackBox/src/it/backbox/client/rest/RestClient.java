@@ -193,7 +193,7 @@ public class RestClient implements IRestClient {
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Upload: " + response.getStatusCode());
 		BoxUploadedFile file =  response.parseAs(BoxUploadedFile.class);
-		if ((file == null) || (file.entries == null) || !file.entries.isEmpty() || (file.entries.get(0) == null))
+		if ((file == null) || (file.entries == null) || file.entries.isEmpty() || (file.entries.get(0) == null))
 			throw new RestException("Upload error: uploaded file informations not retrieved");
 		return file.entries.get(0);
 	}
