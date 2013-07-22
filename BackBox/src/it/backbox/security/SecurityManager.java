@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.BadPaddingException;
@@ -100,7 +101,6 @@ public class SecurityManager implements ISecurityManager{
 		}
 	}
 	
-
 	/**
 	 * Check if the password is correct
 	 * 
@@ -152,7 +152,7 @@ public class SecurityManager implements ISecurityManager{
 			KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, GEN_KEY_ITERATIONS, GEN_KEY_LENGTH);
 			SecretKey tmp = factory.generateSecret(spec);
 			key = new SecretKeySpec(tmp.getEncoded(), ENCRYPT_ALGO_GEN_KEY);
-			_log.fine("Key generated");
+			_log.info("Key generated");
 		} else
 			_log.severe("Password/Salt null: key not generated");
 	}
@@ -181,7 +181,7 @@ public class SecurityManager implements ISecurityManager{
 			out.write(c.doFinal());
 			out.flush();
 
-			_log.fine("encrypt ok");
+			if (_log.isLoggable(Level.INFO)) _log.info("encrypt ok");
 		} finally {
 			if (in != null)
 				in.close();
@@ -190,7 +190,6 @@ public class SecurityManager implements ISecurityManager{
 		}
 	}
 
-	
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.ISecurityManager#encrypt(byte[])
@@ -250,7 +249,7 @@ public class SecurityManager implements ISecurityManager{
 			out.write(c.doFinal());
 			out.flush();
 			
-			_log.fine("decrypt ok");
+			if (_log.isLoggable(Level.INFO)) _log.info("decrypt ok");
 		} finally {
 			if (in != null)
 				in.close();

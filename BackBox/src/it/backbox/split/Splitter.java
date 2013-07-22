@@ -87,7 +87,7 @@ public class Splitter implements ISplitter {
 		int bytesRemaining = (int) (size - bytesRead);
 		if (bytesRemaining < csize) {
 			csize = bytesRemaining;
-			if (_log.isLoggable(Level.FINEST)) _log.finest("Chunk size: " + csize);
+			if (_log.isLoggable(Level.FINE)) _log.fine("Chunk size: " + csize);
 		}
 		byte[] buffer = new byte[csize];
 		inStream.read(buffer, 0, csize);

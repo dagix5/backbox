@@ -138,7 +138,7 @@ public class BackBoxHelper {
 	 */
 	public boolean dbExists() {
 		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
-			_log.fine("Decrypted DB found");
+			if (_log.isLoggable(Level.INFO)) _log.info("Decrypted DB found");
 			return true;
 		}
 		return Files.exists(Paths.get(DB_FILE));
@@ -299,7 +299,7 @@ public class BackBoxHelper {
 			throw new BackBoxException("Configuration not found.");
 
 		sm = new SecurityManager(password, getConfiguration().getPwdDigest(), getConfiguration().getSalt());
-		_log.fine("SecurityManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
 
 		//try to instantiate the rest client before the boxmanager, because it can fail
 		RestClient client = new RestClient(getConfiguration().getProxyConfiguration());
@@ -315,24 +315,24 @@ public class BackBoxHelper {
 		
 		//if something goes wrong you could have (only) the decrypted db file
 		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
-			_log.warning("Something went wrong, decrypted DB found. Trying to open it...");
+			if (_log.isLoggable(Level.WARNING)) _log.warning("Something went wrong, decrypted DB found. Trying to open it...");
 		} else {
 			if (!Files.exists(Paths.get(DB_FILE)))
 				throw new BackBoxException("DB not found");
 			
-			_log.fine("DB found");
+			if (_log.isLoggable(Level.INFO)) _log.info("DB found");
 			sm.decrypt(DB_FILE, DB_FILE_TEMP);
 		}
 		
 		dbm = new DBManager(DB_FILE_TEMP);
 		dbm.openDB();
-		_log.fine("DBManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("DBManager init OK");
 		
 		ICompress z = new Zipper();
 		ISplitter s = new Splitter(getConfiguration().getChunkSize());
 		
 		tm = new TransactionManager(dbm, bm, sm, s, z);
-		_log.fine("TransactionManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("TransactionManager init OK");
 	}
 	
 	/**
@@ -355,20 +355,20 @@ public class BackBoxHelper {
 			Files.delete(Paths.get(DB_FILE_TEMP));
 		
 		sm = new SecurityManager(password);
-		_log.fine("SecurityManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
 		
 		getConfiguration().setPwdDigest(sm.getPwdDigest());
 		getConfiguration().setSalt(Hex.encodeHexString(sm.getSalt()));
 		
 		dbm = new DBManager(DB_FILE_TEMP);
-		_log.fine("DBManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("DBManager init OK");
 		dbm.createDB();
-		_log.fine("DB created");
+		if (_log.isLoggable(Level.INFO)) _log.info("DB created");
 		
 		bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
 		String rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
 		if (rootFolderID != null) {
-			_log.warning("Box Upload folder exists");
+			if (_log.isLoggable(Level.WARNING)) _log.warning("Box Upload folder exists");
 			bm.deleteFolder(rootFolderID);
 		}
 		rootFolderID = bm.mkdir(BoxManager.ROOT_FOLDER_NAME, null);
@@ -379,13 +379,13 @@ public class BackBoxHelper {
 		for (Folder folder : backupFolders)
 			addBackupFolder(folder);
 
-		_log.fine("BoxManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("BoxManager init OK");
 		
 		ICompress z = new Zipper();
 		ISplitter s = new Splitter(chunksize);
 		
 		tm = new TransactionManager(dbm, bm, sm, s, z);
-		_log.fine("TransactionManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("TransactionManager init OK");
 		
 		getConfiguration().setChunkSize(chunksize);
 		
@@ -686,11 +686,11 @@ public class BackBoxHelper {
 			throw new BackBoxException("Configuration not found.");
 
 		sm = new SecurityManager(password, getConfiguration().getPwdDigest(), getConfiguration().getSalt());
-		_log.fine("SecurityManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
 
 		dbm = new DBManager(DB_FILE);
 		dbm.createDB();
-		_log.fine("DBManager init OK");
+		if (_log.isLoggable(Level.INFO)) _log.info("DBManager init OK");
 		
 		bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
 		String folderID = getConfiguration().getRootFolderID();
@@ -712,17 +712,17 @@ public class BackBoxHelper {
 			
 			Map<String, Map<String, File>> localInfo = c.getFiles();
 			for (String hash : remoteInfo.keySet()) {
-				_log.fine("Restoring " + hash);
+				if (_log.isLoggable(Level.INFO)) _log.info("Restoring " + hash);
 				List<Chunk> chunks = remoteInfo.get(hash);
 				if (!localInfo.containsKey(hash)) {
 					bm.deleteChunk(chunks);
-					_log.fine("Not found locally, deleted " + hash);
+					if (_log.isLoggable(Level.INFO)) _log.info("Not found locally, deleted " + hash);
 					break;
 				}
 				Map<String, File> fileInfo = localInfo.get(hash);
 				for (String path : fileInfo.keySet()) {
 					File file = fileInfo.get(path);
-					_log.fine("Insert " + hash + " " + path + " " + chunks.size());
+					if (_log.isLoggable(Level.INFO)) _log.info("Insert " + hash + " " + path + " " + chunks.size());
 					dbm.insert(file, path, f.getPath(), hash, chunks, true, true, chunks.size() > 1);
 				}
 			}

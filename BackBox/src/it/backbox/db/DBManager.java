@@ -96,7 +96,7 @@ public class DBManager implements IDBManager {
 		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string, size INTEGER, foreign key(filehash) references files(hash))");
 		
 		statement.executeUpdate("PRAGMA journal_mode = OFF");
-		_log.fine("DB created");
+		if (_log.isLoggable(Level.INFO)) _log.info("DB created");
 	}
 	
 	/*
@@ -144,7 +144,7 @@ public class DBManager implements IDBManager {
 				statement.executeUpdate(query.toString());
 			}
 			
-			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> insert ok");
+			if (_log.isLoggable(Level.INFO)) _log.info(digest + "-> insert ok");
 
 		} catch (SQLException e) {
 			throw new BackBoxException(e, (query != null) ? query.toString() : "");
@@ -182,7 +182,7 @@ public class DBManager implements IDBManager {
 	
 			statement.executeUpdate(query.toString());
 			
-			if (_log.isLoggable(Level.FINE)) _log.fine(digest + "-> delete ok");
+			if (_log.isLoggable(Level.INFO)) _log.info(digest + "-> delete ok");
 		} catch (SQLException e) {
 			throw new BackBoxException(e, (query != null) ? query.toString() : "");
 		}
