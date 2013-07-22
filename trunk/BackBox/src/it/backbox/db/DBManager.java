@@ -135,8 +135,8 @@ public class DBManager implements IDBManager {
 					query.append(digest).append("','");
 					query.append(chunks.get(i).getChunkname()).append("','");
 					query.append(chunks.get(i).getChunkhash()).append("','");
-					query.append(chunks.get(i).getBoxid()).append("','");
-					query.append(chunks.get(i).getSize()).append('\'');
+					query.append(chunks.get(i).getBoxid()).append("',");
+					query.append(chunks.get(i).getSize());
 					if (i < (chunks.size() - 1))
 						query.append(" union ");
 				}
