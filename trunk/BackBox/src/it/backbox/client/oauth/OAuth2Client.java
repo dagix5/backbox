@@ -52,27 +52,36 @@ public class OAuth2Client {
 		Credential cred = codeFlow.loadCredential(USER_ID);
 		boolean refreshed = false;
 		if (cred != null) {
+			if (_log.isLoggable(Level.INFO)) _log.info("Credential loaded");
 			try {
 				refreshed = cred.refreshToken();
 			} catch (TokenResponseException e) {
-				_log.log(Level.WARNING, "Error refreshing token", e);
+				if (_log.isLoggable(Level.WARNING)) _log.log(Level.WARNING, "Error refreshing token", e);
 			}
-			if (refreshed)
+			if (refreshed) {
+				if (_log.isLoggable(Level.INFO)) _log.info("Token refreshed");
 				return cred;
+			}
 		}
 		VerificationCodeReceiver receiver = null;
 		try {
 			receiver = new LocalServerReceiver();
 			String redirectUri = receiver.getRedirectUri();
+			if (_log.isLoggable(Level.INFO)) _log.info("Server launched");
 			launchInBrowser(null, redirectUri, CLIENT_ID);
+			if (_log.isLoggable(Level.INFO)) _log.info("Browser opened");
 			String code = receiver.waitForCode();
+			if (_log.isLoggable(Level.INFO)) _log.info("Waiting for code");
 			TokenResponse response = codeFlow.newTokenRequest(code)
 					.setRedirectUri(redirectUri)
 					.setScopes(Arrays.asList("")).execute();
 			cred = codeFlow.createAndStoreCredential(response, USER_ID);
+			if (_log.isLoggable(Level.INFO)) _log.info("Credential store created");
 		} finally {
-			if (receiver != null)
+			if (receiver != null) {
 				receiver.stop();
+				if (_log.isLoggable(Level.INFO)) _log.info("Server stopped");
+			}
 		}
 		return cred;
 	}

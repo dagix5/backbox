@@ -37,7 +37,7 @@ public class Zipper implements ICompress{
 	    while((len = in.read(buffer)) >= 0)
 	    	zout.write(buffer, 0, len);
 
-	    if (_log.isLoggable(Level.FINE)) _log.fine(name + " entry zipped");
+	    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry zipped");
 	    
 	    in.close();
 	    zout.close();
@@ -62,7 +62,7 @@ public class Zipper implements ICompress{
 	    while((len = zin.read(buffer)) >= 0)
 	    	out.write(buffer, 0, len);
 
-	    if (_log.isLoggable(Level.FINE)) _log.fine(name + " entry unzipped");
+	    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry unzipped");
 	    
 	    in.close();
 	    zin.close();

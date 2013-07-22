@@ -35,7 +35,7 @@ public class TransactionThread implements Runnable {
 	public void run() {
 		boolean inError = false;
 		for (Task task : t.getTasks()) {
-			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> start");
+			if (_log.isLoggable(Level.INFO)) _log.info(task.getDescription() + "-> start");
 			
 			long start = new Date().getTime();
 			try {
@@ -61,7 +61,7 @@ public class TransactionThread implements Runnable {
 			if (inError)
 				break;
 			
-			if (_log.isLoggable(Level.FINE)) _log.fine(task.getDescription() + "-> end");
+			if (_log.isLoggable(Level.INFO)) _log.info(task.getDescription() + "-> end");
 		}
 		if (!inError)
 			t.setResultCode(Transaction.ESITO_OK);

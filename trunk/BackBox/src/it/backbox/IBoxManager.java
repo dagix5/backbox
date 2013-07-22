@@ -1,6 +1,7 @@
 package it.backbox;
 
 import it.backbox.bean.Chunk;
+import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 
 import java.io.IOException;
@@ -45,8 +46,9 @@ public interface IBoxManager {
 	 * @return ID of the folder created
 	 * @throws IOException
 	 * @throws RestException 
+	 * @throws BackBoxException
 	 */
-	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException;
+	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException, BackBoxException;
 
 	/**
 	 * Upload a file to Box.com
@@ -56,9 +58,11 @@ public interface IBoxManager {
 	 * @param folderID
 	 *            ID of the folder where upload the chunks
 	 * @return Uploaded file ID
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
+	 * @throws BackBoxException 
 	 */
-	public String upload(String filename, String folderID) throws IOException, RestException;
+	public String upload(String filename, String folderID) throws IOException, RestException, BackBoxException;
 
 	/**
 	 * Download a file from Box.com
@@ -66,7 +70,8 @@ public interface IBoxManager {
 	 * @param fileID
 	 *            ID of the file to download
 	 * @return Byte array downloaded file content
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public byte[] download(String fileID) throws IOException, RestException;
 
@@ -75,7 +80,8 @@ public interface IBoxManager {
 	 * 
 	 * @param folderID
 	 *            ID of the folder to delete
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public void deleteFolder(String folderID) throws IOException, RestException;
 	
@@ -84,7 +90,8 @@ public interface IBoxManager {
 	 * 
 	 * @param fileID
 	 *            ID of the file to delete
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public void delete(String fileID) throws IOException, RestException;
 	
@@ -93,7 +100,8 @@ public interface IBoxManager {
 	 * 
 	 * @param chunks
 	 *            List of Chunk to delete
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public void deleteChunk(List<Chunk> chunks) throws IOException, RestException;
 
@@ -103,6 +111,8 @@ public interface IBoxManager {
 	 * @param chunks
 	 *            List of Chunk to download
 	 * @return List of byte arrays chunks contents
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws IOException, RestException;
 	
@@ -112,6 +122,8 @@ public interface IBoxManager {
 	 * @param chunk
 	 *            Chunk to download
 	 * @return Byte array chunk content
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public byte[] downloadChunk(Chunk chunk) throws IOException, RestException;
 	
@@ -122,9 +134,11 @@ public interface IBoxManager {
 	 *            Chunk to upload
 	 * @param folderID
 	 *            ID of the folder where upload the chunks
-	 * @throws Exception 
+	 * @throws IOException
+	 * @throws RestException 
+	 * @throws BackBoxException
 	 */
-	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException;
+	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException, BackBoxException;
 	
 	/**
 	 * Get a map with all chunks for all the files in the remote folder with ID
@@ -133,7 +147,8 @@ public interface IBoxManager {
 	 * @param folderID
 	 *            ID of the folder to scan
 	 * @return Map with <File hash, List of Chunks>
-	 * @throws Exception
+	 * @throws IOException
+	 * @throws RestException 
 	 */
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException;
 	

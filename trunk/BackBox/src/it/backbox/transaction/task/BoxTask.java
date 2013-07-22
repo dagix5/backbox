@@ -4,6 +4,7 @@ import it.backbox.IBoxManager;
 import it.backbox.exception.RestException;
 
 import java.util.concurrent.Phaser;
+import java.util.logging.Level;
 
 import com.google.api.client.http.HttpResponseException;
 
@@ -20,14 +21,14 @@ protected abstract void boxMethod() throws Exception;
 		if (!bm.isAccessTokenValid()) {
 			if (p.getRegisteredParties() > 0) {
 				int f = p.getPhase();
-				_log.fine("Phaser - waiting -> " + f);
+				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - waiting -> " + f);
 				int c = p.awaitAdvance(f);
-				_log.fine("Phaser - continuing -> " + c);
+				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - continuing -> " + c);
 			} else
-				_log.fine("Phaser - no one registered -> not waiting");
+				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - no one registered -> not waiting");
 		} else {
 			int r = p.register();
-			_log.fine("Phaser - register -> " + r);
+			if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - register -> " + r);
 			registered = true;
 		}
 		
@@ -37,7 +38,7 @@ protected abstract void boxMethod() throws Exception;
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 401)) {
-					_log.fine("Unauthorized");
+					if (_log.isLoggable(Level.FINE)) _log.fine("Unauthorized");
 					//retry because at this point the token should already be refreshed
 					if (bm.isAccessTokenValid())
 						boxMethod();
@@ -47,7 +48,7 @@ protected abstract void boxMethod() throws Exception;
 		} finally {
 			if (registered) {
 				int a = p.arriveAndDeregister();
-				_log.fine("Phaser - arrive -> " + a);
+				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - arrive -> " + a);
 			}
 		}
 	}

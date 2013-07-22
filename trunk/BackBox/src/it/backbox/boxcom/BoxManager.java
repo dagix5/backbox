@@ -9,6 +9,7 @@ import it.backbox.client.rest.bean.BoxFolder;
 import it.backbox.client.rest.bean.BoxItemCollection;
 import it.backbox.client.rest.bean.BoxSearchResult;
 import it.backbox.client.rest.bean.BoxUserInfo;
+import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 import it.backbox.utility.Utility;
 
@@ -68,18 +69,18 @@ public class BoxManager implements IBoxManager {
 	 * (non-Javadoc)
 	 * @see it.backbox.IBoxManager#mkdir(java.lang.String, java.lang.String)
 	 */
-	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException {
+	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException, BackBoxException {
 		BoxFolder folder;
 		try {
 			folder = client.mkdir(folderName, parentFolderID);
-			if (folder != null) {
-				if (_log.isLoggable(Level.FINE)) _log.fine("Folder created id: " + folder.id);
+			if ((folder != null) && (folder.id != null) && !folder.id.isEmpty()) {
+				if (_log.isLoggable(Level.INFO)) _log.info("Folder created id: " + folder.id);
 				return folder.id;
 			}
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
-				_log.warning(folderName + " exists");
+				if (_log.isLoggable(Level.WARNING)) _log.warning(folderName + " exists");
 				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
 				if ((error != null) && 
@@ -91,8 +92,7 @@ public class BoxManager implements IBoxManager {
 				throw e;
 		}
 		
-		if (_log.isLoggable(Level.FINE)) _log.fine("Folder not created");
-		return null;
+		throw new BackBoxException("Folder not created");
 	}
 	
 	/*
@@ -102,10 +102,10 @@ public class BoxManager implements IBoxManager {
 	public String getBoxID(String filename) throws IOException, RestException {
 		BoxSearchResult results = client.search(filename);
 		if ((results != null) && (results.entries != null) && !results.entries.isEmpty()) {
-			if (_log.isLoggable(Level.FINE)) _log.fine(filename + " found");
+			if (_log.isLoggable(Level.INFO)) _log.info(filename + " found");
 			return results.entries.get(0).id;
 		}
-		if (_log.isLoggable(Level.FINE)) _log.fine(filename + " not found");
+		if (_log.isLoggable(Level.INFO)) _log.info(filename + " not found");
 		return null;
 	}
 	
@@ -114,15 +114,14 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public String upload(String filename, String folderID) throws IOException, RestException {
+	public String upload(String filename, String folderID) throws IOException, RestException, BackBoxException {
 		String[] ns = filename.split("\\\\");
 		String n = ns[ns.length - 1];
 		
 		byte[] content = Utility.read(filename);
 		BoxFile file = upload(n, content, folderID, DigestUtils.sha1Hex(content));
-		String id = ((file != null) ? file.id : null);
-		if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
-		return id;
+		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
+		return file.id;
 	}
 	
 	/*
@@ -132,7 +131,7 @@ public class BoxManager implements IBoxManager {
 	@Override
 	public byte[] download(String fileID) throws IOException, RestException {
 		byte[] file = client.download(fileID);
-		if (_log.isLoggable(Level.FINE)) _log.fine(fileID + " downloaded");
+		if (_log.isLoggable(Level.INFO)) _log.info(fileID + " downloaded");
 		return file;
 	}
 
@@ -198,15 +197,18 @@ public class BoxManager implements IBoxManager {
 	 * @return Box file informations
 	 * @throws IOException
 	 * @throws RestException
+	 * @throws BackBoxException 
 	 */
-	private BoxFile upload(String name, byte[] content, String folderID, String hash) throws IOException, RestException {
+	private BoxFile upload(String name, byte[] content, String folderID, String hash) throws IOException, RestException, BackBoxException {
 		BoxFile file = null;
 		try {
 			file = client.upload(name, null, content, folderID, hash);
+			if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+				throw new BackBoxException("Uploaded file ID not retrieved");
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
-				_log.fine("Uploading new version");
+				if (_log.isLoggable(Level.FINE)) _log.fine("Uploading new version");
 				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
 				if ((error != null) &&
@@ -214,7 +216,7 @@ public class BoxManager implements IBoxManager {
 						(error.context_info.conflicts != null) &&
 						!error.context_info.conflicts.isEmpty()) {
 					String id = error.context_info.conflicts.get(0).id;
-					_log.fine("upload: 409 Conflict, fileID " + id);
+					if (_log.isLoggable(Level.FINE)) _log.fine("upload: 409 Conflict, fileID " + id);
 					file = client.upload(name, id, content, folderID, hash);
 				} else
 					throw e;
@@ -228,15 +230,14 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk, java.lang.String)
 	 */
 	@Override
-	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException {
+	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException, BackBoxException {
 		String name = chunk.getChunkname();
 		String[] ns = name.split("\\\\");
 		String n = ns[ns.length - 1];
 		
 		BoxFile file = upload(n, chunk.getContent(), folderID, chunk.getChunkhash());
-		String id = ((file != null) ? file.id : null);
-		if (_log.isLoggable(Level.FINE)) _log.fine(n + " uploaded with id " + id);
-		chunk.setBoxid(id);
+		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
+		chunk.setBoxid(file.id);
 	}
 	
 	/*
@@ -258,7 +259,7 @@ public class BoxManager implements IBoxManager {
 				info.put(hash, chunks);
 			}
 			info.get(hash).add(c);
-			
+			if (_log.isLoggable(Level.INFO)) _log.info("Rebuilding chunks, added chunk " + hash);
 		}
 		return info;
 	}
@@ -281,6 +282,7 @@ public class BoxManager implements IBoxManager {
 	@Override
 	public long getFreeSpace() throws IOException, RestException {
 		BoxUserInfo userInfo = client.getUserInfo();
+		if (_log.isLoggable(Level.INFO)) _log.info("Retrieved information about user: " + userInfo.login);
 		return userInfo.space_amount - userInfo.space_used;
 	}
 }

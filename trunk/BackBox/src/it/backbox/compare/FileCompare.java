@@ -67,7 +67,7 @@ public class FileCompare {
 				try {
 					hash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file.toFile())));
 				} catch (IOException e) {
-					_log.log(Level.WARNING, file.toString() + " not accessible");
+					if (_log.isLoggable(Level.WARNING)) _log.log(Level.WARNING, file.toString() + " not accessible");
 					return FileVisitResult.CONTINUE;
 				}
 				String relativePath = folder.relativize(file).toString();
