@@ -140,7 +140,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public byte[] download(String fileID) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(baseUri + "/files/" + fileID + "/content");
+		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("files/").append(fileID).append("/content").toString());
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Download: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
@@ -168,13 +168,11 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public BoxFile upload(String name, String fileID, byte[] content, String folderID, String sha1) throws RestException, IOException {
-		String uri;
-		if (fileID == null)
-			uri = baseUriUpload + "content";
-		else
-			uri = baseUriUpload + fileID + "/content";
-		
-		GenericUrl url = new GenericUrl(uri);
+		StringBuilder uri = new StringBuilder(baseUriUpload);
+		if (fileID != null)
+			uri.append(fileID).append('/');
+		uri.append("content");
+		GenericUrl url = new GenericUrl(uri.toString());
 		
 		MultipartFormDataContent mpc = new MultipartFormDataContent();
 		mpc.addPart(new MultipartFormDataContent.Part(null, name, new InputStreamContent("application/octet-stream", new InputStreamCounter(new ByteArrayInputStream(content), ProgressManager.UPLOAD_ID))));
@@ -204,7 +202,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public void delete(String fileID, boolean isFolder) throws RestException, IOException {
-		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "folders/" : "files/") + fileID);
+		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append(isFolder ? "folders/" : "files/").append(fileID).toString());
 		if (isFolder)
 			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
@@ -256,7 +254,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(baseUri + "/folders/" + folderID + "/items");
+		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("folders/").append(folderID).append("/items").toString());
 		url.put("limit", "1000");
 		url.put("fields", "name,id,sha1");
 		HttpRequest request = requestFactory.buildGetRequest(url);
@@ -272,7 +270,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public BoxUserInfo getUserInfo() throws IOException, RestException {
-		GenericUrl url = new GenericUrl(baseUri + "/users/me");
+		GenericUrl url = new GenericUrl(baseUri + "users/me");
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		if (_log.isLoggable(Level.FINE)) _log.fine("getUserInfo: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
