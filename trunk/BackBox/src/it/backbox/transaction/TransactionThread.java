@@ -47,11 +47,8 @@ public class TransactionThread implements Runnable {
 				if (currentTask.isCountWeight())
 					tm.weightCompleted(currentTask.getWeight());
 			} catch (Exception e) {
-				_log.log(Level.SEVERE, "Error", e);
-				StringBuilder error = new StringBuilder("Error during execution task ");
-//				error.append(t.getDescription()).append(" ");
-				error.append(task.getDescription()).append(": ").append(e.toString());
-				t.setResultDescription(error.toString());
+				_log.log(Level.SEVERE, new StringBuilder("Error occurred in transaction ").append(t.getId()).append(", task ").append(currentTask.getId()).toString(), e);
+				t.setResultDescription(new StringBuilder("Error during execution task ").append(task.getDescription()).append(": ").append(e.toString()).toString());
 				t.setResultCode(Transaction.ESITO_KO);
 				inError = true;
 			}
