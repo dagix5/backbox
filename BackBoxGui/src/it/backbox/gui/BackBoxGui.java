@@ -157,13 +157,27 @@ public class BackBoxGui {
 	
 	public void disconnect() {
 		try {
-			connected = false;
-			if (helper.getTransactionManager() != null)
+			if (helper.getTransactionManager() != null) {
+				if (running) {
+					helper.getTransactionManager().stopTransactions();
+					pendingDone = true;
+				}
 				helper.getTransactionManager().clear();
+			}
+			
 			clearTable();
 			clearPreviewTable();
+			
+			if (connected) {
+				if (helper.getConfiguration().isAutoUploadConf())
+					helper.uploadConf();
+				else
+					helper.logout();
+			}
+			
+			connected = false;
+			running = false;
 			updateStatus();
-			helper.logout();
 		} catch (Exception e) {
 			GuiUtility.handleException(frmBackBox, "Error in logout", e);
 		}
@@ -348,34 +362,6 @@ public class BackBoxGui {
 		frmBackBox = new JFrame();
 		frmBackBox.setLocationRelativeTo(null);
 		frmBackBox.setSize(750, 700);
-		frmBackBox.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				showLoading();
-				Thread worker = new Thread() {
-					public void run() {
-						try {
-							if (connected)
-								helper.logout();
-						} catch (Exception e1) {
-							hideLoading();
-							GuiUtility.handleException(frmBackBox, "Error in logout", e1);
-						}
-						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	hideLoading();
-		                    	if (!running) {
-		                    		System.exit(1);
-		                    	} else
-									JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
-		                    }
-		                });
-					}
-				};
-				worker.start();
-			}
-		});
 		frmBackBox.setTitle("BackBox");
 		frmBackBox.setBounds(100, 100, 732, 692);
 		frmBackBox.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -408,19 +394,36 @@ public class BackBoxGui {
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 		
-		JMenuItem mntmExit = new JMenuItem("Exit");
-		mntmExit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (running) {
-					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
+		final Thread exitThread = new Thread() {
+			public void run() {
 				try {
 					disconnect();
 					System.exit(0);
 				} catch (Exception e) {
 					GuiUtility.handleException(frmBackBox, "Error in logout", e);
 				}
+				
+				SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                    	hideLoading();
+                    }
+				});
+			}
+		};
+		
+		JMenuItem mntmExit = new JMenuItem("Exit");
+		mntmExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				showLoading();
+				exitThread.start();
+			}
+		});
+		
+		frmBackBox.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				showLoading();
+				exitThread.start();
 			}
 		});
 		
@@ -436,8 +439,7 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.uploadConf();
-							if (connected)
-								disconnect();
+							disconnect();
 							JOptionPane.showMessageDialog(frmBackBox, "Configuration uploaded successfully", "Upload configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
@@ -472,8 +474,7 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.downloadConf();
-							if (connected)
-								disconnect();
+							disconnect();
 							JOptionPane.showMessageDialog(frmBackBox, "Configuration downloaded successfully", "Download configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
@@ -551,7 +552,8 @@ public class BackBoxGui {
 											helper.getConfiguration().getProxyConfiguration(), 
 											!running, 
 											Level.parse(helper.getConfiguration().getLogLevel()), 
-											helper.getConfiguration().getLogSize());
+											helper.getConfiguration().getLogSize(),
+											helper.getConfiguration().isAutoUploadConf());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {
 					GuiUtility.handleException(frmBackBox, "Error loading configuration", e1);

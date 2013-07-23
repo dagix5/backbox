@@ -30,6 +30,9 @@ public class Configuration {
 	private List<Folder> backupFolders;
 	@Key
 	private ProxyConfiguration proxyConfiguration;
+	
+	@Key
+	private boolean autoUploadConf;
 
 	public String getPwdDigest() {
 		return pwdDigest;
@@ -117,6 +120,14 @@ public class Configuration {
 
 	public void setLogSize(int logSize) {
 		this.logSize = logSize;
+	}
+
+	public boolean isAutoUploadConf() {
+		return autoUploadConf;
+	}
+
+	public void setAutoUploadConf(boolean autoUploadConf) {
+		this.autoUploadConf = autoUploadConf;
 	}
 
 }
