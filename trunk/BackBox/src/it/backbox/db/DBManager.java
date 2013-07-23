@@ -105,6 +105,30 @@ public class DBManager implements IDBManager {
 	 */
 	@Override
 	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+		insert(file.lastModified(), file.length(), relativePath, folder, digest, chunks, encrypted, compressed, splitted);
+	}
+	
+	/**
+	 * Insert new file informations in database
+	 * 
+	 * @param fileLastModified
+	 *            New file last modified time
+	 * @param fileSize
+	 * 			  New file size
+	 * @param relativePath
+	 *            File relative path
+	 * @param folder
+	 *            Folder where the file is
+	 * @param digest
+	 *            New file hash
+	 * @param chunks
+	 *            List of new file chunks
+	 * @param encrypted
+	 * @param compressed
+	 * @param splitted
+	 * @throws BackBoxException
+	 */
+	public void insert(long fileLastModified, long fileSize, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
 		StringBuilder query = null;
 		try {
 			Statement statement = connection.createStatement();
@@ -114,19 +138,23 @@ public class DBManager implements IDBManager {
 			query.append(digest).append("','");
 			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
 			query.append(folder).append("','");
-			query.append(file.lastModified()).append("',");
-            query.append(file.length()).append(',');
+			query.append(fileLastModified).append("',");
+            query.append(fileSize).append(',');
             query.append(encrypted ? 1 : 0).append(',');
             query.append(compressed ? 1 : 0).append(',');
             query.append(splitted ? 1 : 0).append(')');
-
+            
 			statement.executeUpdate(query.toString());
+			
+			if (_log.isLoggable(Level.FINE)) _log.fine("Query executed: " + query.toString());
 
 			query = new StringBuilder("select filehash from chunks where filehash = '");
 			query.append(digest);
 			query.append('\'');
 
 			ResultSet rs = statement.executeQuery(query.toString());
+			
+			if (_log.isLoggable(Level.FINE)) _log.fine("Query executed: " + query.toString());
 
 			if (!rs.next()) {
 				query = new StringBuilder("insert into chunks ");
@@ -142,10 +170,10 @@ public class DBManager implements IDBManager {
 				}
 
 				statement.executeUpdate(query.toString());
+				
+				if (_log.isLoggable(Level.FINE)) _log.fine("Query executed: " + query.toString());
 			}
 			
-			if (_log.isLoggable(Level.INFO)) _log.info(digest + "-> insert ok");
-
 		} catch (SQLException e) {
 			throw new BackBoxException(e, (query != null) ? query.toString() : "");
 		}
@@ -166,6 +194,7 @@ public class DBManager implements IDBManager {
 			query.append(digest).append('\'');
 			ResultSet rs = statement.executeQuery(query.toString());
 	
+			// check if there are other files with same hash and chunks
 			int i = 0;
 			while (rs.next())
 				i++;
