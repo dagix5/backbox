@@ -35,7 +35,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -182,7 +181,7 @@ public class BackBoxGui {
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			for (SimpleEntry<String, File> entry : map) {
 				File f = entry.getValue();
-				model.addRow(new Object[] { new StringBuilder(f.getFolder()).append('\\').append(f.getFilename()).toString(), f.getHash(), new Size(f.getSize()), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
+				model.addRow(new Object[] { new StringBuilder(f.getFolder()).append('\\').append(f.getFilename()).toString(), new Size(f.getSize()), f.getTimestamp().toString(), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
 				fileKeys.add(entry.getKey());
 			}
 		} catch (SQLException | IOException e) {
@@ -204,7 +203,7 @@ public class BackBoxGui {
 		if (transactions != null) {
 			for (Transaction tt : transactions)
 				for (Task t : tt.getTasks()) {
-					model.addRow(new Object[] {tt.getId(), t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t)});
+					model.addRow(new Object[] {t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t)});
 					taskKeys.put(t.getId(), model.getRowCount() - 1);
 					
 					TableTask tbt = new TableTask();
@@ -240,9 +239,9 @@ public class BackBoxGui {
 			if (!taskKeys.containsKey(t.getId()))
 				break;
 			if (transaction.getResultCode() == Transaction.ESITO_KO)
-				model.setValueAt(GuiConstant.RESULT_ERROR, taskKeys.get(t.getId()), 4);
+				model.setValueAt(GuiConstant.RESULT_ERROR, taskKeys.get(t.getId()), GuiConstant.RESULT_COLUM_INDEX);
 			else if (transaction.getResultCode() == Transaction.ESITO_OK)
-				model.setValueAt(GuiConstant.RESULT_SUCCESS, taskKeys.get(t.getId()), 4);
+				model.setValueAt(GuiConstant.RESULT_SUCCESS, taskKeys.get(t.getId()), GuiConstant.RESULT_COLUM_INDEX);
 			tasksPending.get(taskKeys.get(t.getId())).setTask(t);
 			tasksPending.get(taskKeys.get(t.getId())).setTransaction(transaction);
 		}
@@ -329,9 +328,9 @@ public class BackBoxGui {
 	 */
 	private void initialize() {
 		// Logger configuration
-		ConsoleHandler ch = new ConsoleHandler();
-		ch.setLevel(Level.ALL);
-		_log.addHandler(ch);
+//		ConsoleHandler ch = new ConsoleHandler();
+//		ch.setLevel(Level.ALL);
+//		_log.addHandler(ch);
 		try {
 			FileHandler fh = new FileHandler(GuiConstant.LOG_FILE, helper.getConfiguration().getLogSize(), 3, true);
 			fh.setFormatter(new SimpleFormatter());
@@ -566,17 +565,17 @@ public class BackBoxGui {
 		
 		table = new JTable();
 		table.setFillsViewportHeight(true);
-		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		table.setModel(new DefaultTableModel(
 			new Object[][] {
 			},
 			new String[] {
-				"Filename", "Hash", "Size", "Chunks"
+				"Filename", "Size", "Last Modified", "Chunks"
 			}
 		) {
 			private static final long serialVersionUID = 1L;
 			Class[] columnTypes = new Class[] {
-				String.class, String.class, Size.class, Integer.class
+				String.class, Size.class, String.class, Integer.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
@@ -590,10 +589,10 @@ public class BackBoxGui {
 		});
 		table.getColumnModel().getColumn(0).setPreferredWidth(200);
 		table.getColumnModel().getColumn(0).setMinWidth(200);
-		table.getColumnModel().getColumn(1).setPreferredWidth(250);
-		table.getColumnModel().getColumn(1).setMinWidth(200);
-		table.getColumnModel().getColumn(2).setPreferredWidth(15);
-		table.getColumnModel().getColumn(2).setMinWidth(5);
+		table.getColumnModel().getColumn(1).setPreferredWidth(50);
+		table.getColumnModel().getColumn(1).setMinWidth(50);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+		table.getColumnModel().getColumn(2).setMinWidth(100);
 		table.getColumnModel().getColumn(3).setPreferredWidth(15);
 		table.getColumnModel().getColumn(3).setMinWidth(5);
 		
@@ -825,40 +824,37 @@ public class BackBoxGui {
 		panel.add(scrollPanePreview, "cell 0 1 9 1,grow");
 		
 		tablePreview = new JTable();
-		tablePreview.setAutoCreateRowSorter(true);
 		tablePreview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tablePreview.setModel(new DefaultTableModel(
 			new Object[][] {
 			},
 			new String[] {
-				"Transaction", "Filename", "Size", "Operation", "Result"
+				"Filename", "Size", "Operation", "Result"
 			}
 		) {			
 			private static final long serialVersionUID = 1L;
 			Class[] columnTypes = new Class[] {
-				String.class, String.class, Size.class, String.class, String.class
+				String.class, Size.class, String.class, String.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
 			}
 			boolean[] columnEditables = new boolean[] {
-				false, false, false, false, false
+				false, false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
 			}
 		}
 		);
-		tablePreview.getColumnModel().getColumn(0).setPreferredWidth(150);
-		tablePreview.getColumnModel().getColumn(0).setMaxWidth(100);
-		tablePreview.getColumnModel().getColumn(1).setPreferredWidth(200);
-		tablePreview.getColumnModel().getColumn(1).setMinWidth(200);
+		tablePreview.getColumnModel().getColumn(0).setPreferredWidth(300);
+		tablePreview.getColumnModel().getColumn(0).setMaxWidth(300);
+		tablePreview.getColumnModel().getColumn(1).setPreferredWidth(100);
+		tablePreview.getColumnModel().getColumn(1).setMinWidth(50);
 		tablePreview.getColumnModel().getColumn(2).setPreferredWidth(100);
 		tablePreview.getColumnModel().getColumn(2).setMaxWidth(100);
 		tablePreview.getColumnModel().getColumn(3).setPreferredWidth(100);
 		tablePreview.getColumnModel().getColumn(3).setMaxWidth(100);
-		tablePreview.getColumnModel().getColumn(4).setPreferredWidth(100);
-		tablePreview.getColumnModel().getColumn(4).setMaxWidth(100);
 		
 		tablePreview.setRowSorter(new SizeTableRowSorter(tablePreview.getModel()));
 		tablePreview.setDefaultRenderer(String.class, new ColorTableCellRenderer());
@@ -1011,7 +1007,7 @@ public class BackBoxGui {
 					public void run() {
 						progressBar.setValue(0);
 						while (tm.isRunning()) {
-							if (_log.isLoggable(Level.FINEST)) _log.finest(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append("/").append(tm.getAllTasksWeight()).toString());
+							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append("/").append(tm.getAllTasksWeight()).toString());
 							if (tm.getAllTasksWeight() > 0) {
 								int perc = (int) ((tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight());
 								if ((perc > progressBar.getValue()) && (perc < 99))
