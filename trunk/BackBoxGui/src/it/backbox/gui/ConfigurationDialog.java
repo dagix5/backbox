@@ -61,8 +61,8 @@ public class ConfigurationDialog extends JDialog {
 							main.helper.updateBackupFolders(foldersPanel.getFolders());
 						} catch (IOException | RestException | BackBoxException e) {
 							main.hideLoading();
-							setVisible(true);
 							GuiUtility.handleException(getContentPane(), "Error updating configuration", e);
+							setVisible(true);
 						}
 						
 						SwingUtilities.invokeLater(new Runnable() {

@@ -155,7 +155,9 @@ public class BackBoxHelper {
 		
 		logout();
 		
-		bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
+		if (bm == null)
+			bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
+
 		String rootFolderID = getConfiguration().getRootFolderID();
 		if ((rootFolderID == null) || rootFolderID.isEmpty())
 			rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
@@ -172,7 +174,8 @@ public class BackBoxHelper {
 	public void downloadConf() throws Exception {
 		logout();
 		
-		bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
+		if (bm == null)
+			bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
 		
 		String name = DB_FILE + ".new";
 		String id = bm.getBoxID(DB_FILE);
