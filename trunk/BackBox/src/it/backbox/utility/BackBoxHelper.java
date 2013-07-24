@@ -43,8 +43,10 @@ import java.security.spec.InvalidParameterSpecException;
 import java.sql.SQLException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,6 +72,8 @@ public class BackBoxHelper {
 	
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private Configuration configuration;
+	
+	private static Set<String> ex = new HashSet<>();
 	
 	protected ISecurityManager sm;
 	protected IDBManager dbm;
@@ -301,6 +305,8 @@ public class BackBoxHelper {
 		if (getConfiguration().isEmpty())
 			throw new BackBoxException("Configuration not found.");
 
+		ex.add(".deleted");
+		
 		sm = new SecurityManager(password, getConfiguration().getPwdDigest(), getConfiguration().getSalt());
 		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
 
@@ -476,6 +482,27 @@ public class BackBoxHelper {
 	 * 
 	 * @param restoreFolder
 	 *            Folder where restore
+	 * @return The created transactions
+	 * @throws BackBoxException 
+	 * @throws SQLException 
+	 * @throws IOException 
+	 */
+	public List<Transaction> restoreAll(String restoreFolder) throws BackBoxException, SQLException, IOException {
+		List<Transaction> tt = new ArrayList<>();
+		
+		for (Folder backupFolder : getConfiguration().getBackupFolders())
+			tt.addAll(restore(restoreFolder, backupFolder, false));
+		
+		return tt;
+	}
+	
+	/**
+	 * Restore all files
+	 * 
+	 * @param restoreFolder
+	 *            Folder where restore
+	 * @param backupFolder
+	 * 			  Folder to restore
 	 * @param startNow
 	 *            true if start the transactions, false if just create them
 	 * @return The created transactions
@@ -483,79 +510,74 @@ public class BackBoxHelper {
 	 * @throws SQLException 
 	 * @throws IOException 
 	 */
-	public ArrayList<Transaction> restore(String restoreFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
+	public List<Transaction> restore(String restoreFolder, Folder backupFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
 		if (restoreFolder == null)
 			throw new BackBoxException("Restore path not specified");
 		
-		ArrayList<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<>();
 		
-		List<String> ex = new ArrayList<>();
-		ex.add(".deleted");
+		Path base = Paths.get(restoreFolder, backupFolder.getAlias());
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
+		c.load();
 		
-		for (Folder backupFolder : getConfiguration().getBackupFolders()) {
-			Path base = Paths.get(restoreFolder, backupFolder.getAlias());
-			FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
-			c.load();
-			
-			Map<String, Map<String, it.backbox.bean.File>> toDownload = c.getRecordsNotInFiles();
-			for (String hash : toDownload.keySet()) {
-				Transaction t = new Transaction();
-				t.setId(hash);
-				boolean first = true;
-				String fileToCopy = null;
-				for (String path : toDownload.get(hash).keySet()) {
-					if (c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) {
-						CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), base.resolve(c.getRecords().get(hash).get(path).getFilename()).toString());
+		Path del = null;
+		if (!c.getFilesNotInRecords().isEmpty()) {
+			del = Paths.get(restoreFolder, backupFolder.getAlias(), ".deleted");
+			del.toFile().mkdirs();
+		}
+		
+		Map<String, Map<String, File>> toDelete = c.getFilesNotInRecords();
+		for (String hash : toDelete.keySet()) {
+			Transaction t = new Transaction();
+			t.setId(hash);
+			for (String path : toDelete.get(hash).keySet()) {
+				DeleteTask dt = new DeleteTask(base.toString(), path, del.toString());
+				dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+				t.addTask(dt);
+			}
+			if (!t.getTasks().isEmpty()) {
+				tt.add(t);
+				if (startNow)
+					tm.runTransaction(t);
+				else
+					tm.addTransaction(t);
+			}
+		}
+		
+		Map<String, Map<String, it.backbox.bean.File>> toDownload = c.getRecordsNotInFiles();
+		for (String hash : toDownload.keySet()) {
+			Transaction t = new Transaction();
+			t.setId(hash);
+			boolean first = true;
+			String fileToCopy = null;
+			for (String path : toDownload.get(hash).keySet()) {
+				if (c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) {
+					CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), base.resolve(c.getRecords().get(hash).get(path).getFilename()).toString());
+					ct.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+					t.addTask(ct);
+				} else if (!c.getFiles().containsKey(hash)) {
+					it.backbox.bean.File file = c.getRecords().get(hash).get(path);
+					if (first) {
+						DownloadTask dt = new DownloadTask(base.toString(), file);
+						dt.setWeight(file.getSize());
+						dt.setCountWeight(false);
+						dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(file.getFilename()).toString());
+						t.addTask(dt);
+						fileToCopy = file.getFilename();
+						first = false;
+					} else {
+						CopyTask ct = new CopyTask(base.resolve(fileToCopy).toString(), base.resolve(file.getFilename()).toString());
 						ct.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
 						t.addTask(ct);
-					} else if (!c.getFiles().containsKey(hash)) {
-						it.backbox.bean.File file = c.getRecords().get(hash).get(path);
-						if (first) {
-							DownloadTask dt = new DownloadTask(base.toString(), file);
-							dt.setWeight(file.getSize());
-							dt.setCountWeight(false);
-							dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(file.getFilename()).toString());
-							t.addTask(dt);
-							fileToCopy = file.getFilename();
-							first = false;
-						} else {
-							CopyTask ct = new CopyTask(base.resolve(fileToCopy).toString(), base.resolve(file.getFilename()).toString());
-							ct.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-							t.addTask(ct);
-						}
 					}
 				}
-				if (!t.getTasks().isEmpty()) {
-					tt.add(t);
-					if (startNow)
-						tm.runTransaction(t);
-					else
-						tm.addTransaction(t);
-				}
 			}
-			
-			Path del = null;
-			if (!c.getFilesNotInRecords().isEmpty()) {
-				del = Paths.get(restoreFolder, backupFolder.getAlias(), ".deleted");
-				del.toFile().mkdirs();
-			}
-			
-			Map<String, Map<String, File>> toDelete = c.getFilesNotInRecords();
-			for (String hash : toDelete.keySet()) {
-				Transaction t = new Transaction();
-				t.setId(hash);
-				for (String path : toDelete.get(hash).keySet()) {
-					DeleteTask dt = new DeleteTask(base.toString(), path, del.toString());
-					dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-					t.addTask(dt);
-				}
-				if (!t.getTasks().isEmpty()) {
-					tt.add(t);
-					if (startNow)
-						tm.runTransaction(t);
-					else
-						tm.addTransaction(t);
-				}
+			if (!t.getTasks().isEmpty()) {
+				tt.add(t);
+				if (startNow)
+					tm.runTransaction(t);
+				else
+					tm.addTransaction(t);
 			}
 		}
 		
@@ -568,76 +590,89 @@ public class BackBoxHelper {
 	/**
 	 * Backup all files
 	 * 
+	 * @return The created transactions
+	 * @throws SQLException 
+	 * @throws IOException 
+	 */
+	public List<Transaction> backupAll() throws SQLException, IOException {
+		List<Transaction> tt = new ArrayList<>();
+		
+		for (Folder backupFolder : getConfiguration().getBackupFolders())
+			tt.addAll(backup(backupFolder, false));
+		
+		return tt;
+	}
+	
+	/**
+	 * Backup all files
+	 * 
+	 * @param backupFolder
+	 * 			  Folder to backup
 	 * @param startNow
 	 *            true if start the transactions, false if just create them
 	 * @return The created transactions
 	 * @throws SQLException 
 	 * @throws IOException 
 	 */
-	public ArrayList<Transaction> backup(boolean startNow) throws SQLException, IOException {
-		ArrayList<Transaction> tt = new ArrayList<>();
+	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
+		List<Transaction> tt = new ArrayList<>();
 		
-		List<String> ex = new ArrayList<>();
-		ex.add(".deleted");
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), Paths.get(backupFolder.getPath()), ex);
+		c.load();
 		
-		for (Folder backupFolder : getConfiguration().getBackupFolders()) {
-			FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), Paths.get(backupFolder.getPath()), ex);
-			c.load();
-			
-			Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
-			for (String hash : toUpload.keySet()) {
-				Transaction t = new Transaction();
-				t.setId(hash);
-				boolean first = true;
-				for (String path : toUpload.get(hash).keySet()) {
-					if ((c.getRecords().containsKey(hash) && !c.getRecords().get(hash).containsKey(path)) || 
-							(!c.getRecords().containsKey(hash) && !first)) {
-						InsertTask it =  new InsertTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
-						it.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-						t.addTask(it);
-					} else if (!c.getRecords().containsKey(hash) && first) {
-						UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
-						ut.setWeight(c.getFiles().get(hash).get(path).length());
-						ut.setCountWeight(false);
-						ut.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-						t.addTask(ut);
-						first = false;
-					}
-				}
-				if (!t.getTasks().isEmpty()) {
-					tt.add(t);
-					if (startNow)
-						tm.runTransaction(t);
-					else
-						tm.addTransaction(t);
+		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
+		for (String hash : toUpload.keySet()) {
+			Transaction t = new Transaction();
+			t.setId(hash);
+			boolean first = true;
+			for (String path : toUpload.get(hash).keySet()) {
+				if ((c.getRecords().containsKey(hash) && !c.getRecords().get(hash).containsKey(path)) || 
+						(!c.getRecords().containsKey(hash) && !first)) {
+					InsertTask it =  new InsertTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
+					it.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+					t.addTask(it);
+				} else if (!c.getRecords().containsKey(hash) && first) {
+					UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
+					ut.setWeight(c.getFiles().get(hash).get(path).length());
+					ut.setCountWeight(false);
+					ut.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+					t.addTask(ut);
+					first = false;
 				}
 			}
-			
-			Map<String, Map<String, it.backbox.bean.File>> toDelete = c.getRecordsNotInFiles();
-			for (String hash : toDelete.keySet()) {
-				Transaction t = new Transaction();
-				t.setId(hash);
-				boolean first = true;
-				for (String path : toDelete.get(hash).keySet()) {
-					if ((c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) ||
-							(!c.getFiles().containsKey(hash) && !first)) {
-						DeleteDBTask rt = new DeleteDBTask(c.getRecords().get(hash).get(path));
-						rt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-						t.addTask(rt);
-					} else if (!c.getFiles().containsKey(hash) && first) {
-						DeleteBoxTask dt = new DeleteBoxTask(c.getRecords().get(hash).get(path));
-						dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
-						t.addTask(dt);
-						first = false;
-					}
+			if (!t.getTasks().isEmpty()) {
+				tt.add(t);
+				if (startNow)
+					tm.runTransaction(t);
+				else
+					tm.addTransaction(t);
+			}
+		}
+		
+		Map<String, Map<String, it.backbox.bean.File>> toDelete = c.getRecordsNotInFiles();
+		for (String hash : toDelete.keySet()) {
+			Transaction t = new Transaction();
+			t.setId(hash);
+			boolean first = true;
+			for (String path : toDelete.get(hash).keySet()) {
+				if ((c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) ||
+						(!c.getFiles().containsKey(hash) && !first)) {
+					DeleteDBTask rt = new DeleteDBTask(c.getRecords().get(hash).get(path));
+					rt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+					t.addTask(rt);
+				} else if (!c.getFiles().containsKey(hash) && first) {
+					DeleteBoxTask dt = new DeleteBoxTask(c.getRecords().get(hash).get(path));
+					dt.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
+					t.addTask(dt);
+					first = false;
 				}
-				if (!t.getTasks().isEmpty()) {
-					tt.add(t);
-					if (startNow)
-						tm.runTransaction(t);
-					else
-						tm.addTransaction(t);
-				}
+			}
+			if (!t.getTasks().isEmpty()) {
+				tt.add(t);
+				if (startNow)
+					tm.runTransaction(t);
+				else
+					tm.addTransaction(t);
 			}
 		}
 		
@@ -707,8 +742,6 @@ public class BackBoxHelper {
 		
 		for (Folder f : folders) {
 			Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(f.getId());
-			List<String> ex = new ArrayList<>();
-			ex.add(".deleted");
 			
 			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias()), Paths.get(f.getPath()), ex);
 			c.load();

@@ -32,7 +32,7 @@ public abstract class Task {
 	private BBPhaser phaser;
 	
 	protected File tempDir;
-	protected int threshold = 1024*1024*100;
+	protected static int THRESHOLD = 1024*1024*100;
 	protected static final String SUFFIX = ".temp";
 
 	public Task() {

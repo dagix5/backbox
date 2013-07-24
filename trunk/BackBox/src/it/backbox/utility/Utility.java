@@ -96,9 +96,8 @@ public class Utility {
 	public static File getFileWithParents(String filePath) throws IOException {
 		File file = new File(filePath);
 		File parent = file.getParentFile();
-		if((parent != null) && !parent.exists() && !parent.mkdirs()){
-		    throw new IllegalStateException("Couldn't create dir: " + parent);
-		}
+		if (parent != null)
+			parent.mkdirs();
 		file.createNewFile();
 		
 		return file;

@@ -81,8 +81,8 @@ public class BackBoxGui {
 	private JTable tablePreview;
 	private JButton btnConnect;
 	private JLabel lblEtaValue;
-	private JButton btnBackup;
-	private JButton btnRestore;
+	private JButton btnBackupAll;
+	private JButton btnRestoreAll;
 	private LoadingDialog loadingDialog;
 	private JButton btnClear;
 	private JButton btnStart;
@@ -272,8 +272,8 @@ public class BackBoxGui {
 			lblStatus.setText("Not connected");
 		
 		btnConnect.setEnabled(!connected);
-		btnBackup.setEnabled(connected && !running);
-		btnRestore.setEnabled(connected && !running);
+		btnBackupAll.setEnabled(connected && !running);
+		btnRestoreAll.setEnabled(connected && !running);
 		btnStart.setEnabled(connected && !running && pending && !pendingDone);
 		btnStop.setEnabled(connected && running);
 		btnClear.setEnabled(connected && !running && pending);
@@ -693,12 +693,12 @@ public class BackBoxGui {
 		
 		JPanel panel = new JPanel();
 		frmBackBox.getContentPane().add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new MigLayout("", "[70px][70px][70px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][70px]", "[20px][282.00][]"));
+		panel.setLayout(new MigLayout("", "[80px:80px:80px][80px:80px:80px][80px:80px:80px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][70px]", "[20px][282.00][]"));
 		
-		btnBackup = new JButton("Backup");
-		btnBackup.setMnemonic('B');
-		btnBackup.setEnabled(connected);
-		btnBackup.addActionListener(new ActionListener() {
+		btnBackupAll = new JButton("Backup All");
+		btnBackupAll.setMnemonic('B');
+		btnBackupAll.setEnabled(connected);
+		btnBackupAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
@@ -709,9 +709,9 @@ public class BackBoxGui {
 					showLoading();
 					Thread worker = new Thread() {
 						public void run() {
-							ArrayList<Transaction> tt = null;
+							List<Transaction> tt = null;
 							try {
-								tt = helper.backup(false);
+								tt = helper.backupAll();
 								
 								spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultUploadSpeed() / 1024);
 							} catch (Exception e) {
@@ -757,12 +757,12 @@ public class BackBoxGui {
 			}
 		});
 		panel.add(btnConnect, "cell 0 0,grow");
-		panel.add(btnBackup, "cell 1 0,grow");
+		panel.add(btnBackupAll, "cell 1 0,grow");
 		
-		btnRestore = new JButton("Restore");
-		btnRestore.setMnemonic('R');
-		btnRestore.setEnabled(connected);
-		btnRestore.addActionListener(new ActionListener() {
+		btnRestoreAll = new JButton("Restore All");
+		btnRestoreAll.setMnemonic('R');
+		btnRestoreAll.setEnabled(connected);
+		btnRestoreAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
@@ -777,9 +777,9 @@ public class BackBoxGui {
 						showLoading();
 						Thread worker = new Thread() {
 							public void run() {
-								ArrayList<Transaction> tt = null;
+								List<Transaction> tt = null;
 								try {
-									tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), false);
+									tt = helper.restoreAll(fc.getSelectedFile().getCanonicalPath());
 									
 									spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultDownloadSpeed() / 1024);
 								} catch (Exception e) {
@@ -811,7 +811,7 @@ public class BackBoxGui {
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		});
-		panel.add(btnRestore, "cell 2 0,grow");
+		panel.add(btnRestoreAll, "cell 2 0,grow");
 		
 		JLabel lblFreeSpace = new JLabel("Free Space:");
 		panel.add(lblFreeSpace, "cell 5 0,alignx right,growy");

@@ -10,8 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,7 +26,7 @@ public class FileCompare {
 	private Map<String, Map<String, File>> filesNotInRecords = null;
 	
 	private Path folder;
-	private List<String> exclusions;
+	private Set<String> exclusions;
 	
 	/**
 	 * Constructor
@@ -39,7 +39,7 @@ public class FileCompare {
 	 *            Folders/files to exclude
 	 * 
 	 */
-	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, Path root, List<String> exclusions) {
+	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, Path root, Set<String> exclusions) {
 		this.records = records;
         
 		this.folder = root;
