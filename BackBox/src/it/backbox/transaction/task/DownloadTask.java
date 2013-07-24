@@ -58,7 +58,7 @@ public class DownloadTask extends BoxTask {
 		OutputStream fout = Utility.getOutputStream(filename);
 		
 		if (file.isCompressed() || file.isEncrypted()) {
-			dfout = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+			dfout = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
 			out = dfout;
 		} else
 			out = fout;
@@ -78,7 +78,7 @@ public class DownloadTask extends BoxTask {
 			InputStream in = Utility.getInputStream(dfout);
 			
 			if (file.isCompressed() || file.isEncrypted()) {
-				dfout = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+				dfout = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
 				out = dfout;
 			} else
 				out = fout;

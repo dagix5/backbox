@@ -59,7 +59,7 @@ public class UploadTask extends BoxTask {
 	@Override
 	public void run() throws Exception {
 		InputStream in = new BufferedInputStream(new FileInputStream(file));
-		DeferredFileOutputStream out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+		DeferredFileOutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
 		
 		long size = file.length();
 		List<Chunk> chunks = new ArrayList<>();
@@ -77,7 +77,7 @@ public class UploadTask extends BoxTask {
 			size = out.getByteCount();
 			
 			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
 		}
 		
 		if (stop) { in.close(); out.close(); return; }
@@ -89,7 +89,7 @@ public class UploadTask extends BoxTask {
 			size = out.getByteCount();
 			
 			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(threshold, PREFIX, SUFFIX, tempDir);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
 		}
 		
 		int totalBytesRead = 0;
