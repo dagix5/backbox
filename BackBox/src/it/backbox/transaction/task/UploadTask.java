@@ -16,13 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
 public class UploadTask extends BoxTask {
 	
-	private static final String PREFIX = "BB_UPLOAD-";
-
 	private boolean encryptEnabled = true;
 	private boolean compressEnabled = true;
 	
@@ -59,7 +56,7 @@ public class UploadTask extends BoxTask {
 	@Override
 	public void run() throws Exception {
 		InputStream in = new BufferedInputStream(new FileInputStream(file));
-		DeferredFileOutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
+		DeferredFileOutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		
 		long size = file.length();
 		List<Chunk> chunks = new ArrayList<>();
@@ -77,7 +74,7 @@ public class UploadTask extends BoxTask {
 			size = out.getByteCount();
 			
 			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		}
 		
 		if (stop) { in.close(); out.close(); return; }
@@ -89,7 +86,7 @@ public class UploadTask extends BoxTask {
 			size = out.getByteCount();
 			
 			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		}
 		
 		int totalBytesRead = 0;
@@ -118,8 +115,6 @@ public class UploadTask extends BoxTask {
 		out.close();
 		
 		if (stop) return;
-		
-		FileUtils.deleteDirectory(tempDir);
 	}
 
 	@Override

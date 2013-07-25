@@ -422,6 +422,13 @@ public class BackBoxHelper {
 			sm.encrypt(DB_FILE_TEMP, DB_FILE);
 			Files.delete(Paths.get(DB_FILE_TEMP));
 		}
+		if (tm != null)
+			tm.close();
+
+		dbm = null;
+		sm = null;
+		tm = null;
+		bm = null;
 	}
 	
 	/**

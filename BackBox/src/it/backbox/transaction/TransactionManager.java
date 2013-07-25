@@ -8,6 +8,7 @@ import it.backbox.ISplitter;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +18,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.FileUtils;
+
+import com.google.common.io.Files;
 
 public class TransactionManager {
 	private static Logger _log = Logger.getLogger(TransactionManager.class.getCanonicalName());
@@ -35,6 +40,8 @@ public class TransactionManager {
 	private ISecurityManager securityManager;
 	private ISplitter splitter;
 	private ICompress zipper;
+	
+	private File tempDir;
 	
 	/**
 	 * Constructor
@@ -56,6 +63,10 @@ public class TransactionManager {
 		this.securityManager = securityManager;
 		this.splitter = splitter;
 		this.zipper = zipper;
+		
+		this.tempDir = Files.createTempDir();
+		_log.info("Created temp dir: " + tempDir.getAbsolutePath());
+		
 		running = false;
 		start();
 	}
@@ -89,6 +100,7 @@ public class TransactionManager {
 			task.setSplitter(splitter);
 			task.setZipper(zipper);
 			task.setPhaser(phaser);
+			task.setTempDir(tempDir);
 		}
 
 		getTransactions().add(t);
@@ -249,6 +261,13 @@ public class TransactionManager {
 		if (listeners == null)
 			listeners = new ArrayList<>();
 		listeners.add(listener);
+	}
+	
+	/**
+	 * Free transaction manager resources
+	 */
+	public void close() {
+		FileUtils.deleteQuietly(tempDir);
 	}
 
 	/**

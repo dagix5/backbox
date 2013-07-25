@@ -11,8 +11,6 @@ import it.backbox.utility.Utility;
 import java.io.File;
 import java.util.logging.Logger;
 
-import com.google.common.io.Files;
-
 public abstract class Task {
 	protected static Logger _log = Logger.getLogger(Task.class.getCanonicalName());
 	
@@ -29,15 +27,17 @@ public abstract class Task {
 	private ISecurityManager securityManager;
 	private ICompress zipper;
 	
+	private File tempDir;
+	
 	private BBPhaser phaser;
 	
-	protected File tempDir;
 	protected static int THRESHOLD = 1024*1024*100;
 	protected static final String SUFFIX = ".temp";
+	protected static String PREFIX;
 
 	public Task() {
 		setId(Utility.genID());
-		tempDir = Files.createTempDir();
+		PREFIX = getId() + "-";
 	}
 	
 	public IBoxManager getBoxManager() {
@@ -133,5 +133,13 @@ public abstract class Task {
 	}
 
 	public abstract void run() throws Exception;
+
+	public File getTempDir() {
+		return tempDir;
+	}
+
+	public void setTempDir(File tempDir) {
+		this.tempDir = tempDir;
+	}
 		
 }
