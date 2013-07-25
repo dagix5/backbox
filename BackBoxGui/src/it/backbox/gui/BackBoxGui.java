@@ -693,7 +693,7 @@ public class BackBoxGui {
 		
 		JPanel panel = new JPanel();
 		frmBackBox.getContentPane().add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new MigLayout("", "[80px:80px:80px][80px:80px:80px][80px:80px:80px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][70px]", "[20px][282.00][]"));
+		panel.setLayout(new MigLayout("", "[80px:80px:80px][80px:80px:80px][80px:80px:80px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][90px:90px:90px]", "[20px][282.00][]"));
 		
 		btnBackupAll = new JButton("Backup All");
 		btnBackupAll.setMnemonic('B');
@@ -954,7 +954,7 @@ public class BackBoxGui {
 					long speedSubpartial = 0;
 					long lastTimestamp = 0;
 					long averagespeed = 0;
-					long speeds[] = new long[5];
+					long speeds[] = new long[10];
 					int i = 0;
 					
 					@Override
@@ -971,7 +971,7 @@ public class BackBoxGui {
 								lastTimestamp = timestamp;
 								speedSubpartial = 0;
 								
-								if (i == speeds.length) {
+								if (i >= 5) {
 									i = 0;
 									averagespeed = 0;
 									for (long a : speeds)
@@ -1003,16 +1003,14 @@ public class BackBoxGui {
 				
 				running = true;
 				updateStatus();
-				Runnable runnable = new Runnable() {
-					
-					@Override
+				Thread t = new Thread("ProgressBar") {
 					public void run() {
 						progressBar.setValue(0);
 						while (tm.isRunning()) {
 							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append("/").append(tm.getAllTasksWeight()).toString());
 							if (tm.getAllTasksWeight() > 0) {
-								int perc = (int) ((tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight());
-								if ((perc > progressBar.getValue()) && (perc < 99))
+								int perc = Math.round((tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight());
+								if ((perc > progressBar.getValue()) && (perc <= 99))
 									progressBar.setValue(perc);
 							}
 							try { Thread.sleep(1000); } catch (InterruptedException e) {}
@@ -1027,7 +1025,6 @@ public class BackBoxGui {
 						updateStatus();
 					}
 				};
-				Thread t = new Thread(runnable, "ProgressBar");
 				t.start();
 			}
 		});

@@ -163,8 +163,6 @@ public class PreferencesDialog extends JDialog {
 							main.helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
 							main.helper.getConfiguration().setDefaultDownloadSpeed(downSpeed);
 							
-							main.setSpeed(upSpeed, downSpeed);
-							
 							if (newLevel != null) {
 								Logger.getLogger("it.backbox").setLevel(newLevel);
 								main.helper.getConfiguration().setLogLevel(newLevel.getName());
