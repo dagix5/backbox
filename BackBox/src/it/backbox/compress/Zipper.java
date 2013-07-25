@@ -26,22 +26,25 @@ public class Zipper implements ICompress{
 	 */
 	@Override
 	public void compress(InputStream in, OutputStream out, String name) throws IOException {
-		ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(out));
+		ZipOutputStream zout = null;
+		try{
+			zout = new ZipOutputStream(new BufferedOutputStream(out));
 		
-		ZipEntry entry = new ZipEntry(name);
-		zout.putNextEntry(entry);
-		
-		byte[] buffer = new byte[Utility.BUFFER];
-	    int len;
-
-	    while((len = in.read(buffer)) >= 0)
-	    	zout.write(buffer, 0, len);
-
-	    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry zipped");
-	    
-	    in.close();
-	    zout.close();
-	    out.close();
+			ZipEntry entry = new ZipEntry(name);
+			zout.putNextEntry(entry);
+			
+			byte[] buffer = new byte[Utility.BUFFER];
+		    int len;
+	
+		    while((len = in.read(buffer)) >= 0)
+		    	zout.write(buffer, 0, len);
+	
+		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry zipped");
+		} finally {
+		    if (in != null) in.close();
+		    if (zout != null) zout.close();
+		    if (out != null) out.close();
+		}
 	}
 	
 	/*
@@ -50,23 +53,26 @@ public class Zipper implements ICompress{
 	 */
 	@Override
 	public void decompress(InputStream in, OutputStream out, String name) throws IOException {
-		ZipInputStream zin = new ZipInputStream(in);
-		ZipEntry zipEntry = null;
-		do {
-			zipEntry = zin.getNextEntry();
-		} while ((zipEntry != null) && !zipEntry.getName().equals(name));
-		
-		byte[] buffer = new byte[Utility.BUFFER];
-	    int len;
-
-	    while((len = zin.read(buffer)) >= 0)
-	    	out.write(buffer, 0, len);
-
-	    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry unzipped");
-	    
-	    in.close();
-	    zin.close();
-	    out.close();
+		ZipInputStream zin = null;
+		try {
+			zin = new ZipInputStream(in);
+			ZipEntry zipEntry = null;
+			do {
+				zipEntry = zin.getNextEntry();
+			} while ((zipEntry != null) && !zipEntry.getName().equals(name));
+			
+			byte[] buffer = new byte[Utility.BUFFER];
+		    int len;
+	
+		    while((len = zin.read(buffer)) >= 0)
+		    	out.write(buffer, 0, len);
+	
+		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry unzipped");
+		} finally {
+		    if (in != null) in.close();
+		    if (zin != null) zin.close();
+		    if (out != null) out.close();
+		}
 	}
 	
 	/*
