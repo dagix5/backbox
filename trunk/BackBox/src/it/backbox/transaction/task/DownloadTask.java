@@ -9,17 +9,15 @@ import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
 public class DownloadTask extends BoxTask {
 
-	private static final String PREFIX = "BB_DOWNLOAD-";
-	
 	private String path;
 	private File file;
 	
@@ -54,34 +52,34 @@ public class DownloadTask extends BoxTask {
 		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
 		
 		OutputStream out;
-		DeferredFileOutputStream dfout = null;
-		OutputStream fout = Utility.getOutputStream(filename);
 		
-		if (file.isCompressed() || file.isEncrypted()) {
-			dfout = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
-			out = dfout;
-		} else
-			out = fout;
+		if (file.isCompressed() || file.isEncrypted())
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
+		else
+			out = Utility.getOutputStream(filename);
 		
 		if (stop) { out.close(); return; }
 		
-		for (Chunk c : file.getChunks()) {
-			if (stop) return;
-			chunk = c;
-			callBox();
-			s.mergeNextChunk(new ByteArrayInputStream(chunkContent), out);
+		try {
+			for (Chunk c : file.getChunks()) {
+				if (stop) return;
+				chunk = c;
+				callBox();
+				s.mergeNextChunk(new BufferedInputStream(new ByteArrayInputStream(chunkContent)), out);
+			}
+		} finally {
+			out.close();
 		}
 		
-		if (stop) { out.close(); return; }
+		if (stop) return;
 		
 		if (file.isEncrypted()) {
-			InputStream in = Utility.getInputStream(dfout);
+			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 			
-			if (file.isCompressed() || file.isEncrypted()) {
-				dfout = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, tempDir);
-				out = dfout;
-			} else
-				out = fout;
+			if (file.isCompressed())
+				out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
+			else
+				out = Utility.getOutputStream(filename);
 			
 			ISecurityManager sm = getSecurityManager();
 			sm.decrypt(in, out);
@@ -90,18 +88,16 @@ public class DownloadTask extends BoxTask {
 		if (stop) return;
 		
 		if (file.isCompressed()) {
-			InputStream in = Utility.getInputStream(dfout);
+			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 			
 			ICompress z = new Zipper();
-			z.decompress(in, fout, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
+			z.decompress(in, Utility.getOutputStream(filename), filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
 		}
 		
 		if (stop) return;
 			
 		if (!Utility.checkIntegrity(filename, file.getHash()))
 			throw new BackBoxException(filename + ": File integrity check failed");
-		
-		FileUtils.deleteDirectory(tempDir);
 	}
 
 	@Override
