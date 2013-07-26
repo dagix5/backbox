@@ -208,7 +208,7 @@ public class BoxManager implements IBoxManager {
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
-				if (_log.isLoggable(Level.FINE)) _log.fine("Uploading new version");
+				if (_log.isLoggable(Level.INFO)) _log.info("Uploading new version");
 				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
 				if ((error != null) &&
@@ -216,11 +216,14 @@ public class BoxManager implements IBoxManager {
 						(error.context_info.conflicts != null) &&
 						!error.context_info.conflicts.isEmpty()) {
 					String id = error.context_info.conflicts.get(0).id;
-					if (_log.isLoggable(Level.FINE)) _log.fine("upload: 409 Conflict, fileID " + id);
+					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + id);
 					file = client.upload(name, id, content, folderID, hash);
+					if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+						throw new BackBoxException("Uploaded file ID not retrieved");
 				} else
 					throw e;
-			}
+			} else
+				throw e;
 		}
 		return file;
 	}
