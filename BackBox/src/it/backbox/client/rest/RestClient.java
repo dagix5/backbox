@@ -48,7 +48,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
 
 public class RestClient implements IRestClient {
-	private static Logger _log = Logger.getLogger(RestClient.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(RestClient.class.getCanonicalName());
 
 	/** Global instance of the HTTP transport. */
 	private static HttpTransport HTTP_TRANSPORT;
@@ -61,7 +61,7 @@ public class RestClient implements IRestClient {
 
 	private HttpRequestFactory requestFactory;
 
-	private static Credential credential;
+	private Credential credential;
 	
 	private class RestHttpRequestInitializer implements HttpRequestInitializer {
 

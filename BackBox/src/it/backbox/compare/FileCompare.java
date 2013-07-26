@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class FileCompare {
-	private static Logger _log = Logger.getLogger(FileCompare.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(FileCompare.class.getCanonicalName());
 
 	private Map<String, Map<String, File>> files = null;
 	private Map<String, Map<String, it.backbox.bean.File>> records = null;

@@ -7,11 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class DeleteTask extends Task {
-	private static Logger _log = Logger.getLogger(DeleteTask.class.getCanonicalName());
-
 	private String srcFolder;
 	private String deletePath;
 	private String src;

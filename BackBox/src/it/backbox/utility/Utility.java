@@ -1,6 +1,5 @@
 package it.backbox.utility;
 
-import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
 
 import java.io.BufferedInputStream;
@@ -15,7 +14,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
@@ -122,40 +120,6 @@ public class Utility {
 	}
 	
 	/**
-	 * Fill the list of chunks with the chunkfile hash
-	 * 
-	 * @param chunks
-	 *            ArrayList of Chunks
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 */
-	public static void hashChunks(List<Chunk> chunks) throws NoSuchAlgorithmException, IOException {
-		for (Chunk c : chunks)
-			c.setChunkhash(DigestUtils.sha1Hex(c.getContent()));
-	}
-
-	/**
-	 * Check the file integrity, comparing its digest with that one passed as
-	 * parameter
-	 * 
-	 * @param filename
-	 *            Name of the file to check
-	 * @param hash
-	 *            Hash to check
-	 * @return true if the file is intact, false otherwise
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws BackBoxException 
-	 */
-	public static boolean checkIntegrity(String filename, String hash) throws NoSuchAlgorithmException, IOException, BackBoxException {
-		File file = new File(filename);
-		if (!file.exists())
-			throw new BackBoxException("File not found");
-		String newHash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file)));
-		return hash.equals(newHash);
-	}
-	
-	/**
 	 * Get the chunk names
 	 * 
 	 * @param chunkprefix
@@ -171,34 +135,6 @@ public class Utility {
 			name.append(0);
 		name.append(index);
 		return name.toString();
-	}
-	
-	/**
-	 * Build a string with memory status informations
-	 * 
-	 * @return Memory status informations
-	 */
-	public static String getMemoryStats() {
-		int mb = 1024*1024;
-        
-        //Getting the runtime reference from system
-        Runtime runtime = Runtime.getRuntime();
-         
-        StringBuilder s = new StringBuilder("##### Heap utilization statistics [MB] #####");
-         
-        //Print used memory
-        s.append("\nUsed Memory: ").append((runtime.totalMemory() - runtime.freeMemory()) / mb);
- 
-        //Print free memory
-        s.append("\nFree Memory: ").append(runtime.freeMemory() / mb);
-         
-        //Print total available memory
-        s.append("\nTotal Memory: ").append(runtime.totalMemory() / mb);
- 
-        //Print Maximum available memory
-        s.append("\nMax Memory: ").append(runtime.maxMemory() / mb);
-        
-        return s.toString();
 	}
 	
 	/**

@@ -14,6 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
 public class DownloadTask extends BoxTask {
@@ -51,12 +53,7 @@ public class DownloadTask extends BoxTask {
 		
 		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
 		
-		OutputStream out;
-		
-		if (file.isCompressed() || file.isEncrypted())
-			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-		else
-			out = Utility.getOutputStream(filename);
+		OutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		
 		if (stop) { out.close(); return; }
 		
@@ -69,17 +66,15 @@ public class DownloadTask extends BoxTask {
 			}
 		} finally {
 			out.close();
+			chunkContent = null;
+			chunk = null;
 		}
 		
 		if (stop) return;
 		
 		if (file.isEncrypted()) {
 			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
-			
-			if (file.isCompressed())
-				out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-			else
-				out = Utility.getOutputStream(filename);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 			
 			ISecurityManager sm = getSecurityManager();
 			sm.decrypt(in, out);
@@ -89,15 +84,28 @@ public class DownloadTask extends BoxTask {
 		
 		if (file.isCompressed()) {
 			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
+			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 			
 			ICompress z = new Zipper();
-			z.decompress(in, Utility.getOutputStream(filename), filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
+			z.decompress(in, out, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
 		}
 		
 		if (stop) return;
-			
-		if (!Utility.checkIntegrity(filename, file.getHash()))
+		
+		InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
+		
+		if (!file.getHash().equals(DigestUtils.sha1Hex(in)))
 			throw new BackBoxException(filename + ": File integrity check failed");
+		
+		in = Utility.getInputStream((DeferredFileOutputStream) out);
+		out = Utility.getOutputStream(filename);
+		
+		try {
+			IOUtils.copy(in, out);
+		} finally {
+			in.close();
+			out.close();
+		}
 	}
 
 	@Override

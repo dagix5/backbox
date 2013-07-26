@@ -40,7 +40,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class SecurityManager implements ISecurityManager{
-	private static Logger _log = Logger.getLogger(SecurityManager.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(SecurityManager.class.getCanonicalName());
 
 	private static final String ENCRYPT_ALGO = "AES/CBC/PKCS5Padding";
 	private static final String ENCRYPT_ALGO_GEN_KEY = "AES";

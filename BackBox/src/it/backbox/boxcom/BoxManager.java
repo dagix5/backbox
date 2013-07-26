@@ -30,7 +30,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class BoxManager implements IBoxManager {
-	private static Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
 
 	public static final String ROOT_FOLDER_NAME = "BackBox";
 	

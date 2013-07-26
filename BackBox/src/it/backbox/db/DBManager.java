@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.StringEscapeUtils;
 
 public class DBManager implements IDBManager {
-	private static Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
 
 	private static final int QUERY_TIMEOUT = 30;
 

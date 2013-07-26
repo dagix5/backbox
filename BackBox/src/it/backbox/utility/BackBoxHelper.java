@@ -61,7 +61,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class BackBoxHelper {
-	private static Logger _log = Logger.getLogger(BackBoxHelper.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(BackBoxHelper.class.getCanonicalName());
 	
 	public static final String DB_FILE = "backbox.db";
 	public static final String DB_FILE_TEMP = "backbox.db.temp";
@@ -73,7 +73,7 @@ public class BackBoxHelper {
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private Configuration configuration;
 	
-	private static Set<String> ex = new HashSet<>();
+	private static final Set<String> ex = new HashSet<>();
 	
 	protected ISecurityManager sm;
 	protected IDBManager dbm;

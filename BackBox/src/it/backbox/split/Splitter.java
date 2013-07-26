@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 public class Splitter implements ISplitter {
 	
-	private static Logger _log = Logger.getLogger(Splitter.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(Splitter.class.getCanonicalName());
 	
 	private int chunkSize;
 	
