@@ -1,7 +1,5 @@
 package it.backbox.utility;
 
-import it.backbox.exception.BackBoxException;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -13,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
