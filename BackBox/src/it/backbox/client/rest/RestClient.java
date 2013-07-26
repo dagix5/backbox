@@ -207,8 +207,14 @@ public class RestClient implements IRestClient {
 			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Delete: " + request.getUrl().toString());
-		HttpResponse response = execute(request);
-		if (_log.isLoggable(Level.FINE)) _log.fine("Delete: " + response.getStatusCode());
+		try {
+			HttpResponse response = execute(request);
+			if (_log.isLoggable(Level.FINE)) _log.fine("Delete: " + response.getStatusCode());
+		} catch (RestException re) {
+			if (re.getHttpException().getStatusCode() != 404)
+				throw re;
+			if (_log.isLoggable(Level.WARNING)) _log.warning(new StringBuilder("Delete file/folder with id ").append(fileID).append(" returned 404").toString());
+		}
 	}
 	
 	/*
