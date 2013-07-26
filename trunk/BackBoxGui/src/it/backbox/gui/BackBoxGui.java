@@ -68,7 +68,7 @@ import javax.swing.table.DefaultTableModel;
 import net.miginfocom.swing.MigLayout;
 
 public class BackBoxGui {
-	private static Logger _log = Logger.getLogger("it.backbox");
+	private static final Logger _log = Logger.getLogger("it.backbox");
 
 	private static BackBoxGui window;
 	private JFrame frmBackBox;

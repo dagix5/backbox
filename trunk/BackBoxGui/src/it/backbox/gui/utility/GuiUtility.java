@@ -23,7 +23,7 @@ import javax.swing.JTable;
 
 public class GuiUtility {
 	
-	private static Logger _log = Logger.getLogger(BackBoxGui.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(BackBoxGui.class.getCanonicalName());
 	
 	public static void handleException(Component parent, String message, Exception e) {
 		_log.log(Level.SEVERE, message, e);
