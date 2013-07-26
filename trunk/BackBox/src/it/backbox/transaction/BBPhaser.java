@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BBPhaser extends Phaser {
-	private static Logger _log = Logger.getLogger(BBPhaser.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(BBPhaser.class.getCanonicalName());
 	
 	/*
 	 * (non-Javadoc)

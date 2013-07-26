@@ -12,6 +12,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,11 +25,10 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.io.Files;
 
 public class TransactionManager {
-	private static Logger _log = Logger.getLogger(TransactionManager.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(TransactionManager.class.getCanonicalName());
 	
 	private LinkedList<Transaction> transactions;
 	private ExecutorService executor;
-	private boolean running;
 	private int completedTasksWeight;
 	private long allTasksWeight;
 	private BBPhaser phaser;
@@ -67,7 +67,6 @@ public class TransactionManager {
 		this.tempDir = Files.createTempDir();
 		_log.info("Created temp dir: " + tempDir.getAbsolutePath());
 		
-		running = false;
 		start();
 	}
 
@@ -104,7 +103,7 @@ public class TransactionManager {
 		}
 
 		getTransactions().add(t);
-		if (_log.isLoggable(Level.INFO)) _log.info(t.getId() + " added");
+		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " added");
 	}
 	
 	/**
@@ -116,8 +115,7 @@ public class TransactionManager {
 	private void startTransaction(Transaction t) {
 		Runnable tt = new TransactionThread(this, t);
 		executor.execute(tt);
-		running = true;
-		if (_log.isLoggable(Level.INFO)) _log.info(t.getId() + " transaction thread running");
+		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " transaction thread running");
 	}
 	
 	/**
@@ -125,14 +123,14 @@ public class TransactionManager {
 	 * @throws InterruptedException 
 	 */
 	public void stopTransactions() throws InterruptedException {
-		if (running) {
-			List<Runnable> rr = executor.shutdownNow();
+		if (!executor.isTerminated()) {
+			BlockingQueue<Runnable> rr = ((ThreadPoolExecutor)executor).getQueue();
 			for (Runnable r : rr) {
 				TransactionThread tt = (TransactionThread) r;
 				tt.stop();
 			}
-			running = false;
-			executor.awaitTermination(5, TimeUnit.MINUTES);
+			executor.shutdownNow();
+			executor.awaitTermination(15, TimeUnit.MINUTES);
 		}
 	}
 	
@@ -219,9 +217,29 @@ public class TransactionManager {
 	 */
 	public boolean isRunning() {
 		if (executor == null)
-			return running;
-		running = !executor.isTerminated();
-		return running;
+			return false;
+		
+		if (_log.isLoggable(Level.INFO)) {
+			ThreadPoolExecutor tpEx = (ThreadPoolExecutor) executor;
+			_log.info(String.format("[Executor monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
+					tpEx.getPoolSize(), 
+					tpEx.getCorePoolSize(),
+					tpEx.getActiveCount(),
+					tpEx.getCompletedTaskCount(), 
+					tpEx.getTaskCount(),
+					tpEx.isShutdown(), 
+					tpEx.isTerminated()));
+			
+			Runtime runtime = Runtime.getRuntime();
+			int mb = 1024*1024;
+			_log.info(String.format("[JVM monitor] Used Memory: %d, Free Memory: %d, Total Memory: %d, Max Memory: %d",
+					(runtime.totalMemory() - runtime.freeMemory()) / mb,
+					runtime.freeMemory() / mb,
+					runtime.totalMemory() / mb,
+					runtime.maxMemory() / mb));
+		}
+		
+		return !executor.isTerminated();
 	}
 	
 	/**

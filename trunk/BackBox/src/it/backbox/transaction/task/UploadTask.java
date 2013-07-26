@@ -107,6 +107,9 @@ public class UploadTask extends BoxTask {
 			
 			chunk.setContent(null);
 			chunks.add(chunk);
+			
+			chunk = null;
+			c = null;
 		}
 		
 		getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));

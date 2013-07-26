@@ -26,7 +26,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class OAuth2Client {
-	private static Logger _log = Logger.getLogger(OAuth2Client.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(OAuth2Client.class.getCanonicalName());
 	
 	private static final String CLIENT_ID = "zr56mtgkjibomdnmtje8cer8v8sw3nxe";
 	private static final String CLIENT_SECRET = "AkFazArd6LnIifodfHQJ02D1fh90qLs2";
@@ -38,10 +38,8 @@ public class OAuth2Client {
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	
-	private static CredentialStore store;
-
 	public static Credential getCredential(HttpTransport httpTransport) throws Exception {
-		store = new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY);
+		CredentialStore store = new FileCredentialStoreJava7(new File(CREDENTIAL_STORE_FILENAME), JSON_FACTORY);
 		AuthorizationCodeFlow codeFlow = new AuthorizationCodeFlow.Builder(
 				BearerToken.authorizationHeaderAccessMethod(), httpTransport,
 				JSON_FACTORY, new GenericUrl(TOKEN_SERVER_URL),

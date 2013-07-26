@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class TransactionThread implements Runnable {
-	private static Logger _log = Logger.getLogger(TransactionThread.class.getCanonicalName());
+	private static final Logger _log = Logger.getLogger(TransactionThread.class.getCanonicalName());
 
 	private TransactionManager tm;
 	

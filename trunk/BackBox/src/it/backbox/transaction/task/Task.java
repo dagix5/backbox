@@ -12,7 +12,7 @@ import java.io.File;
 import java.util.logging.Logger;
 
 public abstract class Task {
-	protected static Logger _log = Logger.getLogger(Task.class.getCanonicalName());
+	protected static final Logger _log = Logger.getLogger(Task.class.getCanonicalName());
 	
 	private String id;
 	private String description;
@@ -31,9 +31,9 @@ public abstract class Task {
 	
 	private BBPhaser phaser;
 	
-	protected static int THRESHOLD = 1024*1024*100;
+	protected static final int THRESHOLD = 1024*1024*50; //Runtime.getRuntime().freeMemory() / 10
 	protected static final String SUFFIX = ".temp";
-	protected static String PREFIX;
+	protected String PREFIX;
 
 	public Task() {
 		setId(Utility.genID());
