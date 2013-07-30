@@ -4,7 +4,6 @@ import it.backbox.ICompress;
 import it.backbox.utility.Utility;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -27,8 +26,8 @@ public class Zipper implements ICompress{
 	@Override
 	public void compress(InputStream in, OutputStream out, String name) throws IOException {
 		ZipOutputStream zout = null;
-		try{
-			zout = new ZipOutputStream(new BufferedOutputStream(out));
+		try {
+			zout = new ZipOutputStream(out);
 		
 			ZipEntry entry = new ZipEntry(name);
 			zout.putNextEntry(entry);

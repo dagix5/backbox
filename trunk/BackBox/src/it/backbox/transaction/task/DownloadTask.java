@@ -49,15 +49,13 @@ public class DownloadTask extends BoxTask {
 	
 	@Override
 	public void run() throws Exception {
-		ISplitter s = getSplitter();
-		
-		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
-		
 		OutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
+		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
 		
 		if (stop) { out.close(); return; }
 		
 		try {
+			ISplitter s = getSplitter();
 			for (Chunk c : file.getChunks()) {
 				if (stop) return;
 				chunk = c;
@@ -76,8 +74,13 @@ public class DownloadTask extends BoxTask {
 			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 			
-			ISecurityManager sm = getSecurityManager();
-			sm.decrypt(in, out);
+			try {
+				ISecurityManager sm = getSecurityManager();
+				sm.decrypt(in, out);
+			} finally {
+				in.close();
+				out.close();
+			}
 		}
 		
 		if (stop) return;
@@ -86,8 +89,13 @@ public class DownloadTask extends BoxTask {
 			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 			
-			ICompress z = new Zipper();
-			z.decompress(in, out, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
+			try {
+				ICompress z = new Zipper();
+				z.decompress(in, out, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
+			} finally {
+				in.close();
+				out.close();
+			}
 		}
 		
 		if (stop) return;

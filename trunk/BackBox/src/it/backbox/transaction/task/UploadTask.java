@@ -58,66 +58,66 @@ public class UploadTask extends BoxTask {
 		InputStream in = new BufferedInputStream(new FileInputStream(file));
 		DeferredFileOutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		
-		long size = file.length();
-		List<Chunk> chunks = new ArrayList<>();
-		
-		ISplitter s = getSplitter();
-		
-		if (stop) { in.close(); out.close(); return; }
-		
-		if (isCompressEnabled()) {
-			ICompress z = new Zipper();
-			String filename = file.getCanonicalPath();
-			String name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
-			z.compress(in, out, name);
+		try {
+			long size = file.length();
+			List<Chunk> chunks = new ArrayList<>();
 			
-			size = out.getByteCount();
+			ISplitter s = getSplitter();
 			
-			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-		}
-		
-		if (stop) { in.close(); out.close(); return; }
-		
-		if (isEncryptEnabled()) {
-			ISecurityManager sm = getSecurityManager();
-			sm.encrypt(in, out);
-			
-			size = out.getByteCount();
-			
-			in = Utility.getInputStream(out);
-			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-		}
-		
-		int totalBytesRead = 0;
-		int i = 0;
-		while (totalBytesRead < size) {
 			if (stop) { in.close(); out.close(); return; }
 			
-			byte[] c = s.splitNextChunk(in, size, totalBytesRead);
-			totalBytesRead += c.length;
+			if (isCompressEnabled()) {
+				ICompress z = new Zipper();
+				String filename = file.getCanonicalPath();
+				String name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
+				z.compress(in, out, name);
+				
+				size = out.getByteCount();
+				
+				in = Utility.getInputStream(out);
+				out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
+			}
 			
-			chunk = new Chunk();
-			chunk.setChunkname(Utility.buildChunkName(hash, i++));
-			chunk.setContent(c);
-			chunk.setChunkhash(DigestUtils.sha1Hex(c));
-			chunk.setSize(c.length);
+			if (stop) { in.close(); out.close(); return; }
 			
-			callBox();
+			if (isEncryptEnabled()) {
+				ISecurityManager sm = getSecurityManager();
+				sm.encrypt(in, out);
+				
+				size = out.getByteCount();
+				
+				in = Utility.getInputStream(out);
+				out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
+			}
 			
-			chunk.setContent(null);
-			chunks.add(chunk);
+			int totalBytesRead = 0;
+			int i = 0;
+			while (totalBytesRead < size) {
+				if (stop) { in.close(); out.close(); return; }
+				
+				byte[] c = s.splitNextChunk(in, size, totalBytesRead);
+				totalBytesRead += c.length;
+				
+				chunk = new Chunk();
+				chunk.setChunkname(Utility.buildChunkName(hash, i++));
+				chunk.setContent(c);
+				chunk.setChunkhash(DigestUtils.sha1Hex(c));
+				chunk.setSize(c.length);
+				
+				callBox();
+				
+				chunk.setContent(null);
+				chunks.add(chunk);
+				
+				chunk = null;
+				c = null;
+			}
 			
-			chunk = null;
-			c = null;
+			getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
+		} finally {
+			in.close();
+			out.close();
 		}
-		
-		getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
-		
-		in.close();
-		out.close();
-		
-		if (stop) return;
 	}
 
 	@Override
