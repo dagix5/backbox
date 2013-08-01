@@ -14,7 +14,6 @@ import it.backbox.exception.RestException;
 import it.backbox.utility.Utility;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,18 +24,12 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
 
 public class BoxManager implements IBoxManager {
 	private static final Logger _log = Logger.getLogger(BoxManager.class.getCanonicalName());
 
 	public static final String ROOT_FOLDER_NAME = "BackBox";
 	
-	/** Global instance of the JSON factory. */
-	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-
 	private IRestClient client;
 
 	/**
@@ -81,13 +74,13 @@ public class BoxManager implements IBoxManager {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
 				if (_log.isLoggable(Level.WARNING)) _log.warning(folderName + " exists");
-				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
+				BoxError error = e.getError();
 				if ((error != null) && 
 						(error.context_info != null) && 
-						(error.context_info.conflicts != null) && 
-						!error.context_info.conflicts.isEmpty())
-					return error.context_info.conflicts.get(0).id;
+						(error.context_info.conflicts != null) &&
+						(error.context_info.conflicts.id != null) &&
+						!error.context_info.conflicts.id.isEmpty())
+					return error.context_info.conflicts.id;
 			} else
 				throw e;
 		}
@@ -203,28 +196,30 @@ public class BoxManager implements IBoxManager {
 		BoxFile file = null;
 		try {
 			file = client.upload(name, null, content, folderID, hash);
-			if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
-				throw new BackBoxException("Uploaded file ID not retrieved");
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
 				if (_log.isLoggable(Level.INFO)) _log.info("Uploading new version");
-				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-				BoxError error = parser.parseAndClose(new StringReader(httpe.getContent()), BoxError.class);
+				BoxError error = e.getError();
 				if ((error != null) &&
 						(error.context_info != null) &&
-						(error.context_info.conflicts != null) &&
-						!error.context_info.conflicts.isEmpty()) {
-					String id = error.context_info.conflicts.get(0).id;
-					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + id);
-					file = client.upload(name, id, content, folderID, hash);
-					if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
-						throw new BackBoxException("Uploaded file ID not retrieved");
-				} else
+						(error.context_info.conflicts != null)) {
+					BoxFile conflict = error.context_info.conflicts;
+					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + conflict.id);
+					file = client.upload(name, conflict.id, content, folderID, hash);
+					if (file == null) {
+						if (_log.isLoggable(Level.WARNING)) _log.warning("Uploading new version returned a null Box File");
+						file = conflict;
+					}
+				} else {
+					_log.severe("Problem parsing an 409 HTTP response: missing information of confliction file");
 					throw e;
+				}
 			} else
 				throw e;
 		}
+		if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+			throw new BackBoxException("Uploaded file ID not retrieved");
 		return file;
 	}
 
