@@ -129,22 +129,19 @@ public class BackBoxGui {
 	
 	public void connect() {
 		connected = true;
-		
-		if (connected) {
-			try {
-				setSpeed(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getDefaultDownloadSpeed());
-				updateTable();
+		try {
+			setSpeed(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getDefaultDownloadSpeed());
+			updateTable();
+			
+			helper.getTransactionManager().addListener(new CompleteTransactionListener() {
 				
-				helper.getTransactionManager().addListener(new CompleteTransactionListener() {
-					
-					@Override
-					public void transactionCompleted(Transaction tt) {
-						updateTableResult(tt);
-					}
-				});
-			} catch (IOException e) {
-				GuiUtility.handleException(frmBackBox, "Error loading configuration", e);
-			}
+				@Override
+				public void transactionCompleted(Transaction tt) {
+					updateTableResult(tt);
+				}
+			});
+		} catch (IOException e) {
+			GuiUtility.handleException(frmBackBox, "Error loading configuration", e);
 		}
 		
 		if (pwdDialog != null)
@@ -282,12 +279,12 @@ public class BackBoxGui {
 		mntmNewConfiguration.setEnabled(!running);
 		mntmConfiguration.setEnabled(connected && !running);
 		
-		if (connected)
+		if (connected && !running && !pending)
 			try {
 				lblFreeSpaceValue.setText(Utility.humanReadableByteCount(helper.getFreeSpace(), false));
 			} catch (IOException | RestException | BackBoxException e) {
 				lblFreeSpaceValue.setText("Error");
-				_log.log(Level.WARNING, "Error retrieving free space");
+				_log.log(Level.WARNING, "Error retrieving free space", e);
 			}
 		else
 			lblFreeSpaceValue.setText("");
@@ -1007,11 +1004,12 @@ public class BackBoxGui {
 					public void run() {
 						progressBar.setValue(0);
 						while (tm.isRunning()) {
-							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append("/").append(tm.getAllTasksWeight()).toString());
+							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append('/').append(tm.getAllTasksWeight()).toString());
 							if (tm.getAllTasksWeight() > 0) {
-								int perc = Math.round((tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight());
+								long perc = (tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight();
+								if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("Perc: ").append(perc).append("% - ").append("Progress: ").append(progressBar.getValue()).append('%').toString());
 								if ((perc > progressBar.getValue()) && (perc <= 99))
-									progressBar.setValue(perc);
+									progressBar.setValue((int)perc);
 							}
 							try { Thread.sleep(1000); } catch (InterruptedException e) {}
 						}
