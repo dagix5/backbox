@@ -206,9 +206,18 @@ public class BoxManager implements IBoxManager {
 						(error.context_info.conflicts != null) &&
 						(error.context_info.conflicts.id != null) &&
 						!error.context_info.conflicts.id.isEmpty()) {
-					String id = error.context_info.conflicts.id;
-					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + id);
-					file = client.upload(name, id, content, folderID, hash);
+					BoxFile conflict = error.context_info.conflicts;
+					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + conflict.id);
+					if ((conflict.sha1 != null) &&
+							!conflict.sha1.isEmpty() &&
+							(hash != null) &&
+							conflict.sha1.equals(hash)) {
+						file = conflict;
+						if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, new file is the same");
+					} else {
+						if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, uploading new version...");
+						file = client.upload(name, conflict.id, content, folderID, hash);
+					}
 				} else {
 					_log.severe("Problem parsing an 409 HTTP response: missing information of confliction file");
 					throw e;
