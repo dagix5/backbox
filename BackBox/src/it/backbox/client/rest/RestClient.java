@@ -123,7 +123,8 @@ public class RestClient implements IRestClient {
 		try {
 			if (_log.isLoggable(Level.FINE)) _log.fine("Request URL: " + request.getUrl().toString());
 			response = request.execute();
-			if (_log.isLoggable(Level.FINE)) _log.fine("Response OK: " + response.parseAsString());
+			//LOG HERE CLOSE THE RESPONSE CONTENT STREAM, DON'T DO IT
+			//if (_log.isLoggable(Level.FINE)) _log.fine("Response OK: " + response.parseAsString());
 		} catch (HttpResponseException e) {
 			if (_log.isLoggable(Level.INFO)) _log.info("HTTP response exception throwed");
 			String message = new StringBuilder(request.getRequestMethod()).append(' ').append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
@@ -195,15 +196,10 @@ public class RestClient implements IRestClient {
 		if (_log.isLoggable(Level.FINE)) _log.fine("Upload: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Upload: " + response.getStatusCode());
-		try {
-			BoxUploadedFile file =  response.parseAs(BoxUploadedFile.class);
-			if ((file == null) || (file.entries == null) || file.entries.isEmpty() || (file.entries.get(0) == null))
-				throw new RestException("Upload error: uploaded file informations not retrieved");
-			return file.entries.get(0);
-		} catch (IOException ioe) {
-			if (_log.isLoggable(Level.WARNING)) _log.log(Level.WARNING, "Problems retrieving uploaded file informations", ioe);
-		}
-		return null;
+		BoxUploadedFile file =  response.parseAs(BoxUploadedFile.class);
+		if ((file == null) || (file.entries == null) || file.entries.isEmpty() || (file.entries.get(0) == null))
+			throw new RestException("Upload error: uploaded file informations not retrieved");
+		return file.entries.get(0);
 	}
 
 	/*
