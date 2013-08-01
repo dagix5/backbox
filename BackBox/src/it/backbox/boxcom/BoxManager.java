@@ -203,14 +203,12 @@ public class BoxManager implements IBoxManager {
 				BoxError error = e.getError();
 				if ((error != null) &&
 						(error.context_info != null) &&
-						(error.context_info.conflicts != null)) {
-					BoxFile conflict = error.context_info.conflicts;
-					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + conflict.id);
-					file = client.upload(name, conflict.id, content, folderID, hash);
-					if (file == null) {
-						if (_log.isLoggable(Level.WARNING)) _log.warning("Uploading new version returned a null Box File");
-						file = conflict;
-					}
+						(error.context_info.conflicts != null) &&
+						(error.context_info.conflicts.id != null) &&
+						!error.context_info.conflicts.id.isEmpty()) {
+					String id = error.context_info.conflicts.id;
+					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + id);
+					file = client.upload(name, id, content, folderID, hash);
 				} else {
 					_log.severe("Problem parsing an 409 HTTP response: missing information of confliction file");
 					throw e;
