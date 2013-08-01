@@ -211,7 +211,7 @@ public class BoxManager implements IBoxManager {
 					if ((conflict.sha1 != null) &&
 							!conflict.sha1.isEmpty() &&
 							(hash != null) &&
-							conflict.sha1.equals(hash)) {
+							conflict.sha1.equalsIgnoreCase(hash)) {
 						file = conflict;
 						if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, new file is the same");
 					} else {
