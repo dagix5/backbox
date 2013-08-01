@@ -29,7 +29,7 @@ public class TransactionManager {
 	
 	private LinkedList<Transaction> transactions;
 	private ExecutorService executor;
-	private int completedTasksWeight;
+	private long completedTasksWeight;
 	private long allTasksWeight;
 	private BBPhaser phaser;
 	
@@ -157,7 +157,7 @@ public class TransactionManager {
 	 * 
 	 * @return The weight of completed tasks
 	 */
-	public int getCompletedTasksWeight() {
+	public long getCompletedTasksWeight() {
 		return completedTasksWeight;
 	}
 	
