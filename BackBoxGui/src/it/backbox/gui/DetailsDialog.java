@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -32,8 +33,20 @@ public class DetailsDialog extends JDialog {
 	private JLabel lblStatusValue;
 	private JLabel lblTotalTimeValue;
 	private JTextPane txtResult;
+	
+	private List<TableTask> tasks;
+	private List<Integer> allIndexes;
+	private int selectedIndex;
 
-	public void updateDetails(TableTask tbt) {
+	public void load(List<TableTask> tasks, int selectedIndex, List<Integer> allIndexes) {
+		this.tasks = tasks;
+		this.allIndexes = allIndexes;
+		this.selectedIndex = selectedIndex;
+		
+		updateDetails(tasks.get(allIndexes.get(selectedIndex)));
+	}
+	
+	private void updateDetails(TableTask tbt) {
 		lblTransactionIdValue.setText(tbt.getTransaction().getId());
 		lblTaskIdValue.setText(tbt.getTask().getId());
 		String fn = tbt.getTask().getDescription();
@@ -51,6 +64,16 @@ public class DetailsDialog extends JDialog {
 		} else if (tbt.getTransaction().getResultCode() == Transaction.ESITO_OK)
 			lblStatusValue.setText("Success");
 		lblTotalTimeValue.setText(GuiUtility.getTimeString(tbt.getTask().getTotalTime() / 1000));
+	}
+	
+	private void prev() {
+		if (selectedIndex > 0)
+			updateDetails(tasks.get(allIndexes.get(--selectedIndex)));
+	}
+	
+	private void next() {
+		if (selectedIndex < allIndexes.size() - 1)
+			updateDetails(tasks.get(allIndexes.get(++selectedIndex)));
 	}
 	
 	/**
@@ -128,6 +151,22 @@ public class DetailsDialog extends JDialog {
 				setVisible(false);
 			}
 		});
+		
+		JButton btnNext = new JButton("Next");
+		btnNext.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				next();
+			}
+		});
+		
+		JButton btnPrev = new JButton("Prev");
+		btnPrev.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				prev();
+			}
+		});
+		buttonPane.add(btnPrev);
+		buttonPane.add(btnNext);
 		okButton.setActionCommand("OK");
 		buttonPane.add(okButton);
 		getRootPane().setDefaultButton(okButton);
