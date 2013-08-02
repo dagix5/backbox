@@ -160,5 +160,16 @@ public interface IBoxManager {
 	 * @throws RestException
 	 */
 	public long getFreeSpace() throws IOException, RestException;
+	
+	/**
+	 * Check if a file was deleted remotely
+	 * 
+	 * @param fileID
+	 *            ID of the file to check
+	 * @return false if the file was deleted, true otherwise
+	 * @throws IOException
+	 * @throws RestException
+	 */
+	public boolean checkRemoteFile(String fileID) throws IOException, RestException;
 
 }

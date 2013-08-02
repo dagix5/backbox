@@ -94,6 +94,7 @@ public class BackBoxGui {
 	private JMenuItem mntmNewConfiguration;
 	private JMenuItem mntmConfiguration;
 	private JLabel lblFreeSpaceValue;
+	private JMenuItem mntmCheck;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -278,6 +279,7 @@ public class BackBoxGui {
 		mntmDownloadDb.setEnabled(!running);
 		mntmNewConfiguration.setEnabled(!running);
 		mntmConfiguration.setEnabled(connected && !running);
+		mntmCheck.setEnabled(connected && !running);
 		
 		if (connected && !running && !pending)
 			try {
@@ -535,6 +537,44 @@ public class BackBoxGui {
 				pwdDialog.setVisible(true);
 			}
 		});
+		
+		mntmCheck = new JMenuItem("Check database");
+		mntmCheck.setEnabled(false);
+		mntmCheck.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (running) {
+					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				showLoading();
+				Thread worker = new Thread() {
+					public void run() {
+						try {
+							List<File> deleted = helper.getRemotelyDeletedFiles(true);
+							if (deleted == null)
+								JOptionPane.showMessageDialog(frmBackBox, "Error checking the database", "Check database", JOptionPane.ERROR_MESSAGE);
+							else if (deleted.isEmpty())
+								JOptionPane.showMessageDialog(frmBackBox, "That's all right!", "Check database", JOptionPane.INFORMATION_MESSAGE);
+							else {
+								StringBuilder message = new StringBuilder("Deleted ").append(deleted.size()).append(" files");
+								JOptionPane.showMessageDialog(frmBackBox, message.toString(), "Check database", JOptionPane.INFORMATION_MESSAGE);
+							}
+						} catch (Exception e1) {
+							hideLoading();
+							GuiUtility.handleException(frmBackBox, "Error checking database", e1);
+						}
+						
+						SwingUtilities.invokeLater(new Runnable() {
+		                    public void run() {
+		                    	hideLoading();
+		                    }
+		                });
+					}
+				};
+				worker.start();
+			}
+		});
+		mnEdit.add(mntmCheck);
 		mnEdit.add(mntmBuildDatabase);
 		mnEdit.add(mntmConfiguration);
 		

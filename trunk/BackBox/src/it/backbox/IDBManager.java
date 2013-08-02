@@ -86,5 +86,13 @@ public interface IDBManager {
 	 * @throws ClassNotFoundException
 	 */
 	public void createDB() throws SQLException, ClassNotFoundException;
+	
+	/**
+	 * Get all files in the database
+	 * 
+	 * @return List of all files
+	 * @throws SQLException
+	 */
+	public List<it.backbox.bean.File> getAllFiles() throws SQLException;
 
 }

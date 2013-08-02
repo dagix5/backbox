@@ -104,4 +104,15 @@ public interface IRestClient {
 	 * @throws RestException
 	 */
 	public BoxUserInfo getUserInfo() throws IOException, RestException;
+	
+	/**
+	 * Retrieves information about the file with id fileID
+	 * 
+	 * @param fileID
+	 *            ID of the file
+	 * @return File informations
+	 * @throws IOException
+	 * @throws RestException
+	 */
+	public BoxFile getFileInfo(String fileID) throws IOException, RestException;
 }
