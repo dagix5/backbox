@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -269,6 +270,52 @@ public class DBManager implements IDBManager {
 		}
 
 		return records;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#getAllFiles()
+	 */
+	@Override
+	public List<it.backbox.bean.File> getAllFiles() throws SQLException {
+		Statement statement = connection.createStatement();
+		statement.setQueryTimeout(QUERY_TIMEOUT);
+
+		ResultSet rs = statement.executeQuery("select * from files");
+
+		List<it.backbox.bean.File> files = new ArrayList<>();
+
+		while (rs.next()) {
+			it.backbox.bean.File file = new it.backbox.bean.File();
+			file.setHash(rs.getString("hash"));
+			file.setFilename(rs.getString("filename").replaceAll("''", "'"));
+			file.setTimestamp(rs.getDate("timestamp"));
+			file.setFolder(rs.getString("folder"));
+			file.setSize(rs.getLong("size"));
+			file.setEncrypted(rs.getBoolean("encrypted"));
+			file.setCompressed(rs.getBoolean("compressed"));
+			file.setSplitted(rs.getBoolean("splitted"));
+	
+			StringBuilder query = new StringBuilder("select * from chunks where filehash like '");
+			query.append(file.getHash()).append('\'');
+	
+			Statement statement2 = connection.createStatement();
+			statement2.setQueryTimeout(QUERY_TIMEOUT);
+			ResultSet rs2 = statement2.executeQuery(query.toString());
+	
+			while (rs2.next()) { 
+				Chunk c = new Chunk();
+				c.setChunkname(rs2.getString("chunkname"));
+				c.setBoxid(rs2.getString("boxid"));
+				c.setChunkhash(rs2.getString("chunkhash"));
+				c.setSize(rs2.getLong("size"));
+				file.getChunks().add(c);
+			}
+			
+			files.add(file);
+		}
+
+		return files;
 	}
 
 	/*

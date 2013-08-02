@@ -290,4 +290,22 @@ public class BoxManager implements IBoxManager {
 		if (_log.isLoggable(Level.INFO)) _log.info("Retrieved information about user: " + userInfo.login);
 		return userInfo.space_amount - userInfo.space_used;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#checkRemoteFile(java.lang.String)
+	 */
+	@Override
+	public boolean checkRemoteFile(String fileID) throws IOException, RestException {
+		try {
+			BoxFile file = client.getFileInfo(fileID);
+			if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+				return false;
+		} catch (RestException e) {
+			if (e.getHttpException().getStatusCode() == 404)
+				return false;
+			throw e;
+		}
+		return true;
+	}
 }

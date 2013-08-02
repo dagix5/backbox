@@ -452,6 +452,41 @@ public class BackBoxHelper {
 	}
 	
 	/**
+	 * Get all files in the database with chunks remotely deleted
+	 * 
+	 * @param deleteFromDB
+	 *            true if delete that files from database too, false otherwise
+	 * @return List of files remotely deleted
+	 * @throws IOException
+	 * @throws SQLException
+	 * @throws BackBoxException
+	 * @throws RestException
+	 */
+	public List<it.backbox.bean.File> getRemotelyDeletedFiles(boolean deleteFromDB) throws IOException, SQLException, BackBoxException, RestException {
+		List<it.backbox.bean.File> deleted = new ArrayList<>();
+		
+		List<it.backbox.bean.File> records = dbm.getAllFiles();
+		for (it.backbox.bean.File f : records)
+			for (Chunk c : f.getChunks())
+				if ((c.getBoxid() == null) || 
+						c.getBoxid().isEmpty() || 
+						c.getBoxid().equals("null") || 
+						!bm.checkRemoteFile(c.getBoxid())) {
+					if (deleteFromDB) {
+						try {
+							if (f.getChunks().size() > 1)
+								bm.deleteChunk(f.getChunks());
+						} catch (RestException e) {	}
+						dbm.delete(f.getFilename(), f.getHash());
+					}
+					deleted.add(f);
+					break;
+				}
+		
+		return deleted;
+	}
+	
+	/**
 	 * Download a single file
 	 * 
 	 * @param key

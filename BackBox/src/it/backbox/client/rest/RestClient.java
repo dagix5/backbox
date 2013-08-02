@@ -148,7 +148,6 @@ public class RestClient implements IRestClient {
 	public byte[] download(String fileID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("files/").append(fileID).append("/content").toString());
 		HttpRequest request = requestFactory.buildGetRequest(url);
-		if (_log.isLoggable(Level.FINE)) _log.fine("Download: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Download: " + response.getStatusCode());
 		if (response.getStatusCode() == 202) {
@@ -193,7 +192,6 @@ public class RestClient implements IRestClient {
 			h.set("Content-MD5", sha);
 			request.setHeaders(h);
 		}
-		if (_log.isLoggable(Level.FINE)) _log.fine("Upload: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Upload: " + response.getStatusCode());
 		BoxUploadedFile file =  response.parseAs(BoxUploadedFile.class);
@@ -212,7 +210,6 @@ public class RestClient implements IRestClient {
 		if (isFolder)
 			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
-		if (_log.isLoggable(Level.FINE)) _log.fine("Delete: " + request.getUrl().toString());
 		try {
 			HttpResponse response = execute(request);
 			if (_log.isLoggable(Level.FINE)) _log.fine("Delete: " + response.getStatusCode());
@@ -232,7 +229,6 @@ public class RestClient implements IRestClient {
 		GenericUrl url = new GenericUrl(baseUri + "search");
 		url.put("query", query);
 		HttpRequest request = requestFactory.buildGetRequest(url);
-		if (_log.isLoggable(Level.FINE)) _log.fine("Search: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Search: " + response.getStatusCode());
 		return response.parseAs(BoxSearchResult.class);
@@ -254,7 +250,6 @@ public class RestClient implements IRestClient {
         	parentData.put("id", parentFolderID);
         data.put("parent", parentData);
 		HttpRequest request = requestFactory.buildPostRequest(url, new JsonHttpContent(JSON_FACTORY, data));
-		if (_log.isLoggable(Level.FINE)) _log.fine("MkDir: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("MkDir: " + response.getStatusCode());
 		return response.parseAs(BoxFolder.class);
@@ -270,7 +265,6 @@ public class RestClient implements IRestClient {
 		url.put("limit", "1000");
 		url.put("fields", "name,id,sha1");
 		HttpRequest request = requestFactory.buildGetRequest(url);
-		if (_log.isLoggable(Level.FINE)) _log.fine("getFolderItems: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("getFolderItems: " + response.getStatusCode());
 		return response.parseAs(BoxItemCollection.class);
@@ -284,10 +278,22 @@ public class RestClient implements IRestClient {
 	public BoxUserInfo getUserInfo() throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "users/me");
 		HttpRequest request = requestFactory.buildGetRequest(url);
-		if (_log.isLoggable(Level.FINE)) _log.fine("getUserInfo: " + request.getUrl().toString());
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("getUserInfo: " + response.getStatusCode());
 		return response.parseAs(BoxUserInfo.class);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IRestClient#getFileInfo(java.lang.String)
+	 */
+	@Override
+	public BoxFile getFileInfo(String fileID) throws IOException, RestException {
+		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("files/").append(fileID).toString());
+		HttpRequest request = requestFactory.buildGetRequest(url);
+		HttpResponse response = execute(request);
+		if (_log.isLoggable(Level.FINE)) _log.fine("getFileInfo: " + response.getStatusCode());
+		return response.parseAs(BoxFile.class);
 	}
 	
 	/*
