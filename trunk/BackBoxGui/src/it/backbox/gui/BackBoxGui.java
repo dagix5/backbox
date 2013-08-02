@@ -1087,8 +1087,15 @@ public class BackBoxGui {
 		showLoading();
 		Thread worker = new Thread() {
 			public void run() {
-				int i = tablePreview.convertRowIndexToModel(tablePreview.getSelectedRow());
-				detailsDialog.updateDetails(tasksPending.get(i));
+				List<Integer> indexes = new ArrayList<>();
+				int selectedIndex = 0;
+				for (int i = 0; i < tablePreview.getRowCount(); i++) {
+					int c = tablePreview.convertRowIndexToModel(i);
+					indexes.add(c);
+					if (i == tablePreview.getSelectedRow())
+						selectedIndex = i;
+				}
+				detailsDialog.load(tasksPending, selectedIndex, indexes);
 				detailsDialog.setLocationRelativeTo(frmBackBox);
 				detailsDialog.setVisible(true);
 				
