@@ -779,7 +779,7 @@ public class BackBoxHelper {
 		sm = new SecurityManager(password, getConfiguration().getPwdDigest(), getConfiguration().getSalt());
 		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
 
-		dbm = new DBManager(DB_FILE);
+		dbm = new DBManager(DB_FILE_TEMP);
 		dbm.createDB();
 		if (_log.isLoggable(Level.INFO)) _log.info("DBManager init OK");
 		

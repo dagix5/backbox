@@ -174,7 +174,7 @@ public class RestClient implements IRestClient {
 	@Override
 	public BoxFile upload(String name, String fileID, byte[] content, String folderID, String sha1) throws RestException, IOException {
 		StringBuilder uri = new StringBuilder(baseUriUpload);
-		if (fileID != null)
+		if ((fileID != null) && !fileID.isEmpty())
 			uri.append(fileID).append('/');
 		uri.append("content");
 		GenericUrl url = new GenericUrl(uri.toString());
@@ -261,13 +261,29 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("folders/").append(folderID).append("/items").toString());
-		url.put("limit", "1000");
-		url.put("fields", "name,id,sha1");
-		HttpRequest request = requestFactory.buildGetRequest(url);
-		HttpResponse response = execute(request);
-		if (_log.isLoggable(Level.FINE)) _log.fine("getFolderItems: " + response.getStatusCode());
-		return response.parseAs(BoxItemCollection.class);
+		BoxItemCollection toReturn = new BoxItemCollection();
+		toReturn.entries = new ArrayList<>();
+		int limit = 1;
+		int returned = 0;
+		int total_count = 0;
+		do {
+			GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("folders/").append(folderID).append("/items").toString());
+			url.put("limit", limit);
+			url.put("offset", returned);
+			url.put("fields", "name,id,sha1");
+			HttpRequest request = requestFactory.buildGetRequest(url);
+			HttpResponse response = execute(request);
+			if (_log.isLoggable(Level.FINE)) _log.fine("getFolderItems: " + response.getStatusCode());
+			BoxItemCollection items = response.parseAs(BoxItemCollection.class);
+			
+			total_count = items.total_count;
+			returned += items.entries.size();
+			
+			toReturn.entries.addAll(items.entries);
+		} while (returned < total_count);
+		
+		toReturn.total_count = total_count;
+		return toReturn;
 	}
 	
 	/*
