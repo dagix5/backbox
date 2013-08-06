@@ -392,7 +392,7 @@ public class BackBoxGui {
 		final Thread exitThread = new Thread() {
 			public void run() {
 				try {
-					if (helper.getConfiguration().isAutoUploadConf())
+					if (connected && helper.getConfiguration().isAutoUploadConf())
 						helper.uploadConf(false);
 					
 					disconnect();
