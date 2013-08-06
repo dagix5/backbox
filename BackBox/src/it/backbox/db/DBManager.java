@@ -97,7 +97,7 @@ public class DBManager implements IDBManager {
 		statement.executeUpdate("drop table if exists files");
 		statement.executeUpdate("drop table if exists chunks");
 		statement.executeUpdate("create table files (hash string, filename string, folder string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename))");
-		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string, size INTEGER, foreign key(filehash) references files(hash))");
+		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string not null, size INTEGER, foreign key(filehash) references files(hash))");
 		
 		statement.executeUpdate("PRAGMA journal_mode = OFF");
 		if (_log.isLoggable(Level.INFO)) _log.info("DB created");
@@ -165,12 +165,13 @@ public class DBManager implements IDBManager {
 			if (!rs.next()) {
 				query = new StringBuilder("insert into chunks ");
 				for (int i = 0; i < chunks.size(); i++) {
+					Chunk chunk = chunks.get(i);
 					query.append("select '");
 					query.append(digest).append("','");
-					query.append(chunks.get(i).getChunkname()).append("','");
-					query.append(chunks.get(i).getChunkhash()).append("','");
-					query.append(chunks.get(i).getBoxid()).append("',");
-					query.append(chunks.get(i).getSize());
+					query.append(chunk.getChunkname()).append("','");
+					query.append(chunk.getChunkhash()).append("','");
+					query.append(chunk.getBoxid()).append("',");
+					query.append(chunk.getSize());
 					if (i < (chunks.size() - 1))
 						query.append(" union ");
 				}
