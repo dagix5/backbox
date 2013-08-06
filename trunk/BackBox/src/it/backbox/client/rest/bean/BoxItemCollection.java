@@ -8,5 +8,11 @@ public class BoxItemCollection {
 	
 	@Key
 	public List<BoxFile> entries;
+	@Key
+	public int offset;
+	@Key
+	public int limit;
+	@Key
+	public int total_count;
 
 }
