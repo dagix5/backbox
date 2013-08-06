@@ -56,13 +56,29 @@ public interface IBoxManager {
 	 * @param filename
 	 *            Name of the file to upload
 	 * @param folderID
-	 *            ID of the folder where upload the chunks
+	 *            Folder ID where upload the file
 	 * @return Uploaded file ID
 	 * @throws IOException
 	 * @throws RestException 
 	 * @throws BackBoxException 
 	 */
 	public String upload(String filename, String folderID) throws IOException, RestException, BackBoxException;
+	
+	/**
+	 * Upload a new version of a file to Box.com
+	 * 
+	 * @param filename
+	 *            Name of the file to upload
+	 * @param fileID
+	 * 			  File ID to overwrite
+	 * @param folderID
+	 *            Folder ID where upload the file
+	 * @return Uploaded file ID
+	 * @throws IOException
+	 * @throws RestException 
+	 * @throws BackBoxException 
+	 */
+	public String upload(String filename, String fileID, String folderID) throws IOException, RestException, BackBoxException;
 
 	/**
 	 * Download a file from Box.com

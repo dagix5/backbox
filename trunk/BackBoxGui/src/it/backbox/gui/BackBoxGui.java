@@ -166,12 +166,8 @@ public class BackBoxGui {
 			clearTable();
 			clearPreviewTable();
 			
-			if (connected) {
-				if (helper.getConfiguration().isAutoUploadConf())
-					helper.uploadConf(false);
-				else
-					helper.logout();
-			}
+			if (connected)
+				helper.logout();
 			
 			connected = false;
 			running = false;
@@ -396,6 +392,9 @@ public class BackBoxGui {
 		final Thread exitThread = new Thread() {
 			public void run() {
 				try {
+					if (helper.getConfiguration().isAutoUploadConf())
+						helper.uploadConf(false);
+					
 					disconnect();
 					System.exit(0);
 				} catch (Exception e) {
