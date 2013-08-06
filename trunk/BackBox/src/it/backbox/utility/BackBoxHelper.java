@@ -333,6 +333,8 @@ public class BackBoxHelper {
 			saveConfiguration();
 		}
 		
+		ICompress z = new Zipper();
+		
 		//if something goes wrong you could have (only) the decrypted db file
 		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
 			if (_log.isLoggable(Level.WARNING)) _log.warning("Something went wrong, decrypted DB found. Trying to open it...");
@@ -341,14 +343,15 @@ public class BackBoxHelper {
 				throw new BackBoxException("DB not found");
 			
 			if (_log.isLoggable(Level.INFO)) _log.info("DB found");
-			sm.decrypt(DB_FILE, DB_FILE_TEMP);
+			byte[] dbContent = sm.decrypt(DB_FILE);
+			z.decompress(dbContent, DB_FILE, DB_FILE_TEMP);
+			dbContent = null;
 		}
 		
 		dbm = new DBManager(DB_FILE_TEMP);
 		dbm.openDB();
 		if (_log.isLoggable(Level.INFO)) _log.info("DBManager init OK");
 		
-		ICompress z = new Zipper();
 		ISplitter s = new Splitter(getConfiguration().getChunkSize());
 		
 		tm = new TransactionManager(dbm, bm, sm, s, z);
@@ -432,7 +435,12 @@ public class BackBoxHelper {
 		if (dbm != null)
 			dbm.closeDB();
 		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {
-			sm.encrypt(DB_FILE_TEMP, DB_FILE);
+			ICompress z = new Zipper();
+			byte[] dbZip = z.compress(DB_FILE_TEMP, DB_FILE);
+			byte[] dbContent = sm.encrypt(dbZip);
+			dbZip = null;
+			Files.write(Paths.get(DB_FILE), dbContent);
+			dbContent = null;
 			Files.delete(Paths.get(DB_FILE_TEMP));
 		}
 		if (tm != null)
