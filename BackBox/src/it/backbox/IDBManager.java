@@ -94,5 +94,12 @@ public interface IDBManager {
 	 * @throws SQLException
 	 */
 	public List<it.backbox.bean.File> getAllFiles() throws SQLException;
+	
+	/**
+	 * Check if the db has been modified
+	 * 
+	 * @return True if the db has been modified, false otherwise
+	 */
+	public boolean isModified();
 
 }

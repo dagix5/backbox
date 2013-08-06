@@ -28,6 +28,7 @@ public class DBManager implements IDBManager {
 
 	private boolean open;
 	private String filename;
+	private boolean modified;
 	
 	/**
 	 * Constructor
@@ -44,6 +45,7 @@ public class DBManager implements IDBManager {
 			throw new BackBoxException("DB filename null");
 		this.filename = filename;
 		open = false;
+		modified = false;
 	}
 	
 	/*
@@ -73,6 +75,7 @@ public class DBManager implements IDBManager {
 			connection.close();
 
 		open = false;
+		modified = false;
 	}
 
 	/*
@@ -98,6 +101,8 @@ public class DBManager implements IDBManager {
 		
 		statement.executeUpdate("PRAGMA journal_mode = OFF");
 		if (_log.isLoggable(Level.INFO)) _log.info("DB created");
+		
+		modified = true;
 	}
 	
 	/*
@@ -175,6 +180,7 @@ public class DBManager implements IDBManager {
 				if (_log.isLoggable(Level.FINE)) _log.fine("Query executed: " + query.toString());
 			}
 			
+			modified = true;
 		} catch (SQLException e) {
 			throw new BackBoxException(e, (query != null) ? query.toString() : "");
 		}
@@ -211,6 +217,8 @@ public class DBManager implements IDBManager {
 			query.append(digest).append("' and filename = '").append(StringEscapeUtils.escapeSql(filename)).append('\'');
 	
 			statement.executeUpdate(query.toString());
+			
+			modified = true;
 			
 			if (_log.isLoggable(Level.INFO)) _log.info(digest + "-> delete ok");
 		} catch (SQLException e) {
@@ -359,5 +367,14 @@ public class DBManager implements IDBManager {
 		}
 
 		return file;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IDBManager#isModified()
+	 */
+	@Override
+	public boolean isModified() {
+		return modified;
 	}
 }

@@ -151,11 +151,16 @@ public class BackBoxHelper {
 	/**
 	 * Upload the configuration on Box.com
 	 * 
+	 * @param force
+	 *            Force upload configuration, even if it is not modified
 	 * @throws Exception
 	 */
-	public void uploadConf() throws Exception {
+	public void uploadConf(boolean force) throws Exception {
 		if (!confExists())
 			throw new BackBoxException("Configuration not found");
+		
+		if ((dbm != null) && dbm.isModified())
+			force = true;
 		
 		logout();
 		
@@ -166,7 +171,8 @@ public class BackBoxHelper {
 		if ((rootFolderID == null) || rootFolderID.isEmpty())
 			rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
 		
-		bm.upload(DB_FILE, rootFolderID);
+		if (force)
+			bm.upload(DB_FILE, rootFolderID);
 		bm.upload(CONFIG_FILE, rootFolderID);
 	}
 	
