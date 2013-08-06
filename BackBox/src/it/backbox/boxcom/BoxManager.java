@@ -108,11 +108,20 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public String upload(String filename, String folderID) throws IOException, RestException, BackBoxException {
+		return upload(filename, null, folderID);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public String upload(String filename, String fileID, String folderID) throws IOException, RestException, BackBoxException {
 		String[] ns = filename.split("\\\\");
 		String n = ns[ns.length - 1];
 		
 		byte[] content = Utility.read(filename);
-		BoxFile file = upload(n, content, folderID, DigestUtils.sha1Hex(content));
+		BoxFile file = upload(n, fileID, content, folderID, DigestUtils.sha1Hex(content));
 		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
 		return file.id;
 	}
@@ -181,6 +190,8 @@ public class BoxManager implements IBoxManager {
 	 * 
 	 * @param name
 	 *            Name of the file to upload
+	 * @param fileID
+	 * 			  File ID (null for new files)
 	 * @param content
 	 *            Content to upload
 	 * @param folderID
@@ -192,10 +203,10 @@ public class BoxManager implements IBoxManager {
 	 * @throws RestException
 	 * @throws BackBoxException 
 	 */
-	private BoxFile upload(String name, byte[] content, String folderID, String hash) throws IOException, RestException, BackBoxException {
+	private BoxFile upload(String name, String fileID, byte[] content, String folderID, String hash) throws IOException, RestException, BackBoxException {
 		BoxFile file = null;
 		try {
-			file = client.upload(name, null, content, folderID, hash);
+			file = client.upload(name, fileID, content, folderID, hash);
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
@@ -225,7 +236,7 @@ public class BoxManager implements IBoxManager {
 			} else
 				throw e;
 		}
-		if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+		if ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
 			throw new BackBoxException("Uploaded file ID not retrieved");
 		return file;
 	}
@@ -240,7 +251,7 @@ public class BoxManager implements IBoxManager {
 		String[] ns = name.split("\\\\");
 		String n = ns[ns.length - 1];
 		
-		BoxFile file = upload(n, chunk.getContent(), folderID, chunk.getChunkhash());
+		BoxFile file = upload(n, null, chunk.getContent(), folderID, chunk.getChunkhash());
 		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
 		chunk.setBoxid(file.id);
 	}

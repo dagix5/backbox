@@ -171,9 +171,14 @@ public class BackBoxHelper {
 		if ((rootFolderID == null) || rootFolderID.isEmpty())
 			rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
 		
-		if (force)
-			bm.upload(DB_FILE, rootFolderID);
-		bm.upload(CONFIG_FILE, rootFolderID);
+		if (force) {
+			String id = bm.upload(DB_FILE, getConfiguration().getDbFileID(), rootFolderID);
+			getConfiguration().setDbFileID(id);
+		}
+		String id = bm.upload(CONFIG_FILE, getConfiguration().getConfFileID(), rootFolderID);
+		getConfiguration().setConfFileID(id);
+
+		saveConfiguration();
 	}
 	
 	/**

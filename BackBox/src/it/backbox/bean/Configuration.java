@@ -33,6 +33,10 @@ public class Configuration {
 	
 	@Key
 	private boolean autoUploadConf;
+	@Key
+	private String dbFileID;
+	@Key
+	private String confFileID;
 
 	public String getPwdDigest() {
 		return pwdDigest;
@@ -128,6 +132,22 @@ public class Configuration {
 
 	public void setAutoUploadConf(boolean autoUploadConf) {
 		this.autoUploadConf = autoUploadConf;
+	}
+
+	public String getDbFileID() {
+		return dbFileID;
+	}
+
+	public void setDbFileID(String dbFileID) {
+		this.dbFileID = dbFileID;
+	}
+
+	public String getConfFileID() {
+		return confFileID;
+	}
+
+	public void setConfFileID(String confFileID) {
+		this.confFileID = confFileID;
 	}
 
 }
