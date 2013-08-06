@@ -168,7 +168,7 @@ public class BackBoxGui {
 			
 			if (connected) {
 				if (helper.getConfiguration().isAutoUploadConf())
-					helper.uploadConf();
+					helper.uploadConf(false);
 				else
 					helper.logout();
 			}
@@ -437,7 +437,7 @@ public class BackBoxGui {
 				Thread worker = new Thread() {
 					public void run() {
 						try {
-							helper.uploadConf();
+							helper.uploadConf(true);
 							disconnect();
 							JOptionPane.showMessageDialog(frmBackBox, "Configuration uploaded successfully", "Upload configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
