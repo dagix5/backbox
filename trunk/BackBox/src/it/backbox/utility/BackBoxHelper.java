@@ -390,6 +390,8 @@ public class BackBoxHelper {
 		if (rootFolderID != null) {
 			if (_log.isLoggable(Level.WARNING)) _log.warning("Box Upload folder exists");
 			bm.deleteFolder(rootFolderID);
+			getConfiguration().setConfFileID(null);
+			getConfiguration().setDbFileID(null);
 		}
 		rootFolderID = bm.mkdir(BoxManager.ROOT_FOLDER_NAME, null);
 		
