@@ -5,7 +5,7 @@ import it.backbox.ICompress;
 import it.backbox.IDBManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
-import it.backbox.transaction.BBPhaser;
+//import it.backbox.transaction.BBPhaser;
 import it.backbox.utility.Utility;
 
 import java.io.File;
@@ -29,7 +29,7 @@ public abstract class Task {
 	
 	private File tempDir;
 	
-	private BBPhaser phaser;
+//	private BBPhaser phaser;
 	
 	protected static final int THRESHOLD = 1024*1024*50; //Runtime.getRuntime().freeMemory() / 10
 	protected static final String SUFFIX = ".temp";
@@ -124,13 +124,13 @@ public abstract class Task {
 		this.totalTime = totalTime;
 	}
 
-	public BBPhaser getPhaser() {
-		return phaser;
-	}
-
-	public void setPhaser(BBPhaser phaser) {
-		this.phaser = phaser;
-	}
+//	public BBPhaser getPhaser() {
+//		return phaser;
+//	}
+//
+//	public void setPhaser(BBPhaser phaser) {
+//		this.phaser = phaser;
+//	}
 
 	public abstract void run() throws Exception;
 

@@ -4,11 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +21,7 @@ public class FileCompare {
 	private Map<String, Map<String, it.backbox.bean.File>> recordsNotInFiles = null;
 	private Map<String, Map<String, File>> filesNotInRecords = null;
 	
-	private Path folder;
+	private File folder;
 	private Set<String> exclusions;
 	
 	/**
@@ -39,11 +35,60 @@ public class FileCompare {
 	 *            Folders/files to exclude
 	 * 
 	 */
-	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, Path root, Set<String> exclusions) {
+	public FileCompare(Map<String, Map<String, it.backbox.bean.File>> records, File root, Set<String> exclusions) {
 		this.records = records;
         
 		this.folder = root;
 		this.exclusions = exclusions;
+	}
+	
+	/**
+	 * Get all the files in a folder with their hash
+	 * 
+	 * @param file
+	 *            Root folder (or file)
+	 * @param path
+	 *            Root path
+	 * @param list
+	 *            Output map <hash, Map<canonicalPath, java.io.File>>
+	 * @param exclusions
+	 *            Folders/files to exclude
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	private void listFiles(File file, String path, Map<String, Map<String, File>> list, Set<String> exclusions) throws IOException {
+		if (!path.endsWith("\\"))
+			path+="\\";
+		String relativePath = "";
+		
+		String absolutePath = file.getCanonicalPath();
+		if (path.length() < absolutePath.length())
+			relativePath = absolutePath.substring(path.length());
+		
+		if (exclusions.contains(relativePath))
+			return;
+		if (!file.isDirectory()) {
+			String hash;
+			try {
+				hash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file)));
+			} catch (IOException e) {
+				_log.log(Level.WARNING, file.toString() + " not accessible");
+				return;
+			}
+			if (list.containsKey(hash))
+				list.get(hash).put(relativePath, file);
+			else {
+				Map<String, File> files = new HashMap<String, File>();
+				files.put(relativePath, file);
+				list.put(hash, files);
+			}
+			return;
+		}
+
+		File[] files = file.listFiles();
+		if (files != null)
+			for (File f : files)
+				listFiles(f, path, list, exclusions);
 	}
 	
 	/**
@@ -53,57 +98,7 @@ public class FileCompare {
 	 */
 	public void load() throws IOException {
 		getFiles().clear();
-		
-		Files.walkFileTree(folder, new FileVisitor<Path>() {
-			
-			@Override
-			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-				return FileVisitResult.CONTINUE;
-			}
-			
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				String hash;
-				try {
-					hash = DigestUtils.sha1Hex(new BufferedInputStream(new FileInputStream(file.toFile())));
-				} catch (IOException e) {
-					if (_log.isLoggable(Level.WARNING)) _log.log(Level.WARNING, file.toString() + " not accessible");
-					return FileVisitResult.CONTINUE;
-				}
-				String relativePath = folder.relativize(file).toString();
-				if (files.containsKey(hash))
-					files.get(hash).put(relativePath, file.toFile());
-				else {
-					Map<String, File> fs = new HashMap<String, File>();
-					fs.put(relativePath, file.toFile());
-					files.put(hash, fs);
-				}
-				
-				Map<String, File> ff = getFilesNotInRecords().get(hash);
-				if (ff == null) {
-					ff = new HashMap<String, File>();
-					filesNotInRecords.put(hash, ff);
-				}
-				if (getRecords().containsKey(hash) && getRecords().get(hash).containsKey(relativePath)) {
-					if (_log.isLoggable(Level.FINE)) _log.fine("Found " + relativePath);
-				} else
-					ff.put(relativePath, getFiles().get(hash).get(relativePath));
-				
-				return FileVisitResult.CONTINUE;
-			}
-			
-			@Override
-			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-				if (exclusions.contains(folder.relativize(dir).toString()))
-					return FileVisitResult.SKIP_SUBTREE;
-				return FileVisitResult.CONTINUE;
-			}
-			
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-				return FileVisitResult.CONTINUE;
-			}
-		});
+		listFiles(folder, folder.getCanonicalPath(), getFiles(), exclusions);
 	}
 
 	/**
@@ -137,8 +132,23 @@ public class FileCompare {
 	 * @return Map with files
 	 */
 	public Map<String, Map<String, File>> getFilesNotInRecords() {
-		if (filesNotInRecords == null)
-			filesNotInRecords = new HashMap<String, Map<String, File>>();
+		if (filesNotInRecords != null)
+			return filesNotInRecords;
+		filesNotInRecords = new HashMap<String, Map<String, File>>();
+		Map<String, Map<String, File>> ret = new HashMap<String, Map<String, File>>();
+		for (String hash : getFiles().keySet()) {
+			Map<String, File> m = new HashMap<String, File>();
+			if (getRecords().containsKey(hash))
+				for (String path : getFiles().get(hash).keySet())
+					if (getRecords().get(hash).containsKey(path)) {
+						if (_log.isLoggable(Level.FINE)) _log.fine("Found " + path);
+					} else
+						m.put(path, getFiles().get(hash).get(path));
+			else
+				for (String path : getFiles().get(hash).keySet())
+					m.put(path, getFiles().get(hash).get(path));
+			ret.put(hash, m);
+		}
 		return filesNotInRecords;
 	}
 

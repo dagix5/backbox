@@ -31,7 +31,7 @@ public class TransactionManager {
 	private ExecutorService executor;
 	private long completedTasksWeight;
 	private long allTasksWeight;
-	private BBPhaser phaser;
+//	private BBPhaser phaser;
 	
 	private List<CompleteTransactionListener> listeners;
 	
@@ -98,7 +98,7 @@ public class TransactionManager {
 			task.setSecurityManager(securityManager);
 			task.setSplitter(splitter);
 			task.setZipper(zipper);
-			task.setPhaser(phaser);
+//			task.setPhaser(phaser);
 			task.setTempDir(tempDir);
 		}
 
@@ -257,7 +257,7 @@ public class TransactionManager {
 		executor = new ThreadPoolExecutor(5, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		((ThreadPoolExecutor) executor).allowCoreThreadTimeOut(true);
 		
-		phaser = new BBPhaser();
+//		phaser = new BBPhaser();
 	}
 	
 	/**

@@ -33,10 +33,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidParameterSpecException;
@@ -59,6 +55,7 @@ import org.apache.commons.codec.binary.Hex;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.common.io.Files;
 
 public class BackBoxHelper {
 	private static final Logger _log = Logger.getLogger(BackBoxHelper.class.getCanonicalName());
@@ -100,7 +97,7 @@ public class BackBoxHelper {
 	public Configuration getConfiguration() throws IOException {
 		if (configuration == null) {
 			try {
-				if (Files.exists(Paths.get(CONFIG_FILE))) {
+				if (new File(CONFIG_FILE).exists()) {
 					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 					configuration = parser.parseAndClose(new FileReader(CONFIG_FILE), Configuration.class);
 					return configuration;
@@ -123,7 +120,7 @@ public class BackBoxHelper {
 	 * @throws IOException
 	 */
 	public void saveConfiguration() throws IOException {
-		Files.write(Paths.get(CONFIG_FILE), JSON_FACTORY.toByteArray(configuration));
+		Files.write(JSON_FACTORY.toByteArray(configuration), new File(CONFIG_FILE));
 	}
 	
 	/**
@@ -132,7 +129,7 @@ public class BackBoxHelper {
 	 * @return true if it exists, false otherwise
 	 */
 	public boolean confExists() {
-		return Files.exists(Paths.get(CONFIG_FILE)) && dbExists();
+		return new File(CONFIG_FILE).exists() && dbExists();
 	}
 	
 	/**
@@ -141,11 +138,11 @@ public class BackBoxHelper {
 	 * @return true if the file exists, false otherwise
 	 */
 	public boolean dbExists() {
-		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
+		if (new File(DB_FILE_TEMP).exists()) {
 			if (_log.isLoggable(Level.INFO)) _log.info("Decrypted DB found");
 			return true;
 		}
-		return Files.exists(Paths.get(DB_FILE));
+		return new File(DB_FILE).exists();
 	}
 	
 	/**
@@ -196,10 +193,10 @@ public class BackBoxHelper {
 		String id = bm.getBoxID(DB_FILE);
 		if (id == null)
 			throw new BackBoxException("DB file not found");
-		Files.write(Paths.get(name), bm.download(id));
+		Files.write(bm.download(id), new File(name));
 		File f = new File(name);
 		if (f.exists() && (f.length() > 0))
-			Files.move(Paths.get(name), Paths.get(DB_FILE), StandardCopyOption.REPLACE_EXISTING);
+			Files.move(new File(name), new File(DB_FILE));
 		else
 			throw new BackBoxException("DB file empty");
 		
@@ -336,10 +333,10 @@ public class BackBoxHelper {
 		ICompress z = new Zipper();
 		
 		//if something goes wrong you could have (only) the decrypted db file
-		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
+		if (new File(DB_FILE_TEMP).exists()) {
 			if (_log.isLoggable(Level.WARNING)) _log.warning("Something went wrong, decrypted DB found. Trying to open it...");
 		} else {
-			if (!Files.exists(Paths.get(DB_FILE)))
+			if (!new File(DB_FILE).exists())
 				throw new BackBoxException("DB not found");
 			
 			if (_log.isLoggable(Level.INFO)) _log.info("DB found");
@@ -371,11 +368,12 @@ public class BackBoxHelper {
 	 */
 	public void register(String password, List<Folder> backupFolders, int chunksize) throws Exception {
 		logout();
-		
-		if (Files.exists(Paths.get(DB_FILE)))
-			Files.delete(Paths.get(DB_FILE));
-		if (Files.exists(Paths.get(DB_FILE_TEMP)))
-			Files.delete(Paths.get(DB_FILE_TEMP));
+		File dbfiletemp = new File(DB_FILE_TEMP);
+		if (dbfiletemp.exists())
+			dbfiletemp.delete();
+		File dbfile = new File(DB_FILE);
+		if (dbfile.exists())
+			dbfile.delete();
 		
 		sm = new SecurityManager(password);
 		if (_log.isLoggable(Level.INFO)) _log.info("SecurityManager init OK");
@@ -434,14 +432,15 @@ public class BackBoxHelper {
 	public void logout() throws SQLException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		if (dbm != null)
 			dbm.closeDB();
-		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {
+		File dbfiletemp = new File(DB_FILE_TEMP);
+		if ((sm != null) && dbfiletemp.exists()) {
 			ICompress z = new Zipper();
 			byte[] dbZip = z.compress(DB_FILE_TEMP, DB_FILE);
 			byte[] dbContent = sm.encrypt(dbZip);
 			dbZip = null;
-			Files.write(Paths.get(DB_FILE), dbContent);
+			Files.write(dbContent, new File(DB_FILE));
 			dbContent = null;
-			Files.delete(Paths.get(DB_FILE_TEMP));
+			dbfiletemp.delete();
 		}
 		if (tm != null)
 			tm.close();
@@ -579,14 +578,15 @@ public class BackBoxHelper {
 		
 		List<Transaction> tt = new ArrayList<Transaction>();
 		
-		Path base = Paths.get(restoreFolder, backupFolder.getAlias());
+		String baseName = new StringBuilder(restoreFolder).append('\\').append(backupFolder.getAlias()).append('\\').toString();
+		File base = new File(baseName);
 		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
 		c.load();
 		
-		Path del = null;
+		File del = null;
 		if (!c.getFilesNotInRecords().isEmpty()) {
-			del = Paths.get(restoreFolder, backupFolder.getAlias(), ".deleted");
-			del.toFile().mkdirs();
+			del = new File(new StringBuilder(restoreFolder).append('\\').append(backupFolder.getAlias()).append('\\').append(".deleted").toString());
+			del.mkdirs();
 		}
 		
 		Map<String, Map<String, File>> toDelete = c.getFilesNotInRecords();
@@ -615,7 +615,7 @@ public class BackBoxHelper {
 			String fileToCopy = null;
 			for (String path : toDownload.get(hash).keySet()) {
 				if (c.getFiles().containsKey(hash) && !c.getFiles().get(hash).containsKey(path)) {
-					CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), base.resolve(c.getRecords().get(hash).get(path).getFilename()).toString());
+					CopyTask ct = new CopyTask(c.getFiles().get(hash).values().iterator().next().getCanonicalPath(), baseName.concat(c.getRecords().get(hash).get(path).getFilename()).toString());
 					ct.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
 					t.addTask(ct);
 				} else if (!c.getFiles().containsKey(hash)) {
@@ -629,7 +629,7 @@ public class BackBoxHelper {
 						fileToCopy = file.getFilename();
 						first = false;
 					} else {
-						CopyTask ct = new CopyTask(base.resolve(fileToCopy).toString(), base.resolve(file.getFilename()).toString());
+						CopyTask ct = new CopyTask(baseName.concat(fileToCopy).toString(), baseName.concat(file.getFilename()).toString());
 						ct.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
 						t.addTask(ct);
 					}
@@ -680,7 +680,7 @@ public class BackBoxHelper {
 	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
 		List<Transaction> tt = new ArrayList<Transaction>();
 		
-		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), Paths.get(backupFolder.getPath()), ex);
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), new File(backupFolder.getPath()), ex);
 		c.load();
 		
 		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
@@ -806,7 +806,7 @@ public class BackBoxHelper {
 		for (Folder f : folders) {
 			Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(f.getId());
 			
-			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias()), Paths.get(f.getPath()), ex);
+			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias()), new File(f.getPath()), ex);
 			c.load();
 			
 			Map<String, Map<String, File>> localInfo = c.getFiles();

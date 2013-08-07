@@ -2,8 +2,6 @@ package it.backbox.client.oauth;
 
 import it.backbox.exception.BackBoxException;
 
-import java.awt.Desktop;
-import java.awt.Desktop.Action;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -88,13 +86,13 @@ public class OAuth2Client {
 		String authorizationUrl = new AuthorizationCodeRequestUrl(
 				AUTHORIZATION_SERVER_URL, clientId).setRedirectUri(redirectUrl)
 				.setScopes(Arrays.asList("")).build();
-		if (Desktop.isDesktopSupported()) {
-			Desktop desktop = Desktop.getDesktop();
-			if (desktop.isSupported(Action.BROWSE)) {
-				desktop.browse(URI.create(authorizationUrl));
-				return;
-			}
-		}
+//		if (Desktop.isDesktopSupported()) {
+//			Desktop desktop = Desktop.getDesktop();
+//			if (desktop.isSupported(Action.BROWSE)) {
+//				desktop.browse(URI.create(authorizationUrl));
+//				return;
+//			}
+//		}
 		if (browser == null)
 			throw new BackBoxException("Browser not found, impossible open authorization url");
 
