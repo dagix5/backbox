@@ -170,7 +170,7 @@ public class BoxManager implements IBoxManager {
 	 */
 	@Override
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws IOException, RestException {
-		List<byte[]> result = new ArrayList<>();
+		List<byte[]> result = new ArrayList<byte[]>();
 		for(Chunk c : chunks)
 			result.add(downloadChunk(c));
 		return result;
@@ -261,7 +261,7 @@ public class BoxManager implements IBoxManager {
 	 * @see it.backbox.IBoxManager#getFolderChunks(java.lang.String)
 	 */
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException {
-		Map<String, List<Chunk>> info = new HashMap<>();
+		Map<String, List<Chunk>> info = new HashMap<String, List<Chunk>>();
 		BoxItemCollection items = client.getFolderItems(folderID);
 		List<BoxFile> files = items.entries;
 		for (BoxFile file : files) {
@@ -271,7 +271,7 @@ public class BoxManager implements IBoxManager {
 			c.setChunkname(file.name);
 			String hash = file.name.split("\\.")[0];
 			if (!info.containsKey(hash)) {
-				List<Chunk> chunks = new ArrayList<>();
+				List<Chunk> chunks = new ArrayList<Chunk>();
 				info.put(hash, chunks);
 			}
 			info.get(hash).add(c);

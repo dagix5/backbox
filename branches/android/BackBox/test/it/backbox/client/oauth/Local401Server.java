@@ -93,7 +93,7 @@ public class Local401Server {
 				start = new Date().getTime();
 			} else if (target.equals("/search")) {
 				BoxSearchResult sr = new BoxSearchResult();
-				sr.entries = new ArrayList<>();
+				sr.entries = new ArrayList<BoxItem>();
 				BoxItem i = new BoxItem();
 				i.id="12345";
 				sr.entries.add(i);
@@ -126,7 +126,7 @@ public class Local401Server {
 						out.close();
 						
 						BoxUploadedFile uf = new BoxUploadedFile();
-						uf.entries = new ArrayList<>();
+						uf.entries = new ArrayList<BoxFile>();
 						BoxFile bf = new BoxFile();
 						bf.id = id;
 						bf.name = id;

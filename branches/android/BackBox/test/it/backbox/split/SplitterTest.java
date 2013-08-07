@@ -48,7 +48,7 @@ public class SplitterTest {
 	public void splitByteArrayChunkFile() throws Exception {
 		List<byte[]> splitted = s.split(in);
 		
-		List<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<Chunk>();
 		for(int i = 0; i < splitted.size(); i++) {
 			Chunk chunk = new Chunk();
 			chunk.setChunkname("splitByteArrayChunkFile.c" + i);
@@ -65,7 +65,7 @@ public class SplitterTest {
 	public void splitByteArrayChunkByteArray2() throws Exception {
 		List<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArray2");
 		
-		List<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<byte[]>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		
@@ -78,7 +78,7 @@ public class SplitterTest {
 	public void splitByteArrayChunkByteArrayFile() throws Exception {
 		List<Chunk> chunks = s.splitChunk(in, "ByteArrayChunkByteArrayFile");
 		
-		List<byte[]> splitted = new ArrayList<>();
+		List<byte[]> splitted = new ArrayList<byte[]>();
 		for (Chunk c : chunks)
 			splitted.add(c.getContent());
 		

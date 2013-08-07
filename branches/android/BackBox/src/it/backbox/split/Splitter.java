@@ -194,7 +194,7 @@ public class Splitter implements ISplitter {
 	 * @return List of Chunk
 	 */
 	private List<Chunk> saveChunks(List<byte[]> cs, String chunkprefix) {
-		List<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<Chunk>();
 		for (int i = 0; i < cs.size(); i++) {
 			byte[] f = cs.get(i);
 			Chunk c = new Chunk();
@@ -212,7 +212,7 @@ public class Splitter implements ISplitter {
 	 */
 	@Override
 	public void mergeChunk(List<Chunk> chunks, String destfilename) throws IOException {
-		List<byte[]> cs = new ArrayList<>();
+		List<byte[]> cs = new ArrayList<byte[]>();
 		for (Chunk c : chunks)
 			cs.add(c.getContent());
 		merge(cs, destfilename);

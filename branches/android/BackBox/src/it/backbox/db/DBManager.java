@@ -238,7 +238,7 @@ public class DBManager implements IDBManager {
 
 		ResultSet rs = statement.executeQuery(new StringBuilder("select * from files where folder like'").append(folder).append('\'').toString());
 
-		Map<String, Map<String, it.backbox.bean.File>> records = new HashMap<>();
+		Map<String, Map<String, it.backbox.bean.File>> records = new HashMap<String, Map<String, it.backbox.bean.File>>();
 
 		while (rs.next()) {
 			it.backbox.bean.File file = new it.backbox.bean.File();
@@ -272,7 +272,7 @@ public class DBManager implements IDBManager {
 			if (records.containsKey(file.getHash()))
 				records.get(file.getHash()).put(file.getFilename(), file);
 			else {
-				Map<String, it.backbox.bean.File> files = new HashMap<>();
+				Map<String, it.backbox.bean.File> files = new HashMap<String, it.backbox.bean.File>();
 				files.put(file.getFilename(), file);
 				records.put(file.getHash(), files);
 			}
@@ -292,7 +292,7 @@ public class DBManager implements IDBManager {
 
 		ResultSet rs = statement.executeQuery("select * from files");
 
-		List<it.backbox.bean.File> files = new ArrayList<>();
+		List<it.backbox.bean.File> files = new ArrayList<it.backbox.bean.File>();
 
 		while (rs.next()) {
 			it.backbox.bean.File file = new it.backbox.bean.File();

@@ -60,7 +60,7 @@ public class UploadTask extends BoxTask {
 		
 		try {
 			long size = file.length();
-			List<Chunk> chunks = new ArrayList<>();
+			List<Chunk> chunks = new ArrayList<Chunk>();
 			
 			ISplitter s = getSplitter();
 			

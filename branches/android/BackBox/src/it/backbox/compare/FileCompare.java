@@ -74,14 +74,14 @@ public class FileCompare {
 				if (files.containsKey(hash))
 					files.get(hash).put(relativePath, file.toFile());
 				else {
-					Map<String, File> fs = new HashMap<>();
+					Map<String, File> fs = new HashMap<String, File>();
 					fs.put(relativePath, file.toFile());
 					files.put(hash, fs);
 				}
 				
 				Map<String, File> ff = getFilesNotInRecords().get(hash);
 				if (ff == null) {
-					ff = new HashMap<>();
+					ff = new HashMap<String, File>();
 					filesNotInRecords.put(hash, ff);
 				}
 				if (getRecords().containsKey(hash) && getRecords().get(hash).containsKey(relativePath)) {
@@ -114,9 +114,9 @@ public class FileCompare {
 	public Map<String, Map<String, it.backbox.bean.File>> getRecordsNotInFiles() {
 		if (recordsNotInFiles != null)
 			return recordsNotInFiles;
-		recordsNotInFiles = new HashMap<>();
+		recordsNotInFiles = new HashMap<String, Map<String, it.backbox.bean.File>>();
 		for (String hash : getRecords().keySet()) {
-			Map<String, it.backbox.bean.File> m = new HashMap<>();
+			Map<String, it.backbox.bean.File> m = new HashMap<String, it.backbox.bean.File>();
 			if (getFiles().containsKey(hash))
 				for (String path : getRecords().get(hash).keySet())
 					if (getFiles().get(hash).containsKey(path)) {
@@ -138,7 +138,7 @@ public class FileCompare {
 	 */
 	public Map<String, Map<String, File>> getFilesNotInRecords() {
 		if (filesNotInRecords == null)
-			filesNotInRecords = new HashMap<>();
+			filesNotInRecords = new HashMap<String, Map<String, File>>();
 		return filesNotInRecords;
 	}
 
@@ -149,7 +149,7 @@ public class FileCompare {
 	 */
 	public Map<String, Map<String, File>> getFiles() {
 		if (files == null)
-			files = new HashMap<>();
+			files = new HashMap<String, Map<String, File>>();
 		return files;
 	}
 
@@ -160,7 +160,7 @@ public class FileCompare {
 	 */
 	public Map<String, Map<String, it.backbox.bean.File>> getRecords() {
 		if (records == null)
-			records = new HashMap<>();
+			records = new HashMap<String, Map<String, it.backbox.bean.File>>();
 		return records;
 	}
 

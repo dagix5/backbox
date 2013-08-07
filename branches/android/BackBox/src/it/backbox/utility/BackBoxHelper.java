@@ -73,7 +73,7 @@ public class BackBoxHelper {
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private Configuration configuration;
 	
-	private static final Set<String> ex = new HashSet<>();
+	private static final Set<String> ex = new HashSet<String>();
 	
 	protected ISecurityManager sm;
 	protected IDBManager dbm;
@@ -460,7 +460,7 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<SimpleEntry<String, it.backbox.bean.File>> getRecords() throws SQLException, IOException {
-		List<SimpleEntry<String, it.backbox.bean.File>> ret = new ArrayList<>();
+		List<SimpleEntry<String, it.backbox.bean.File>> ret = new ArrayList<SimpleEntry<String, it.backbox.bean.File>>();
 		
 		for (Folder folder : getConfiguration().getBackupFolders()) {
 			Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folder.getAlias());
@@ -484,7 +484,7 @@ public class BackBoxHelper {
 	 * @throws RestException
 	 */
 	public List<it.backbox.bean.File> getRemotelyDeletedFiles(boolean deleteFromDB) throws IOException, SQLException, BackBoxException, RestException {
-		List<it.backbox.bean.File> deleted = new ArrayList<>();
+		List<it.backbox.bean.File> deleted = new ArrayList<it.backbox.bean.File>();
 		
 		List<it.backbox.bean.File> records = dbm.getAllFiles();
 		for (it.backbox.bean.File f : records)
@@ -551,7 +551,7 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> restoreAll(String restoreFolder) throws BackBoxException, SQLException, IOException {
-		List<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<Transaction>();
 		
 		for (Folder backupFolder : getConfiguration().getBackupFolders())
 			tt.addAll(restore(restoreFolder, backupFolder, false));
@@ -577,7 +577,7 @@ public class BackBoxHelper {
 		if (restoreFolder == null)
 			throw new BackBoxException("Restore path not specified");
 		
-		List<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<Transaction>();
 		
 		Path base = Paths.get(restoreFolder, backupFolder.getAlias());
 		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
@@ -658,7 +658,7 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> backupAll() throws SQLException, IOException {
-		List<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<Transaction>();
 		
 		for (Folder backupFolder : getConfiguration().getBackupFolders())
 			tt.addAll(backup(backupFolder, false));
@@ -678,7 +678,7 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
-		List<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<Transaction>();
 		
 		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), Paths.get(backupFolder.getPath()), ex);
 		c.load();

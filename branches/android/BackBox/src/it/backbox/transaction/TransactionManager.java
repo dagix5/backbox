@@ -180,7 +180,7 @@ public class TransactionManager {
 			_log.warning("Executor running");
 			return null;
 		}
-		List<Transaction> tt = new ArrayList<>();
+		List<Transaction> tt = new ArrayList<Transaction>();
 		while (!getTransactions().isEmpty()) {
 			Transaction t = getTransactions().poll();
 			if (t.getResultCode() != Transaction.NO_ESITO)
@@ -197,7 +197,7 @@ public class TransactionManager {
 	 */
 	private LinkedList<Transaction> getTransactions() {
 		if (transactions == null)
-			transactions = new LinkedList<>();
+			transactions = new LinkedList<Transaction>();
 		return transactions;
 	}
 	
@@ -277,7 +277,7 @@ public class TransactionManager {
 	 */
 	public void addListener(CompleteTransactionListener listener) {
 		if (listeners == null)
-			listeners = new ArrayList<>();
+			listeners = new ArrayList<CompleteTransactionListener>();
 		listeners.add(listener);
 	}
 	

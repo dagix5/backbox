@@ -22,9 +22,9 @@ public class ProgressManager {
 	private Map<String, ProgressListener> progressMap;
 	
 	private ProgressManager() {
-		progressMap = new HashMap<>();
-		bucket = new HashMap<>();
-		speed = new HashMap<>();
+		progressMap = new HashMap<String, ProgressListener>();
+		bucket = new HashMap<String, TokenBucket>();
+		speed = new HashMap<String, Integer>();
 	}
 	
 	/**

@@ -88,7 +88,7 @@ public class Configuration {
 
 	public List<Folder> getBackupFolders() {
 		if (backupFolders == null)
-			backupFolders = new ArrayList<>();
+			backupFolders = new ArrayList<Folder>();
 		return backupFolders;
 	}
 

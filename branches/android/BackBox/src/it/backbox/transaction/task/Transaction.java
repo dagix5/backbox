@@ -29,7 +29,7 @@ public class Transaction {
 
 	public ArrayList<Task> getTasks() {
 		if (tasks == null)
-			tasks = new ArrayList<>();
+			tasks = new ArrayList<Task>();
 		return tasks;
 	}
 

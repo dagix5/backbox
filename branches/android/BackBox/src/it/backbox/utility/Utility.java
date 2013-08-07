@@ -108,11 +108,21 @@ public class Utility {
 	 * @throws IOException
 	 */
 	public static void copy(File src, File dest) throws IOException {
-		try (FileInputStream fis = new FileInputStream(src);
-				FileOutputStream fos = new FileOutputStream(dest);
-				FileChannel fin = fis.getChannel();
-				FileChannel fout = fos.getChannel();) {
+		FileInputStream fis = null;
+		FileOutputStream fos = null;
+		FileChannel fin = null;
+		FileChannel fout = null;
+		try {
+			fis = new FileInputStream(src);
+			fos = new FileOutputStream(dest);
+			fin = fis.getChannel();
+			fout = fos.getChannel();
 			fin.transferTo(0, fin.size(), fout);
+		} finally {
+			if (fis != null) fis.close();
+			if (fos != null) fos.close();
+			if (fin != null) fin.close();
+			if (fout != null) fout.close();
 		}
 	}
 	

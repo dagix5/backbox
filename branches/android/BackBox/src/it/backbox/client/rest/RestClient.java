@@ -154,7 +154,9 @@ public class RestClient implements IRestClient {
 			String retry = response.getHeaders().getRetryAfter();
 			try {
 				Thread.sleep(Long.parseLong(retry));
-			} catch (NumberFormatException | InterruptedException e) {
+			} catch (NumberFormatException e) {
+				_log.log(Level.SEVERE, "Error waiting to retry the download, retrying now!", e);
+			} catch (InterruptedException e) {
 				_log.log(Level.SEVERE, "Error waiting to retry the download, retrying now!", e);
 			}
 			response = execute(request);
@@ -262,7 +264,7 @@ public class RestClient implements IRestClient {
 	@Override
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
 		BoxItemCollection toReturn = new BoxItemCollection();
-		toReturn.entries = new ArrayList<>();
+		toReturn.entries = new ArrayList<BoxFile>();
 		int limit = 1;
 		int returned = 0;
 		int total_count = 0;
