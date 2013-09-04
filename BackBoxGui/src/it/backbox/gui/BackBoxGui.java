@@ -284,7 +284,7 @@ public class BackBoxGui {
 				lblFreeSpaceValue.setText("Error");
 				_log.log(Level.WARNING, "Error retrieving free space", e);
 			}
-		else
+		else if (!connected)
 			lblFreeSpaceValue.setText("");
 	}
 	
