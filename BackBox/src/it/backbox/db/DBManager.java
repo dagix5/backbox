@@ -232,7 +232,7 @@ public class DBManager implements IDBManager {
 	 * @see it.backbox.IDBManager#getFolderRecords(java.lang.String)
 	 */
 	@Override
-	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder) throws SQLException {
+	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder, boolean loadChunks) throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);
 
@@ -251,22 +251,24 @@ public class DBManager implements IDBManager {
 			file.setCompressed(rs.getBoolean("compressed"));
 			file.setSplitted(rs.getBoolean("splitted"));
 
-			StringBuilder query = new StringBuilder("select * from chunks where filehash like '");
-			query.append(rs.getString("hash"));
-			query.append('\'');
-			//query.append("order by chunkname");
-
-			Statement statement2 = connection.createStatement();
-			statement2.setQueryTimeout(QUERY_TIMEOUT);
-			ResultSet rs2 = statement2.executeQuery(query.toString());
-
-			while (rs2.next()) {
-				Chunk c = new Chunk();
-				c.setChunkname(rs2.getString("chunkname"));
-				c.setBoxid(rs2.getString("boxid"));
-				c.setChunkhash(rs2.getString("chunkhash"));
-				c.setSize(rs2.getLong("size"));
-				file.getChunks().add(c);
+			if (loadChunks) {
+				StringBuilder query = new StringBuilder("select * from chunks where filehash like '");
+				query.append(rs.getString("hash"));
+				query.append('\'');
+				//query.append("order by chunkname");
+		
+				Statement statement2 = connection.createStatement();
+				statement2.setQueryTimeout(QUERY_TIMEOUT);
+				ResultSet rs2 = statement2.executeQuery(query.toString());
+		
+				while (rs2.next()) {
+					Chunk c = new Chunk();
+					c.setChunkname(rs2.getString("chunkname"));
+					c.setBoxid(rs2.getString("boxid"));
+					c.setChunkhash(rs2.getString("chunkhash"));
+					c.setSize(rs2.getLong("size"));
+					file.getChunks().add(c);
+				}
 			}
 
 			if (records.containsKey(file.getHash()))
