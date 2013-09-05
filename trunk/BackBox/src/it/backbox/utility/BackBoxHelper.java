@@ -463,7 +463,7 @@ public class BackBoxHelper {
 		List<SimpleEntry<String, it.backbox.bean.File>> ret = new ArrayList<>();
 		
 		for (Folder folder : getConfiguration().getBackupFolders()) {
-			Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folder.getAlias());
+			Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folder.getAlias(), false);
 			for (Map<String, it.backbox.bean.File> m : map.values())
 				for (it.backbox.bean.File f : m.values())
 					ret.add(new SimpleEntry<String, it.backbox.bean.File>(f.getHash(),f));
@@ -580,7 +580,7 @@ public class BackBoxHelper {
 		List<Transaction> tt = new ArrayList<>();
 		
 		Path base = Paths.get(restoreFolder, backupFolder.getAlias());
-		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias(), true), base, ex);
 		c.load();
 		
 		Path del = null;
@@ -680,7 +680,7 @@ public class BackBoxHelper {
 	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
 		List<Transaction> tt = new ArrayList<>();
 		
-		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), Paths.get(backupFolder.getPath()), ex);
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias(), true), Paths.get(backupFolder.getPath()), ex);
 		c.load();
 		
 		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
@@ -806,7 +806,7 @@ public class BackBoxHelper {
 		for (Folder f : folders) {
 			Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(f.getId());
 			
-			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias()), Paths.get(f.getPath()), ex);
+			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias(), true), Paths.get(f.getPath()), ex);
 			c.load();
 			
 			Map<String, Map<String, File>> localInfo = c.getFiles();

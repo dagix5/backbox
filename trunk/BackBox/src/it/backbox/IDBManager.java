@@ -72,12 +72,14 @@ public interface IDBManager {
 	 * 
 	 * @param folder
 	 *            Files folder
+	 * @param loadChunks
+	 * 			  True if chunks are loaded, false otherwise
 	 * 
 	 * @return Hashmap with <Hash, it.backbox.bean.File> with files informations
 	 *         in database
 	 * @throws SQLException
 	 */
-	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder) throws SQLException;
+	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder, boolean loadChunks) throws SQLException;
 	
 	/**
 	 * Reset or create the database and open the connection
