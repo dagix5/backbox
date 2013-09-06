@@ -1,6 +1,7 @@
 package it.backbox.gui;
 
 import it.backbox.bean.File;
+import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
 import it.backbox.gui.bean.Size;
@@ -18,6 +19,7 @@ import it.backbox.utility.BackBoxHelper;
 import it.backbox.utility.Utility;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -95,6 +97,7 @@ public class BackBoxGui {
 	private JMenuItem mntmConfiguration;
 	private JLabel lblFreeSpaceValue;
 	private JMenuItem mntmCheck;
+	private JMenu mnBackup;
 	
 	protected BackBoxHelper helper;
 	private ArrayList<String> fileKeys;
@@ -133,6 +136,7 @@ public class BackBoxGui {
 		try {
 			setSpeed(helper.getConfiguration().getDefaultUploadSpeed(), helper.getConfiguration().getDefaultDownloadSpeed());
 			updateTable();
+			updateMenu();
 			
 			helper.getTransactionManager().addListener(new CompleteTransactionListener() {
 				
@@ -165,6 +169,7 @@ public class BackBoxGui {
 			
 			clearTable();
 			clearPreviewTable();
+			clearMenu();
 			
 			if (connected)
 				helper.logout();
@@ -175,6 +180,76 @@ public class BackBoxGui {
 		} catch (Exception e) {
 			GuiUtility.handleException(frmBackBox, "Error in logout", e);
 		}
+	}
+	
+	public void updateMenu() {
+		try {
+			List<Folder> folders = helper.getConfiguration().getBackupFolders();
+			
+			for (final Folder f : folders) {
+				JMenuItem mntmFolder = new JMenuItem(f.getAlias());
+				mntmFolder.addActionListener(new ActionListener() {
+					
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						if (running) {
+							JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+						if (connected) {
+							helper.getTransactionManager().clear();
+							showLoading();
+							Thread worker = new Thread() {
+								public void run() {
+									List<Transaction> tt = null;
+									try {
+										tt = helper.backup(f, false);
+										
+										spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultUploadSpeed() / 1024);
+									} catch (Exception e) {
+										hideLoading();
+										GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
+									} finally {
+										clearPreviewTable();
+										updatePreviewTable(tt);
+										
+										if ((tt == null) ||	tt.isEmpty()) {
+											hideLoading();
+											JOptionPane.showMessageDialog(frmBackBox, "No files to backup", "Info", JOptionPane.INFORMATION_MESSAGE);
+										} else {
+											pending = true;
+											pendingDone = false;
+										}
+										updateStatus();
+									}
+									
+									SwingUtilities.invokeLater(new Runnable() {
+					                    public void run() {
+					                    	hideLoading();
+					                    }
+					                });
+								}
+							};
+							worker.start();
+						} else
+							JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+						
+					}
+				});
+				mnBackup.add(mntmFolder);
+			}
+			
+			mnBackup.setEnabled(true);
+		} catch (IOException e) {
+			GuiUtility.handleException(frmBackBox, "Error updating menu", e);
+		}
+	}
+	
+	public void clearMenu() {
+		for (Component c : mnBackup.getComponents())
+			mnBackup.remove(c);
+		
+		mnBackup.setEnabled(false);
 	}
 	
 	private void updateTable() {
@@ -189,7 +264,7 @@ public class BackBoxGui {
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
 			for (SimpleEntry<String, File> entry : map) {
 				File f = entry.getValue();
-				model.addRow(new Object[] { new StringBuilder(f.getFolder()).append('\\').append(f.getFilename()).toString(), new Size(f.getSize()), f.getTimestamp().toString(), ((f.getChunks() != null) ? f.getChunks().size() : 0)});
+				model.addRow(new Object[] { new StringBuilder(f.getFolder()).append('\\').append(f.getFilename()).toString(), new Size(f.getSize()), f.getTimestamp().toString()});
 				fileKeys.add(entry.getKey());
 			}
 		} catch (SQLException | IOException e) {
@@ -385,6 +460,10 @@ public class BackBoxGui {
 		});
 		mntmNewConfiguration.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
 		mnFile.add(mntmNewConfiguration);
+		
+		mnBackup = new JMenu("Backup");
+		mnBackup.setEnabled(false);
+		mnFile.add(mnBackup);
 		
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
@@ -608,18 +687,18 @@ public class BackBoxGui {
 			new Object[][] {
 			},
 			new String[] {
-				"Filename", "Size", "Last Modified", "Chunks"
+				"Filename", "Size", "Last Modified"
 			}
 		) {
 			private static final long serialVersionUID = 1L;
 			Class[] columnTypes = new Class[] {
-				String.class, Size.class, String.class, Integer.class
+				String.class, Size.class, String.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
 			}
 			boolean[] columnEditables = new boolean[] {
-				false, false, false, false
+				false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
@@ -631,8 +710,6 @@ public class BackBoxGui {
 		table.getColumnModel().getColumn(1).setMinWidth(50);
 		table.getColumnModel().getColumn(2).setPreferredWidth(100);
 		table.getColumnModel().getColumn(2).setMinWidth(100);
-		table.getColumnModel().getColumn(3).setPreferredWidth(15);
-		table.getColumnModel().getColumn(3).setMinWidth(5);
 		
 		table.setRowSorter(new SizeTableRowSorter(table.getModel()));
 		
