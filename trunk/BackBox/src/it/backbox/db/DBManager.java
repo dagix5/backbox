@@ -33,8 +33,6 @@ public class DBManager implements IDBManager {
 	/**
 	 * Constructor
 	 * 
-	 * @param sm
-	 *            SecurityManager to database encrypt/decrypt operations
 	 * @param filename
 	 *            Database file name
 	 * @throws BackBoxException
@@ -53,12 +51,16 @@ public class DBManager implements IDBManager {
 	 * @see it.backbox.IDBManager#openDB()
 	 */
 	@Override
-	public void openDB() throws ClassNotFoundException, SQLException {
+	public void openDB() throws BackBoxException {
 		if (open)
 			return;
 
-		Class.forName("org.sqlite.JDBC");
-		connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
+		try {
+			Class.forName("org.sqlite.JDBC");
+			connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
+		} catch (ClassNotFoundException | SQLException e) {
+			throw new BackBoxException("Error opening DB", e);
+		}
 		open = true;
 	}
 
@@ -83,13 +85,10 @@ public class DBManager implements IDBManager {
 	 * @see it.backbox.IDBManager#createDB()
 	 */
 	@Override
-	public void createDB() throws SQLException, ClassNotFoundException {
+	public void createDB() throws BackBoxException, SQLException {
 		closeDB();
-		if(!open) {
-			Class.forName("org.sqlite.JDBC");
-			connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
-			open = true;
-		}
+		if(!open) 
+			openDB();
 		
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);

@@ -13,11 +13,9 @@ public interface IDBManager {
 	/**
 	 * Open the jdbc connection
 	 * 
-	 * @throws ClassNotFoundException
-	 * @throws SQLException
-	 * 
+	 * @throws BackBoxException
 	 */
-	public void openDB() throws ClassNotFoundException, SQLException;
+	public void openDB() throws BackBoxException;
 	
 	/**
 	 * Close the jdbc connection
@@ -84,10 +82,10 @@ public interface IDBManager {
 	/**
 	 * Reset or create the database and open the connection
 	 * 
-	 * @throws SQLException
-	 * @throws ClassNotFoundException
+	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
-	public void createDB() throws SQLException, ClassNotFoundException;
+	public void createDB() throws BackBoxException, SQLException;
 	
 	/**
 	 * Get all files in the database
