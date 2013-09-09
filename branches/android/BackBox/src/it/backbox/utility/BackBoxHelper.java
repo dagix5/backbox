@@ -462,7 +462,7 @@ public class BackBoxHelper {
 		List<SimpleEntry<String, it.backbox.bean.File>> ret = new ArrayList<SimpleEntry<String, it.backbox.bean.File>>();
 		
 		for (Folder folder : getConfiguration().getBackupFolders()) {
-			Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folder.getAlias());
+			Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folder.getAlias(), false);
 			for (Map<String, it.backbox.bean.File> m : map.values())
 				for (it.backbox.bean.File f : m.values())
 					ret.add(new SimpleEntry<String, it.backbox.bean.File>(f.getHash(),f));
@@ -580,7 +580,7 @@ public class BackBoxHelper {
 		
 		String baseName = new StringBuilder(restoreFolder).append('\\').append(backupFolder.getAlias()).append('\\').toString();
 		File base = new File(baseName);
-		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), base, ex);
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias(), true), base, ex);
 		c.load();
 		
 		File del = null;
@@ -680,7 +680,7 @@ public class BackBoxHelper {
 	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
 		List<Transaction> tt = new ArrayList<Transaction>();
 		
-		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias()), new File(backupFolder.getPath()), ex);
+		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias(), true), new File(backupFolder.getPath()), ex);
 		c.load();
 		
 		Map<String, Map<String, File>> toUpload = c.getFilesNotInRecords();
@@ -806,7 +806,7 @@ public class BackBoxHelper {
 		for (Folder f : folders) {
 			Map<String, List<Chunk>> remoteInfo = bm.getFolderChunks(f.getId());
 			
-			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias()), new File(f.getPath()), ex);
+			FileCompare c = new FileCompare(dbm.getFolderRecords(f.getAlias(), true), new File(f.getPath()), ex);
 			c.load();
 			
 			Map<String, Map<String, File>> localInfo = c.getFiles();

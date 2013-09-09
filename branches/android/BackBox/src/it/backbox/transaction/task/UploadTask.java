@@ -6,6 +6,7 @@ import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.bean.Folder;
 import it.backbox.compress.Zipper;
+import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
 
 import java.io.BufferedInputStream;
@@ -105,6 +106,9 @@ public class UploadTask extends BoxTask {
 				chunk.setSize(c.length);
 				
 				callBox();
+				
+				if ((chunk.getBoxid() == null) || chunk.getBoxid().isEmpty() || (chunk.getBoxid().equals("null")))
+					throw new BackBoxException("Uploaded file ID null");
 				
 				chunk.setContent(null);
 				chunks.add(chunk);
