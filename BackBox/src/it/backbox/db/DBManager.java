@@ -97,7 +97,7 @@ public class DBManager implements IDBManager {
 		statement.executeUpdate("drop table if exists chunks");
 		statement.executeUpdate("create table files (hash string, filename string, folder string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename))");
 		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string not null, size INTEGER, foreign key(filehash) references files(hash))");
-		
+		statement.executeUpdate("create index chunks_filehash on chunks (filehash)");
 		statement.executeUpdate("PRAGMA journal_mode = OFF");
 		if (_log.isLoggable(Level.INFO)) _log.info("DB created");
 		
