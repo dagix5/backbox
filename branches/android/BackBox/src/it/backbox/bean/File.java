@@ -90,4 +90,13 @@ public class File {
 		this.folder = folder;
 	}
 
+	@Override
+	public String toString() {
+		if (getFilename() != null)
+			return getFilename();
+		return super.toString();
+	}
+	
+	
+
 }
