@@ -4,7 +4,7 @@ public class GuiConstant {
 
 	public static final String LOG_FILE = "backbox.log";
 	
-	public static final String LOADING_IMG = "/it/backbox/gui/images/loader.gif";
+	public static final String LOADING_IMG = "loader.gif";
 	
 	public static final int LOGIN_MODE = 0;
 	public static final int BUILDDB_MODE = 1;
