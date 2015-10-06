@@ -254,6 +254,22 @@ public class BackBoxHelper {
 	}
 	
 	/**
+	 * Edit a folder to backup
+	 * 
+	 * @param index
+	 * 			  Configuration index of the folder to edit
+	 * @param folder
+	 *            Updated folder configuration
+	 * @throws RestException 
+	 * @throws IOException 
+	 * @throws BackBoxException 
+	 */
+	private void editBackupFolder(int index, Folder folder) throws IOException, RestException, BackBoxException {	
+		getConfiguration().getBackupFolders().set(index, folder);
+		saveConfiguration();
+	}
+	
+	/**
 	 * Update backup folders configuration
 	 * 
 	 * @param folders
@@ -263,7 +279,8 @@ public class BackBoxHelper {
 	 * @throws RestException 
 	 */
 	public void updateBackupFolders(List<Folder> folders) throws IOException, RestException, BackBoxException {
-		for (Folder f1 : folders) {
+		for (int i = 0; i < folders.size(); i++) {
+			Folder f1 = folders.get(i);
 			boolean found = false;
 			for (Folder f2 : getConfiguration().getBackupFolders()) {
 				if (f1.getAlias().equals(f2.getAlias())) {
@@ -272,7 +289,9 @@ public class BackBoxHelper {
 				}
 			}
 			
-			if (!found)
+			if (found)
+				editBackupFolder(i, f1);
+			else
 				addBackupFolder(f1);
 		}
 		

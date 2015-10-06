@@ -38,16 +38,57 @@ public class FoldersPanel extends JPanel {
 		final JButton btnRemove = new JButton("Remove");
 		btnRemove.setEnabled(false);
 		
+		final JButton btnEdit = new JButton("Edit");
+		btnEdit.setEnabled(false);
+		
 		final JList<Folder> list = new JList<Folder>(listModel);
 		list.setVisibleRowCount(5);
 		list.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				if (e.getValueIsAdjusting() == false)
+				if (e.getValueIsAdjusting() == false) {
 					btnRemove.setEnabled((list.getSelectedIndex() != -1) && (listModel.getSize() > 1));
+					btnEdit.setEnabled((list.getSelectedIndex() != -1));
+				}
 			}
 		});
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		add(new JScrollPane(list), "cell 0 0 3 1,grow");
+		
+		btnEdit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int index = list.getSelectedIndex();
+				Folder f = listModel.get(index);
+				
+				String folder = null;
+				
+				JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int returnVal = fc.showOpenDialog(container);
+				if (returnVal == JFileChooser.CANCEL_OPTION)
+					return;
+				try {
+					folder = fc.getSelectedFile().getCanonicalPath();
+				} catch (IOException e) {
+					GuiUtility.handleException(container, "Error getting canonical path", e);
+					return;
+				}
+				if ((folder == null) || folder.isEmpty() || !Files.exists(Paths.get(folder))) {
+					JOptionPane.showMessageDialog(container, "Folder not found", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				if (listModel.contains(folder)) {
+					JOptionPane.showMessageDialog(container, "Folder already in list", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				f.setPath(folder);
+				listModel.set(index, f);
+				
+				list.setSelectedIndex(index);
+	            list.ensureIndexIsVisible(index);
+			}
+		});
 		
 		btnRemove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -109,7 +150,8 @@ public class FoldersPanel extends JPanel {
 			}
 		});
 		add(btnAdd, "cell 1 1,grow");
-		add(btnRemove, "cell 2 1,grow");
+		add(btnEdit, "cell 2 1,grow");
+		add(btnRemove, "cell 3 1,grow");
 	}
 	
 	private boolean checkAlias(String alias) {
