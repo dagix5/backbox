@@ -125,7 +125,7 @@ public class NewConfDialog extends JDialog {
 							main.hideLoading();
 							setVisible(true);
 							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
-							main.disconnect();
+							main.disconnect(true);
 						}
 						
 						passwordField.setText("");

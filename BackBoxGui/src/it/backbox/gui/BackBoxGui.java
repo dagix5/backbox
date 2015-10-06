@@ -157,7 +157,7 @@ public class BackBoxGui {
 		updateStatus();
 	}
 	
-	public void disconnect() {
+	public void disconnect(boolean clear) {
 		try {
 			if (helper.getTransactionManager() != null) {
 				if (running) {
@@ -167,9 +167,11 @@ public class BackBoxGui {
 				helper.getTransactionManager().clear();
 			}
 			
-			clearTable();
-			clearPreviewTable();
-			clearMenu();
+			if (clear) {
+				clearTable();
+				clearPreviewTable();
+				clearMenu();
+			}
 			
 			if (connected)
 				helper.logout();
@@ -474,7 +476,7 @@ public class BackBoxGui {
 					if (connected && helper.getConfiguration().isAutoUploadConf())
 						helper.uploadConf(false);
 					
-					disconnect();
+					disconnect(false);
 					System.exit(0);
 				} catch (Exception e) {
 					GuiUtility.handleException(frmBackBox, "Error in logout", e);
@@ -516,7 +518,7 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.uploadConf(true);
-							disconnect();
+							disconnect(true);
 							JOptionPane.showMessageDialog(frmBackBox, "Configuration uploaded successfully", "Upload configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
@@ -551,7 +553,7 @@ public class BackBoxGui {
 					public void run() {
 						try {
 							helper.downloadConf();
-							disconnect();
+							disconnect(true);
 							JOptionPane.showMessageDialog(frmBackBox, "Configuration downloaded successfully", "Download configuration", JOptionPane.INFORMATION_MESSAGE);
 						} catch (Exception e1) {
 							hideLoading();
