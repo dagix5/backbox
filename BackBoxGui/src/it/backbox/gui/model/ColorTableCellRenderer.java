@@ -1,4 +1,4 @@
-package it.backbox.gui.utility;
+package it.backbox.gui.model;
 
 import it.backbox.gui.GuiConstant;
 
@@ -17,7 +17,7 @@ public class ColorTableCellRenderer extends DefaultTableCellRenderer {
         Component cr = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
         cr.setForeground(Color.BLACK);
-        if ((value != null) && (column == GuiConstant.RESULT_COLUM_INDEX))
+        if ((value != null) && (column == GuiConstant.RESULT_COLUMN_INDEX))
         	if (((String) value).equals(GuiConstant.RESULT_ERROR))
         		cr.setForeground(Color.RED);
             else if (((String) value).equals(GuiConstant.RESULT_SUCCESS))

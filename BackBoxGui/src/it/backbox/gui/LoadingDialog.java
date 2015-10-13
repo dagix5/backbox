@@ -1,7 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.gui.utility.ImagePanel;
-
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Image;
@@ -10,6 +8,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import it.backbox.gui.panel.ImagePanel;
 import net.miginfocom.swing.MigLayout;
 
 public class LoadingDialog extends JDialog {

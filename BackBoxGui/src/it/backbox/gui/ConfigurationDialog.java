@@ -3,7 +3,7 @@ package it.backbox.gui;
 import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
-import it.backbox.gui.utility.FoldersPanel;
+import it.backbox.gui.panel.FoldersPanel;
 import it.backbox.gui.utility.GuiUtility;
 
 import java.awt.BorderLayout;

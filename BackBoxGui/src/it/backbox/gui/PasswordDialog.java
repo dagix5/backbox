@@ -76,19 +76,25 @@ public class PasswordDialog extends JDialog {
 								main.connect();
 							} else if (mode == GuiConstant.BUILDDB_MODE)
 								main.helper.buildDB(new String(passwordField.getPassword()));
+							
+							SwingUtilities.invokeLater(new Runnable() {
+			                    public void run() {
+			                    	main.hideLoading();
+			                    }
+			                });
 						} catch (BackBoxWrongPasswordException e) {
-							lblPasswordErrata.setVisible(true);
-							passwordField.setText("");
+							SwingUtilities.invokeLater(new Runnable() {
+			                    public void run() {
+									main.hideLoading();
+									lblPasswordErrata.setVisible(true);
+									passwordField.setText("");
+			                    }
+			                });
 							setVisible(true);
 						} catch (Exception e) {
 							GuiUtility.handleException(contentPanel, "Error logging in", e);
 						}
 						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	main.hideLoading();
-		                    }
-		                });
 					}
 				};
 				worker.start();

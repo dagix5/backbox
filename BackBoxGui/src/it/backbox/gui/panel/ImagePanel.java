@@ -1,4 +1,4 @@
-package it.backbox.gui.utility;
+package it.backbox.gui.panel;
 
 import java.awt.Graphics;
 import java.awt.Image;

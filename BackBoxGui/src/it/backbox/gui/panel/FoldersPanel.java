@@ -1,6 +1,7 @@
-package it.backbox.gui.utility;
+package it.backbox.gui.panel;
 
 import it.backbox.bean.Folder;
+import it.backbox.gui.utility.GuiUtility;
 
 import java.awt.Container;
 import java.awt.event.ActionEvent;
