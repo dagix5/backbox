@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
@@ -51,6 +52,7 @@ public class DownloadTask extends BoxTask {
 	public void run() throws Exception {
 		OutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
+		filename = FilenameUtils.separatorsToSystem(filename);
 		
 		if (stop) { out.close(); return; }
 		

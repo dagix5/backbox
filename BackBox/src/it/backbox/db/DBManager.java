@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 
 public class DBManager implements IDBManager {
@@ -141,7 +142,7 @@ public class DBManager implements IDBManager {
 
 			query = new StringBuilder("insert into files values('");
 			query.append(digest).append("','");
-			query.append(StringEscapeUtils.escapeSql(relativePath)).append("','");
+			query.append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(relativePath))).append("','");
 			query.append(folder).append("','");
 			query.append(fileLastModified).append("',");
             query.append(fileSize).append(',');
