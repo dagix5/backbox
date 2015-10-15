@@ -9,6 +9,7 @@ import javax.swing.tree.TreeNode;
 import org.apache.commons.io.FilenameUtils;
 
 import it.backbox.bean.File;
+import it.backbox.gui.utility.GuiUtility;
 
 public class FileBrowserTreeModel extends DefaultTreeModel {
 
@@ -19,6 +20,8 @@ public class FileBrowserTreeModel extends DefaultTreeModel {
 	}
 
 	public void insertNodeInto(FileBrowserTreeNode newChild, FileBrowserTreeNode parent) {
+		GuiUtility.checkEDT(true);
+		
 		int i = 0;
 		Enumeration e = parent.children();
 		while (e.hasMoreElements()) {

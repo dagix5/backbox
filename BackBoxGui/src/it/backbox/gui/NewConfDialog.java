@@ -1,9 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.bean.Folder;
-import it.backbox.gui.panel.FoldersPanel;
-import it.backbox.gui.utility.GuiUtility;
-
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -21,6 +17,11 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import it.backbox.bean.Folder;
+import it.backbox.gui.panel.FoldersPanel;
+import it.backbox.gui.utility.BackBoxHelper;
+import it.backbox.gui.utility.GuiUtility;
+import it.backbox.gui.utility.ThreadActionListener;
 import net.miginfocom.swing.MigLayout;
 
 public class NewConfDialog extends JDialog {
@@ -37,6 +38,8 @@ public class NewConfDialog extends JDialog {
 	 * @param BackboxGui 
 	 */
 	public NewConfDialog(final BackBoxGui main) {
+		GuiUtility.checkEDT(true);
+		
 		setResizable(false);
 		contentPanel = new JPanel();
 		
@@ -92,54 +95,62 @@ public class NewConfDialog extends JDialog {
 		getContentPane().add(buttonPane, "cell 0 1,growx,aligny top");
 
 		final JButton okButton = new JButton("OK");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				main.showLoading();
-				setVisible(false);
-				Thread worker = new Thread() {
-					public void run() {
+		okButton.addActionListener(new ThreadActionListener() {
+			private List<Folder> folders;
+			
+			@Override
+			protected void action(ActionEvent event) {
+				try {
+					BackBoxHelper.getInstance().register(new String(passwordField.getPassword()), folders, (int) spinnerChunksize.getValue() * 1024);
+					
+					SwingUtilities.invokeLater(new Runnable() {
 						
-						lblSetFolderTo.setVisible(false);
-						lblPasswordErrata.setVisible(false);
-						
-						if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
-							main.hideLoading();
-							setVisible(true);
-							lblPasswordErrata.setVisible(true);
-							return;
-						}
-						
-						List<Folder> folders = foldersPanel.getFolders();
-						if (folders.isEmpty()) {
-							main.hideLoading();
-							setVisible(true);
-							lblSetFolderTo.setVisible(true);
-							return;
-						}
-						
-						try {	
-							main.helper.register(new String(passwordField.getPassword()), folders, (int) spinnerChunksize.getValue() * 1024);
+						@Override
+						public void run() {
+							passwordField.setText("");
+							passwordField_1.setText("");
 							lblPasswordErrata.setVisible(false);
-							main.connect();	
-						} catch (Exception e) {
-							main.hideLoading();
-							setVisible(true);
+							main.connect();
+						}
+					});
+				} catch (final Exception e) {
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							LoadingDialog.getInstance().hideLoading();
 							GuiUtility.handleException(contentPanel, "Error registering new configuration", e);
+							setVisible(true);
 							main.disconnect(true);
 						}
-						
-						passwordField.setText("");
-						passwordField_1.setText("");
-						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	main.hideLoading();
-		                    }
-		                });
-					}
-				};
-				worker.start();
+					});
+				}
 			}
+
+			@Override
+			protected boolean preaction(ActionEvent event) {
+				setVisible(false);
+				lblSetFolderTo.setVisible(false);
+				lblPasswordErrata.setVisible(false);
+				
+				if ((passwordField.getPassword().length == 0) || !Arrays.equals(passwordField.getPassword(), passwordField_1.getPassword())) {
+					LoadingDialog.getInstance().hideLoading();
+					setVisible(true);
+					lblPasswordErrata.setVisible(true);
+					return false;
+				}
+				
+				folders = foldersPanel.getFolders();
+				if (folders.isEmpty()) {
+					LoadingDialog.getInstance().hideLoading();
+					setVisible(true);
+					lblSetFolderTo.setVisible(true);
+					return false;
+				}
+				
+				return true;
+			}
+
 		});
 		okButton.setActionCommand("OK");
 		buttonPane.add(okButton);

@@ -11,13 +11,12 @@ import it.backbox.gui.bean.Size;
 import it.backbox.gui.model.FileBrowserTreeNode.TreeNodeType;
 import it.backbox.gui.bean.Filename;
 import it.backbox.gui.utility.FileUtility;
+import it.backbox.gui.utility.GuiUtility;
 
 public class FileBrowserTableModel extends DefaultTableModel {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final int NAME_COLUMN_INDEX = 1;
-	public static final int SIZE_COLUMN_INDEX = 2;
 	public static final int ID_COLUMN_INDEX = 5;
 	public static final int NODE_COLUMN_INDEX = 6;
 
@@ -40,19 +39,13 @@ public class FileBrowserTableModel extends DefaultTableModel {
 		return (String) getValueAt(row, ID_COLUMN_INDEX);
 	}
 
-	public Filename getName(int row) {
-		return (Filename) getValueAt(row, NAME_COLUMN_INDEX);
-	}
-
-	public Size getSize(int row) {
-		return (Size) getValueAt(row, SIZE_COLUMN_INDEX);
-	}
-
 	public FileBrowserTreeNode getNode(int row) {
 		return (FileBrowserTreeNode) getValueAt(row, NODE_COLUMN_INDEX);
 	}
 
 	public void addRow(FileBrowserTreeNode node) {
+		GuiUtility.checkEDT(true);
+		
 		Object o = node.getUserObject();
 		if ((node.getType() == TreeNodeType.FOLDER) || (node.getType() == TreeNodeType.PREV_FOLDER))
 			addRow(new Object[] { FileUtility.getFolderIcon(), new Filename((String) o, Filename.DIRECTORY_TYPE), null,

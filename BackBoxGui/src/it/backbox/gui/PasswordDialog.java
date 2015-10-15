@@ -1,9 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.exception.BackBoxWrongPasswordException;
-import it.backbox.gui.utility.GuiUtility;
-import it.backbox.progress.ProgressManager;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -18,6 +14,10 @@ import javax.swing.JPasswordField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import it.backbox.exception.BackBoxWrongPasswordException;
+import it.backbox.gui.utility.BackBoxHelper;
+import it.backbox.gui.utility.GuiUtility;
+import it.backbox.gui.utility.ThreadActionListener;
 import net.miginfocom.swing.MigLayout;
 
 public class PasswordDialog extends JDialog {
@@ -35,8 +35,9 @@ public class PasswordDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public PasswordDialog(final BackBoxGui main) {
+		GuiUtility.checkEDT(true);
+		
 		setModalityType(ModalityType.APPLICATION_MODAL);
-		setType(Type.POPUP);
 		setResizable(false);
 		setTitle("Connect");
 		setBounds(100, 100, 234, 115);
@@ -60,45 +61,37 @@ public class PasswordDialog extends JDialog {
 		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 		okButton = new JButton("OK");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				main.showLoading();
+		okButton.addActionListener(new ThreadActionListener() {
+			
+			@Override
+			protected boolean preaction(ActionEvent e) {
 				setVisible(false);
-				Thread worker = new Thread() {
-					public void run() {
-						try {
-							lblPasswordErrata.setVisible(false);
-							if (mode == GuiConstant.LOGIN_MODE) {
-								main.helper.login(new String(passwordField.getPassword()));
-								ProgressManager.getInstance().setSpeed(ProgressManager.UPLOAD_ID, main.helper.getConfiguration().getDefaultUploadSpeed());
-								ProgressManager.getInstance().setSpeed(ProgressManager.DOWNLOAD_ID, main.helper.getConfiguration().getDefaultDownloadSpeed());
-								
-								main.connect();
-							} else if (mode == GuiConstant.BUILDDB_MODE)
-								main.helper.buildDB(new String(passwordField.getPassword()));
-							
-							SwingUtilities.invokeLater(new Runnable() {
-			                    public void run() {
-			                    	main.hideLoading();
-			                    }
-			                });
-						} catch (BackBoxWrongPasswordException e) {
-							SwingUtilities.invokeLater(new Runnable() {
-			                    public void run() {
-									main.hideLoading();
-									lblPasswordErrata.setVisible(true);
-									passwordField.setText("");
-			                    }
-			                });
-							setVisible(true);
-						} catch (Exception e) {
-							GuiUtility.handleException(contentPanel, "Error logging in", e);
-						}
+				lblPasswordErrata.setVisible(false);
+				return true;
+			}
+			
+			@Override
+			protected void action(ActionEvent ev) {
+				try {
+					if (mode == GuiConstant.LOGIN_MODE) {
+						BackBoxHelper.getInstance().login(new String(passwordField.getPassword()));
+						main.connect();
+					} else if (mode == GuiConstant.BUILDDB_MODE)
+						BackBoxHelper.getInstance().buildDB(new String(passwordField.getPassword()));
+				} catch (BackBoxWrongPasswordException e) {
+					SwingUtilities.invokeLater(new Runnable() {
 						
-					}
-				};
-				worker.start();
-					
+						@Override
+						public void run() {
+							lblPasswordErrata.setVisible(true);
+							passwordField.setText("");
+							setVisible(true);
+						}
+					});
+				} catch (Exception e) {
+					hideLoadingLater(ev);
+					GuiUtility.handleException(contentPanel, "Error logging in", e);
+				}
 			}
 		});
 		okButton.setActionCommand("OK");
@@ -115,6 +108,7 @@ public class PasswordDialog extends JDialog {
 	}
 	
 	public void load(int mode) {
+		GuiUtility.checkEDT(true);
 		this.mode = mode;
 		lblPasswordErrata.setVisible(false);
 		passwordField.setText("");

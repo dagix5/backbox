@@ -1,11 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.bean.Folder;
-import it.backbox.exception.BackBoxException;
-import it.backbox.exception.RestException;
-import it.backbox.gui.panel.FoldersPanel;
-import it.backbox.gui.utility.GuiUtility;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -20,6 +14,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import it.backbox.bean.Folder;
+import it.backbox.exception.BackBoxException;
+import it.backbox.exception.RestException;
+import it.backbox.gui.panel.FoldersPanel;
+import it.backbox.gui.utility.BackBoxHelper;
+import it.backbox.gui.utility.GuiUtility;
+import it.backbox.gui.utility.ThreadActionListener;
 import net.miginfocom.swing.MigLayout;
 
 public class ConfigurationDialog extends JDialog {
@@ -31,6 +32,8 @@ public class ConfigurationDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public ConfigurationDialog(final BackBoxGui main) {
+		GuiUtility.checkEDT(true);
+		
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		
 		setTitle("Configuration");
@@ -51,30 +54,39 @@ public class ConfigurationDialog extends JDialog {
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 		
 		JButton okButton = new JButton("OK");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				main.showLoading();
+		okButton.addActionListener(new ThreadActionListener() {
+			
+			@Override
+			protected boolean preaction(ActionEvent event) {
 				setVisible(false);
-				Thread worker = new Thread() {
-					public void run() {
-						try {
-							main.helper.updateBackupFolders(foldersPanel.getFolders());
+				return true;
+			}
+			
+			@Override
+			protected void action(ActionEvent event) {
+				try {
+					BackBoxHelper.getInstance().updateBackupFolders(foldersPanel.getFolders());
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
 							main.clearMenu();
 							main.updateMenu();
-						} catch (IOException | RestException | BackBoxException e) {
-							main.hideLoading();
+							
+						}
+					});
+				} catch (IOException | RestException | BackBoxException e) {
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							LoadingDialog.getInstance().hideLoading();
 							GuiUtility.handleException(getContentPane(), "Error updating configuration", e);
 							setVisible(true);
 						}
-						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	main.hideLoading();
-		                    }
-		                });
-					}
-				};
-				worker.start();
+					});
+				}
+				
 			}
 		});
 		okButton.setActionCommand("OK");
@@ -95,6 +107,8 @@ public class ConfigurationDialog extends JDialog {
 	}
 	
 	public void load(List<Folder> backupFolders) {
+		GuiUtility.checkEDT(true);
+		
 		foldersPanel.load(backupFolders);
 	}
 

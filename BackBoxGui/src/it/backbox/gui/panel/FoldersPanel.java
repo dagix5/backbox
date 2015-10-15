@@ -32,6 +32,8 @@ public class FoldersPanel extends JPanel {
 	private DefaultListModel<Folder> listModel;
 	
 	public FoldersPanel(final Container container) {
+		GuiUtility.checkEDT(true);
+		
 		setLayout(new MigLayout("", "[279.00px,grow][90.00:90.00:90.00][90.00:90.00:90.00]", "[grow][]"));
 		
 		listModel = new DefaultListModel<Folder>();

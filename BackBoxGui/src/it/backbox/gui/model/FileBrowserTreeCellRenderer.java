@@ -10,6 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import it.backbox.bean.File;
 import it.backbox.gui.utility.FileUtility;
+import it.backbox.gui.utility.GuiUtility;
 
 public class FileBrowserTreeCellRenderer extends DefaultTreeCellRenderer {
 
@@ -18,6 +19,7 @@ public class FileBrowserTreeCellRenderer extends DefaultTreeCellRenderer {
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf,
 			int row, boolean hasFocus) {
+		GuiUtility.checkEDT(true);
 		
 		super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 		

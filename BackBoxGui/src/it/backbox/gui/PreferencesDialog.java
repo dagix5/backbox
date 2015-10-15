@@ -1,8 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.bean.ProxyConfiguration;
-import it.backbox.gui.utility.GuiUtility;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
@@ -30,6 +27,10 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 
+import it.backbox.bean.ProxyConfiguration;
+import it.backbox.gui.utility.BackBoxHelper;
+import it.backbox.gui.utility.GuiUtility;
+import it.backbox.gui.utility.ThreadActionListener;
 import net.miginfocom.swing.MigLayout;
 
 public class PreferencesDialog extends JDialog {
@@ -50,7 +51,9 @@ public class PreferencesDialog extends JDialog {
 	 * Create the dialog.
 	 * @throws ConfigurationException 
 	 */
-	public PreferencesDialog(final BackBoxGui main) {
+	public PreferencesDialog() {
+		GuiUtility.checkEDT(true);
+		
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		
 		setTitle("Preferences");
@@ -79,7 +82,7 @@ public class PreferencesDialog extends JDialog {
 		defaultUploadSpeed = new JSpinner();
 		panel.add(defaultUploadSpeed, "cell 1 0,growx");
 		
-		JLabel lblKbsset = new JLabel("KB\\s (set 0 for unlmited)");
+		JLabel lblKbsset = new JLabel("KB\\s (set 0 for unlimited)");
 		panel.add(lblKbsset, "cell 2 0");
 		
 		JLabel lblDefaultDownloadSpeed = new JLabel("Default download speed");
@@ -88,7 +91,7 @@ public class PreferencesDialog extends JDialog {
 		defaultDownloadSpeed = new JSpinner();
 		panel.add(defaultDownloadSpeed, "cell 1 1,growx");
 		
-		JLabel lblKbsset2 = new JLabel("KB\\s (set 0 for unlmited)");
+		JLabel lblKbsset2 = new JLabel("KB\\s (set 0 for unlimited)");
 		panel.add(lblKbsset2, "cell 2 1");
 		
 		chckbxAutoUpload = new JCheckBox("Auto-Upload configuration on exit");
@@ -150,48 +153,58 @@ public class PreferencesDialog extends JDialog {
 		}
 		
 		JButton okButton = new JButton("OK");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				main.showLoading();
+		okButton.addActionListener(new ThreadActionListener() {
+			
+			@Override
+			protected boolean preaction(ActionEvent event) {
 				setVisible(false);
-				Thread worker = new Thread() {
-					public void run() {
-						try {
-							int upSpeed = ((int) defaultUploadSpeed.getValue()) * 1024;
-							int downSpeed = ((int) defaultDownloadSpeed.getValue()) * 1024;
-							
-							main.helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
-							main.helper.getConfiguration().setDefaultDownloadSpeed(downSpeed);
-							
-							if (newLevel != null) {
-								Logger.getLogger("it.backbox").setLevel(newLevel);
-								main.helper.getConfiguration().setLogLevel(newLevel.getName());
-							}
-							
-							main.helper.getConfiguration().setAutoUploadConf(chckbxAutoUpload.isSelected());
-							
-							ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
-							main.helper.setProxyConfiguration(pc);
-							
-							main.helper.getConfiguration().setProxyConfiguration(pc);
-							//after restart, the new size will be read
-							main.helper.getConfiguration().setLogSize((int) logSize.getValue() * 1024);
-							main.helper.saveConfiguration();
-							
+				return true;
+			}
+			
+			@Override
+			protected void action(ActionEvent event) {
+				try {
+					int upSpeed = ((int) defaultUploadSpeed.getValue()) * 1024;
+					int downSpeed = ((int) defaultDownloadSpeed.getValue()) * 1024;
+					
+					BackBoxHelper helper = BackBoxHelper.getInstance();
+					helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
+					helper.getConfiguration().setDefaultDownloadSpeed(downSpeed);
+					
+					if (newLevel != null) {
+						Logger.getLogger("it.backbox").setLevel(newLevel);
+						helper.getConfiguration().setLogLevel(newLevel.getName());
+					}
+					
+					helper.getConfiguration().setAutoUploadConf(chckbxAutoUpload.isSelected());
+					
+					ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
+					helper.setProxyConfiguration(pc);
+					
+					helper.getConfiguration().setProxyConfiguration(pc);
+					//after restart, the new size will be read
+					helper.getConfiguration().setLogSize((int) logSize.getValue() * 1024);
+					helper.saveConfiguration();
+					
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
 							setVisible(false);
-						} catch (Exception e) {
+						}
+					});
+				} catch (final Exception e) {
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
 							setVisible(true);
 							GuiUtility.handleException(panel, "Error setting preferences", e);
 						}
-						
-						SwingUtilities.invokeLater(new Runnable() {
-		                    public void run() {
-		                    	main.hideLoading();
-		                    }
-		                });
-					}
-				};
-				worker.start();
+					});
+					
+				}
+				
 			}
 		});
 		okButton.setActionCommand("OK");
@@ -200,6 +213,8 @@ public class PreferencesDialog extends JDialog {
 	}
 
 	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, Level logLevel, int logSize, boolean autoUpload) {
+		GuiUtility.checkEDT(true);
+		
 		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
 		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, new Integer(0), null, new Integer(1)));
 		

@@ -11,7 +11,6 @@ import javax.swing.JTree;
 import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 import it.backbox.bean.File;
 import it.backbox.gui.model.FileBrowserTreeNode.TreeNodeType;
@@ -33,15 +32,20 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 	@Override
 	public void valueChanged(TreeSelectionEvent e) {
 		JTree tree = (JTree) e.getSource();
-		tree.setEnabled(false);
 
 		try {
 			FileBrowserTreeNode node = (FileBrowserTreeNode) e.getPath().getLastPathComponent();
 			if (node == null)
 				return;
 
+			FileBrowserTreeNode parent = (FileBrowserTreeNode) node.getParent();
+			if (parent == null)
+				return;
+			
+			tree.setEnabled(false);
+			
 			// update structure
-			if (((DefaultMutableTreeNode) node.getParent()).isRoot() && node.isLeaf()) {
+			if (parent.isRoot() && node.isLeaf()) {
 				String alias = (String) node.getUserObject();
 				List<File> list = helper.getFiles(alias);
 				FileBrowserTreeModel model = (FileBrowserTreeModel) tree.getModel();
@@ -52,10 +56,11 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 					FileBrowserTreeNode cnode = node;
 					int i = 0;
 					for (; i < splitted.length - 1; i++) {
-						Enumeration cc = cnode.children();
+						@SuppressWarnings("unchecked")
+						Enumeration<FileBrowserTreeNode> cc = cnode.children();
 						boolean found = false;
 						while (cc.hasMoreElements()) {
-							FileBrowserTreeNode n = (FileBrowserTreeNode) cc.nextElement();
+							FileBrowserTreeNode n = cc.nextElement();
 							Object o = n.getUserObject();
 							if (o instanceof String) {
 								String u = (String) o;
@@ -88,6 +93,8 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 	}
 
 	private static void updateTable(final FileBrowserTableModel model, final FileBrowserTreeNode node) {
+		GuiUtility.checkEDT(true);
+		
 		SwingWorker<Void, FileBrowserTreeNode> worker = new SwingWorker<Void, FileBrowserTreeNode>() {
 
 			@Override
@@ -101,9 +108,10 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 					publish(fp);
 				}
 				
-				Enumeration cc = node.children();
+				@SuppressWarnings("unchecked")
+				Enumeration<FileBrowserTreeNode> cc = node.children();
 				while (cc.hasMoreElements()) 
-					publish((FileBrowserTreeNode) cc.nextElement());
+					publish(cc.nextElement());
 
 				return null;
 			}

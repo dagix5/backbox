@@ -1,9 +1,5 @@
 package it.backbox.gui;
 
-import it.backbox.gui.bean.TableTask;
-import it.backbox.gui.utility.GuiUtility;
-import it.backbox.transaction.task.Transaction;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -18,6 +14,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
+import it.backbox.gui.utility.GuiUtility;
+import it.backbox.transaction.task.Task;
+import it.backbox.transaction.task.Transaction;
 import net.miginfocom.swing.MigLayout;
 
 public class DetailsDialog extends JDialog {
@@ -33,53 +32,70 @@ public class DetailsDialog extends JDialog {
 	private JLabel lblStatusValue;
 	private JLabel lblTotalTimeValue;
 	private JTextPane txtResult;
+	private JButton btnNext;
+	private JButton btnPrev;
 	
-	private List<TableTask> tasks;
+	private List<Transaction> transactions;
+	private List<Task> tasks;
 	private List<Integer> allIndexes;
 	private int selectedIndex;
 
-	public void load(List<TableTask> tasks, int selectedIndex, List<Integer> allIndexes) {
+	public void load(List<Transaction> transactions, List<Task> tasks, int selectedIndex, List<Integer> allIndexes) {
+		GuiUtility.checkEDT(true);
+		
+		this.transactions = transactions;
 		this.tasks = tasks;
 		this.allIndexes = allIndexes;
 		this.selectedIndex = selectedIndex;
 		
-		updateDetails(tasks.get(allIndexes.get(selectedIndex)));
+		updateDetails(selectedIndex);
 	}
 	
-	private void updateDetails(TableTask tbt) {
-		lblTransactionIdValue.setText(tbt.getTransaction().getId());
-		lblTaskIdValue.setText(tbt.getTask().getId());
-		String fn = tbt.getTask().getDescription();
+	private void updateDetails(int selectedIndex) {
+		Transaction transaction = transactions.get(allIndexes.get(selectedIndex));
+		Task task = tasks.get(allIndexes.get(selectedIndex));
+		lblTransactionIdValue.setText(transaction.getId());
+		lblTaskIdValue.setText(task.getId());
+		String fn = task.getDescription();
 		if (fn.length() > 53)
 			fn = new StringBuilder(fn.substring(0, 24)).append("...").append(fn.substring(fn.length() - 25)).toString();
 		lblFilenameValue.setText(fn);
-		lblOperationValue.setText(GuiUtility.getTaskType(tbt.getTask()));
-		lblSizeValue.setText(GuiUtility.getTaskSize(tbt.getTask()).getHsize());
+		lblOperationValue.setText(GuiUtility.getTaskType(task));
+		lblSizeValue.setText(GuiUtility.getTaskSize(task).getHsize());
 		txtResult.setText("");
-		if (tbt.getTransaction().getResultCode() == Transaction.NO_ESITO)
+		if (transaction.getResultCode() == Transaction.NO_ESITO)
 			lblStatusValue.setText("Not executed");
-		else if (tbt.getTransaction().getResultCode() == Transaction.ESITO_KO) {
+		else if (transaction.getResultCode() == Transaction.ESITO_KO) {
 			lblStatusValue.setText("Error");
-			txtResult.setText(tbt.getTransaction().getResultDescription());
-		} else if (tbt.getTransaction().getResultCode() == Transaction.ESITO_OK)
+			txtResult.setText(transaction.getResultDescription());
+		} else if (transaction.getResultCode() == Transaction.ESITO_OK)
 			lblStatusValue.setText("Success");
-		lblTotalTimeValue.setText(GuiUtility.getTimeString(tbt.getTask().getTotalTime() / 1000));
+		lblTotalTimeValue.setText(GuiUtility.getTimeString(task.getTotalTime() / 1000));
+		
+		if (selectedIndex == 0)
+			btnPrev.setEnabled(false);
+		if (selectedIndex == allIndexes.size() - 1)
+			btnNext.setEnabled(false);
 	}
 	
 	private void prev() {
+		btnNext.setEnabled(true);
 		if (selectedIndex > 0)
-			updateDetails(tasks.get(allIndexes.get(--selectedIndex)));
+			updateDetails(--selectedIndex);
 	}
 	
 	private void next() {
+		btnPrev.setEnabled(true);
 		if (selectedIndex < allIndexes.size() - 1)
-			updateDetails(tasks.get(allIndexes.get(++selectedIndex)));
+			updateDetails(++selectedIndex);
 	}
 	
 	/**
 	 * Create the dialog.
 	 */
 	public DetailsDialog() {
+		GuiUtility.checkEDT(true);
+		
 		setResizable(false);
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		setTitle("Details");
@@ -152,14 +168,14 @@ public class DetailsDialog extends JDialog {
 			}
 		});
 		
-		JButton btnNext = new JButton("Next");
+		btnNext = new JButton("Next");
 		btnNext.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				next();
 			}
 		});
 		
-		JButton btnPrev = new JButton("Prev");
+		btnPrev = new JButton("Prev");
 		btnPrev.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				prev();

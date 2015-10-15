@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 
 public class GuiUtility {
 	
@@ -109,6 +110,8 @@ public class GuiUtility {
 	}
 	
 	public static void addPopup(Component component, final JPopupMenu popup) {
+		GuiUtility.checkEDT(true);
+		
 		final JTable table = (JTable) component;
 		
 		component.addMouseListener(new MouseAdapter() {
@@ -140,4 +143,8 @@ public class GuiUtility {
 		});
 	}
 	
+	public static void checkEDT(boolean shouldbe) {
+		boolean isEDT = SwingUtilities.isEventDispatchThread();
+		assert(!isEDT ^ shouldbe);
+	}
 }

@@ -64,20 +64,29 @@ public class BackBoxHelper {
 	
 	public static final String DB_FILE = "backbox.db";
 	public static final String DB_FILE_TEMP = "backbox.db.temp";
-	
 	public static final String CONFIG_FILE = "config.json";
-	
 	private static final int DEFAULT_LOG_SIZE = 2097152;
-	
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
-	private Configuration configuration;
-	
 	private static final Set<String> ex = new HashSet<>();
+
+	private static BackBoxHelper instance;
+	
+	private static Configuration configuration;
 	
 	protected ISecurityManager sm;
 	protected IDBManager dbm;
 	protected TransactionManager tm;
 	protected IBoxManager bm;
+	
+	public static BackBoxHelper getInstance() {
+		if (instance == null)
+			instance = new BackBoxHelper();
+		return instance;
+	}
+	
+	private BackBoxHelper() {
+		
+	}
 	
 	/**
 	 * Get the transaction manager
@@ -96,13 +105,15 @@ public class BackBoxHelper {
 	 * @return Configuration bean
 	 * @throws IOException
 	 */
-	public Configuration getConfiguration() throws IOException {
+	public void loadConfiguration() throws IOException {
+		GuiUtility.checkEDT(false);
+		
 		if (configuration == null) {
 			try {
 				if (Files.exists(Paths.get(CONFIG_FILE))) {
 					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 					configuration = parser.parseAndClose(new FileReader(CONFIG_FILE), Configuration.class);
-					return configuration;
+					return;
 				}
 			} catch (FileNotFoundException e) {
 				_log.log(Level.SEVERE, "Configuration file not found", e);
@@ -113,6 +124,9 @@ public class BackBoxHelper {
 			configuration.setLogLevel(Level.OFF.getName());
 			configuration.setLogSize(2097152);
 		}
+	}
+	
+	public Configuration getConfiguration() {
 		return configuration;
 	}
 	
@@ -122,6 +136,8 @@ public class BackBoxHelper {
 	 * @throws IOException
 	 */
 	public void saveConfiguration() throws IOException {
+		GuiUtility.checkEDT(false);
+		
 		Files.write(Paths.get(CONFIG_FILE), JSON_FACTORY.toByteArray(configuration));
 	}
 	
@@ -155,6 +171,8 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void uploadConf(boolean force) throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		if (!confExists())
 			throw new BackBoxException("Configuration not found");
 		
@@ -186,6 +204,8 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void downloadConf() throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		logout();
 		
 		if (bm == null)
@@ -221,6 +241,8 @@ public class BackBoxHelper {
 	 * @throws BackBoxException
 	 */
 	public void addBackupFolder(Folder folder) throws IOException, RestException, BackBoxException {
+		GuiUtility.checkEDT(false);
+		
 		if (bm == null)
 			throw new BackBoxException("BoxManager null");
 
@@ -263,7 +285,7 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 * @throws BackBoxException 
 	 */
-	private void editBackupFolder(int index, Folder folder) throws IOException, RestException, BackBoxException {	
+	private void editBackupFolder(int index, Folder folder) throws IOException {	
 		getConfiguration().getBackupFolders().set(index, folder);
 		saveConfiguration();
 	}
@@ -277,7 +299,9 @@ public class BackBoxHelper {
 	 * @throws BackBoxException 
 	 * @throws RestException 
 	 */
-	public void updateBackupFolders(List<Folder> folders) throws IOException, RestException, BackBoxException {
+	public void updateBackupFolders(List<Folder> folders) throws IOException, BackBoxException, RestException {
+		GuiUtility.checkEDT(false);
+		
 		for (int i = 0; i < folders.size(); i++) {
 			Folder f1 = folders.get(i);
 			boolean found = false;
@@ -316,6 +340,8 @@ public class BackBoxHelper {
 	 *            Proxy configuration
 	 */
 	public void setProxyConfiguration(ProxyConfiguration pc) throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		if (bm != null)
 			bm.setRestClient(new RestClient(pc));
 			
@@ -331,6 +357,8 @@ public class BackBoxHelper {
 	 * @throws Exception 
 	 */
 	public void login(String password) throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		if (getConfiguration().isEmpty())
 			throw new BackBoxException("Configuration not found.");
 
@@ -388,6 +416,8 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void register(String password, List<Folder> backupFolders, int chunksize) throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		logout();
 		
 		if (Files.exists(Paths.get(DB_FILE)))
@@ -450,6 +480,8 @@ public class BackBoxHelper {
 	 * @throws InvalidKeyException
 	 */
 	public void logout() throws SQLException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		if (dbm != null)
 			dbm.closeDB();
 		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {
@@ -478,6 +510,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<it.backbox.bean.File> getAllFiles() throws SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		List<it.backbox.bean.File> ret = new ArrayList<>();
 		
 		for (Folder folder : getConfiguration().getBackupFolders()) {
@@ -500,6 +534,8 @@ public class BackBoxHelper {
 	 * @throws IOException
 	 */
 	public List<it.backbox.bean.File> getFiles(String folderAlias) throws SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		List<it.backbox.bean.File> ret = new ArrayList<>();
 
 		Map<String, Map<String, it.backbox.bean.File>> map = dbm.getFolderRecords(folderAlias, false);
@@ -522,6 +558,8 @@ public class BackBoxHelper {
 	 * @throws RestException
 	 */
 	public List<it.backbox.bean.File> getRemotelyDeletedFiles(boolean deleteFromDB) throws IOException, SQLException, BackBoxException, RestException {
+		GuiUtility.checkEDT(false);
+		
 		List<it.backbox.bean.File> deleted = new ArrayList<>();
 		
 		List<it.backbox.bean.File> records = dbm.getAllFiles();
@@ -558,6 +596,8 @@ public class BackBoxHelper {
 	 * @throws SQLException 
 	 */
 	public Transaction downloadFile(String key, String downloadPath, boolean startNow) throws SQLException {
+		GuiUtility.checkEDT(false);
+		
 		it.backbox.bean.File file = dbm.getFileRecord(key);
 		
 		Transaction t = new Transaction();
@@ -589,6 +629,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> restoreAll(String restoreFolder) throws BackBoxException, SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		List<Transaction> tt = new ArrayList<>();
 		
 		for (Folder backupFolder : getConfiguration().getBackupFolders())
@@ -612,6 +654,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> restore(String restoreFolder, Folder backupFolder, boolean startNow) throws BackBoxException, SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		if (restoreFolder == null)
 			throw new BackBoxException("Restore path not specified");
 		
@@ -696,6 +740,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> backupAll() throws SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		List<Transaction> tt = new ArrayList<>();
 		
 		for (Folder backupFolder : getConfiguration().getBackupFolders())
@@ -716,6 +762,8 @@ public class BackBoxHelper {
 	 * @throws IOException 
 	 */
 	public List<Transaction> backup(Folder backupFolder, boolean startNow) throws SQLException, IOException {
+		GuiUtility.checkEDT(false);
+		
 		List<Transaction> tt = new ArrayList<>();
 		
 		FileCompare c = new FileCompare(dbm.getFolderRecords(backupFolder.getAlias(), true), Paths.get(backupFolder.getPath()), ex);
@@ -794,6 +842,8 @@ public class BackBoxHelper {
 	 * @throws SQLException 
 	 */
 	public Transaction delete(String key, boolean startNow) throws SQLException {
+		GuiUtility.checkEDT(false);
+		
 		it.backbox.bean.File file = dbm.getFileRecord(key);
 		
 		Transaction t = new Transaction();
@@ -821,6 +871,8 @@ public class BackBoxHelper {
 	 * @throws Exception
 	 */
 	public void buildDB(String password) throws Exception {
+		GuiUtility.checkEDT(false);
+		
 		if (getConfiguration().isEmpty())
 			throw new BackBoxException("Configuration not found.");
 
@@ -877,6 +929,8 @@ public class BackBoxHelper {
 	 * @throws BackBoxException
 	 */
 	public long getFreeSpace() throws IOException, RestException, BackBoxException {
+		GuiUtility.checkEDT(false);
+		
 		if (bm != null)
 			return bm.getFreeSpace();
 		throw new BackBoxException("BoxManager null");
