@@ -129,10 +129,16 @@ public class RestClient implements IRestClient {
 			if (_log.isLoggable(Level.INFO)) _log.info("HTTP response exception throwed");
 			String message = new StringBuilder(request.getRequestMethod()).append(' ').append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
 			BoxError error = null;
-			if (e.getContent() != null) {
-				if (_log.isLoggable(Level.FINE)) _log.fine("Response KO: " + e.getContent());
+			String content = e.getContent();
+			if (content != null) {
+				if (_log.isLoggable(Level.FINE)) _log.fine("Response KO: " + content);
+				//TODO WORKAROUND Box.com issue (when 409 of a folder, conflicts is an array; when 409 of a file, conflicts is an object)
+				if (e.getStatusCode() == 409) {
+					if (content.contains("\"conflicts\":{"))
+						content = content.replace("\"conflicts\":{", "\"conflict\":{");
+				}
 				JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-				error = parser.parseAndClose(new StringReader(e.getContent()), BoxError.class);
+				error = parser.parseAndClose(new StringReader(content), BoxError.class);
 			}
 			throw new RestException(message, e, error);
 		} 

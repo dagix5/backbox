@@ -75,12 +75,11 @@ public class BoxManager implements IBoxManager {
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
 				if (_log.isLoggable(Level.WARNING)) _log.warning(folderName + " exists");
 				BoxError error = e.getError();
-				if ((error != null) && 
-						(error.context_info != null) && 
-						(error.context_info.conflicts != null) &&
-						(error.context_info.conflicts.id != null) &&
-						!error.context_info.conflicts.id.isEmpty())
-					return error.context_info.conflicts.id;
+				BoxFile file = getBoxFileFromConflict(error);
+				if (file == null)
+					return null;
+				else
+					return file.id;
 			} else
 				throw e;
 		}
@@ -212,12 +211,8 @@ public class BoxManager implements IBoxManager {
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
 				if (_log.isLoggable(Level.INFO)) _log.info("Uploading new version");
 				BoxError error = e.getError();
-				if ((error != null) &&
-						(error.context_info != null) &&
-						(error.context_info.conflicts != null) &&
-						(error.context_info.conflicts.id != null) &&
-						!error.context_info.conflicts.id.isEmpty()) {
-					BoxFile conflict = error.context_info.conflicts;
+				BoxFile conflict = getBoxFileFromConflict(error);
+				if (conflict != null) {
 					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + conflict.id);
 					if ((conflict.sha1 != null) &&
 							!conflict.sha1.isEmpty() &&
@@ -318,5 +313,17 @@ public class BoxManager implements IBoxManager {
 			throw e;
 		}
 		return true;
+	}
+	
+	private BoxFile getBoxFileFromConflict(BoxError error) {
+		if ((error != null) && (error.context_info != null)) {
+			if ((error.context_info.conflicts != null) && (error.context_info.conflicts.length > 0)
+					&& (error.context_info.conflicts[0].id != null) && !error.context_info.conflicts[0].id.isEmpty())
+				return error.context_info.conflicts[0];
+			else if ((error.context_info.conflict != null) && (error.context_info.conflict.id != null)
+					&& !error.context_info.conflict.id.isEmpty())
+				return error.context_info.conflict;
+		}
+		return null;
 	}
 }

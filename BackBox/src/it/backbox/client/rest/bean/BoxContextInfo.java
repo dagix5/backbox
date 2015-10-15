@@ -5,5 +5,8 @@ import com.google.api.client.util.Key;
 public class BoxContextInfo {
 
 	@Key
-	public BoxFile conflicts;
+	public BoxFile[] conflicts;
+	
+	@Key
+	public BoxFile conflict;
 }
