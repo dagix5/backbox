@@ -113,7 +113,7 @@ public class BackBoxGui {
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
-	private Map<String, Integer> taskKeys;
+	private Map<String, Integer> taskRow;
 	private boolean connected = false;
 	private boolean running = false;
 	private boolean pending = false;
@@ -306,13 +306,13 @@ public class BackBoxGui {
 		GuiUtility.checkEDT(true);		
 		
 		final DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
-		taskKeys = new HashMap<String, Integer>();
+		taskRow = new HashMap<String, Integer>();
 		if (transactions != null) {
 			for (Transaction tt : transactions)
 				for (final Task t : tt.getTasks()) {
 					model.addRow(new Object[] {t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t), "", tt, t});
 					
-					taskKeys.put(t.getId(), model.getRowCount() - 1);
+					taskRow.put(t.getId(), model.getRowCount() - 1);
 				}
 		}
 		pending = ((transactions != null) && !transactions.isEmpty());
@@ -334,20 +334,18 @@ public class BackBoxGui {
 		
 		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		for (Task task : transaction.getTasks()) {
-			if (!taskKeys.containsKey(task.getId()))
+			if (!taskRow.containsKey(task.getId()))
 				break;
-			final Integer row = taskKeys.get(task.getId());
+			final Integer row = taskRow.get(task.getId());
 			final short resultCode = transaction.getResultCode();
 			
 			model.setValueAt(transaction, row, PreviewTableModel.TRANSACTION_COLUMN_INDEX);
 			model.setValueAt(task, row, PreviewTableModel.TASK_COLUMN_INDEX);
 			
-			if (resultCode == Transaction.ESITO_KO)
+			if (resultCode < 0)
 				model.setValueAt(GuiConstant.RESULT_ERROR, row, PreviewTableModel.RESULT_COLUMN_INDEX);
-			else if (resultCode == Transaction.ESITO_OK)
+			else if (resultCode == Transaction.Result.OK)
 				model.setValueAt(GuiConstant.RESULT_SUCCESS, row, PreviewTableModel.RESULT_COLUMN_INDEX);
-			
-			
 		}
 	}
 	
@@ -783,7 +781,7 @@ public class BackBoxGui {
 							boolean error = false;
 							for (Transaction t : result) {
 								updateTableResult(t);
-								if (t.getResultCode() == Transaction.ESITO_KO)
+								if (t.getResultCode() < 0)
 									error = true;
 							}
 						

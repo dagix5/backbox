@@ -63,12 +63,15 @@ public class DetailsDialog extends JDialog {
 		lblOperationValue.setText(GuiUtility.getTaskType(task));
 		lblSizeValue.setText(GuiUtility.getTaskSize(task).getHsize());
 		txtResult.setText("");
-		if (transaction.getResultCode() == Transaction.NO_ESITO)
+		if (transaction.getResultCode() == Transaction.Result.NO_RESULT)
 			lblStatusValue.setText("Not executed");
-		else if (transaction.getResultCode() == Transaction.ESITO_KO) {
+		else if (transaction.getResultCode() == Transaction.Result.KO) {
 			lblStatusValue.setText("Error");
 			txtResult.setText(transaction.getResultDescription());
-		} else if (transaction.getResultCode() == Transaction.ESITO_OK)
+		} else if (transaction.getResultCode() == Transaction.Result.ROLLBACK) {
+			lblStatusValue.setText("Rollback");
+			txtResult.setText(transaction.getResultDescription());
+		} else if (transaction.getResultCode() == Transaction.Result.OK)
 			lblStatusValue.setText("Success");
 		lblTotalTimeValue.setText(GuiUtility.getTimeString(task.getTotalTime() / 1000));
 		
