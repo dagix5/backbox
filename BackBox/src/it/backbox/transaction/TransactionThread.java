@@ -4,6 +4,7 @@ import it.backbox.exception.BackBoxException;
 import it.backbox.transaction.task.Task;
 import it.backbox.transaction.task.Transaction;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,22 +35,37 @@ public class TransactionThread implements Runnable {
 	@Override
 	public void run() {
 		boolean inError = false;
-		for (Task task : t.getTasks()) {
-			if (_log.isLoggable(Level.INFO)) _log.info(task.getDescription() + "-> start");
+		ArrayList<Task> tasks = t.getTasks();
+		for (int i = 0; i < tasks.size(); i++) {
+			currentTask = tasks.get(i);
+			if (_log.isLoggable(Level.INFO)) _log.info(currentTask.getDescription() + "-> start");
 			
 			long start = new Date().getTime();
 			try {
 				if (stop)
 					throw new BackBoxException("Interrupted");
-				currentTask = task;
 				
 				currentTask.run();
 				if (currentTask.isCountWeight())
 					tm.weightCompleted(currentTask.getWeight());
 			} catch (Exception e) {
-				_log.log(Level.SEVERE, new StringBuilder("Error occurred in transaction ").append(t.getId()).append(", task ").append(currentTask.getId()).toString(), e);
-				t.setResultDescription(new StringBuilder("Error during execution task ").append(task.getDescription()).append(": ").append(e.toString()).toString());
-				t.setResultCode(Transaction.ESITO_KO);
+				_log.log(Level.SEVERE, "Error occurred in transaction " + t.getId() + ", task " + currentTask.getId(), e);
+				int rollbackError = -1;
+				for (int j = 0; j < i; j++) {
+					Task task = tasks.get(j);
+					if (!task.rollback()) {
+						if (rollbackError > -1)
+							rollbackError = j;
+						_log.log(Level.WARNING, "Rollback failed at task: " + task.getId());
+					}
+				}
+				if (rollbackError == -1) {
+					t.setResultDescription("Rollback at task " + currentTask.getDescription() + ": " + e.toString());
+					t.setResultCode(Transaction.Result.ROLLBACK);
+				} else {
+					t.setResultDescription("Error during execution task " + currentTask.getDescription() + ": " + e.toString() + ". Rollback failed at task " + tasks.get(rollbackError).getDescription());
+					t.setResultCode(Transaction.Result.KO);
+				}
 				inError = true;
 			}
 			long finish = new Date().getTime();
@@ -58,10 +74,10 @@ public class TransactionThread implements Runnable {
 			if (inError)
 				break;
 			
-			if (_log.isLoggable(Level.INFO)) _log.info(task.getDescription() + "-> end");
+			if (_log.isLoggable(Level.INFO)) _log.info(currentTask.getDescription() + "-> end");
 		}
 		if (!inError)
-			t.setResultCode(Transaction.ESITO_OK);
+			t.setResultCode(Transaction.Result.OK);
 		tm.taskCompleted(t);
 	}
 	

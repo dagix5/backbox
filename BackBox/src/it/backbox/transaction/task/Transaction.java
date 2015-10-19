@@ -6,10 +6,13 @@ import java.util.ArrayList;
 
 public class Transaction {
 
-	public static final short ESITO_OK = 1;
-	public static final short ESITO_KO = -1;
-	public static final short NO_ESITO = 0;
-
+	public static final class Result {
+		public static final short OK = 1;
+		public static final short KO = -1;
+		public static final short NO_RESULT = 0;
+		public static final short ROLLBACK = -2;
+	}
+	
 	private ArrayList<Task> tasks;
 	private short resultCode;
 	private String resultDescription;

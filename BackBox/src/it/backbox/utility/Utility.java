@@ -136,7 +136,7 @@ public class Utility {
 	
 	/**
 	 * Return the InputStream of data written in a DeferredFileOutputStream. You
-	 * haven't to be aware if the data are in a file or in a byte arrray.
+	 * haven't to be aware if the data are in a file or in a byte array.
 	 * 
 	 * @param out
 	 *            The DeferredFileOutputStream

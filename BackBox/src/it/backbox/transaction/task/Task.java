@@ -133,6 +133,11 @@ public abstract class Task {
 	}
 
 	public abstract void run() throws Exception;
+	
+	public boolean rollback() {
+		_log.warning("Default rollback method, returning false");
+		return false;
+	}
 
 	public File getTempDir() {
 		return tempDir;

@@ -1,5 +1,19 @@
 package it.backbox.transaction.task;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.output.DeferredFileOutputStream;
+import org.apache.commons.lang.StringEscapeUtils;
+
 import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
@@ -8,16 +22,6 @@ import it.backbox.bean.Folder;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.output.DeferredFileOutputStream;
 
 public class UploadTask extends BoxTask {
 	
@@ -30,7 +34,7 @@ public class UploadTask extends BoxTask {
 	private Folder folder;
 	
 	/** Local operation variables */
-	private Chunk chunk;
+	private List<Chunk> chunks;
 	
 	public void setInput(String hash, File file, String relativePath, Folder folder) {
 		this.hash = hash;
@@ -61,7 +65,7 @@ public class UploadTask extends BoxTask {
 		
 		try {
 			long size = file.length();
-			List<Chunk> chunks = new ArrayList<>();
+			chunks = new ArrayList<>();
 			
 			ISplitter s = getSplitter();
 			
@@ -99,13 +103,20 @@ public class UploadTask extends BoxTask {
 				byte[] c = s.splitNextChunk(in, size, totalBytesRead);
 				totalBytesRead += c.length;
 				
-				chunk = new Chunk();
+				final Chunk chunk = new Chunk();
 				chunk.setChunkname(Utility.buildChunkName(hash, i++));
 				chunk.setContent(c);
 				chunk.setChunkhash(DigestUtils.sha1Hex(c));
 				chunk.setSize(c.length);
 				
-				callBox();
+				callBox(new Callable<Void>() {
+					
+					@Override
+					public Void call() throws Exception {
+						getBoxManager().uploadChunk(chunk, folder.getId());
+						return null;
+					}
+				});
 				
 				if ((chunk.getBoxid() == null) || chunk.getBoxid().isEmpty() || (chunk.getBoxid().equals("null")))
 					throw new BackBoxException("Uploaded file ID null");
@@ -113,7 +124,6 @@ public class UploadTask extends BoxTask {
 				chunk.setContent(null);
 				chunks.add(chunk);
 				
-				chunk = null;
 				c = null;
 			}
 			
@@ -125,10 +135,30 @@ public class UploadTask extends BoxTask {
 	}
 
 	@Override
-	protected void boxMethod() throws Exception {
-		getBoxManager().uploadChunk(chunk, folder.getId());
-	}
-	
+	public boolean rollback() {
+		if ((chunks == null) || (chunks.isEmpty())) {
+			_log.info("Nothing to rollback");
+			return false;
+		}
+		
+		try {
+			callBox(new Callable<Void>() {
+
+				@Override
+				public Void call() throws Exception {
+					getBoxManager().deleteChunk(chunks);
+					getDbManager().delete(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(relativePath)), hash);
+					return null;
+				}
+			});
+		} catch (Exception e) {
+			_log.log(Level.WARNING, "Error rollback, deleting chunks " + file.getName());
+			return false;
+		}
+		
+		return true;
+	};
+
 	public boolean isEncryptEnabled() {
 		return encryptEnabled;
 	}

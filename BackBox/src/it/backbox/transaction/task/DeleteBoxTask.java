@@ -1,5 +1,7 @@
 package it.backbox.transaction.task;
 
+import java.util.concurrent.Callable;
+
 import it.backbox.bean.File;
 
 public class DeleteBoxTask extends BoxTask {
@@ -24,7 +26,14 @@ public class DeleteBoxTask extends BoxTask {
 
 	@Override
 	public void run() throws Exception {
-		callBox();
+		callBox(new Callable<Void>() {
+			
+			@Override
+			public Void call() throws Exception {
+				getBoxManager().deleteChunk(file.getChunks());
+				return null;
+			}
+		});
 		
 		getDbManager().delete(file.getFilename(), file.getHash());
 	}
@@ -43,11 +52,6 @@ public class DeleteBoxTask extends BoxTask {
 
 	public void setCompressEnabled(boolean compressEnabled) {
 		this.compressEnabled = compressEnabled;
-	}
-
-	@Override
-	protected void boxMethod() throws Exception {
-		getBoxManager().deleteChunk(file.getChunks());
 	}
 
 }

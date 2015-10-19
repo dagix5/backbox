@@ -3,6 +3,7 @@ package it.backbox.transaction.task;
 import it.backbox.IBoxManager;
 import it.backbox.exception.RestException;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Phaser;
 import java.util.logging.Level;
 
@@ -10,9 +11,7 @@ import com.google.api.client.http.HttpResponseException;
 
 public abstract class BoxTask extends Task {
 
-protected abstract void boxMethod() throws Exception;
-	
-	protected void callBox() throws Exception {
+	protected void callBox(Callable<Void> callable) throws Exception {
 		IBoxManager bm = getBoxManager();
 		Phaser p = getPhaser();
 		
@@ -34,14 +33,14 @@ protected abstract void boxMethod() throws Exception;
 		
 		try {
 			try {
-				boxMethod();
+				callable.call();
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 401)) {
 					if (_log.isLoggable(Level.FINE)) _log.fine("Unauthorized");
 					//retry because at this point the token should already be refreshed
 					if (bm.isAccessTokenValid())
-						boxMethod();
+						callable.call();
 				} else
 					throw e;
 			}

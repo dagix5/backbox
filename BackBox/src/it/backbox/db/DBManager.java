@@ -202,7 +202,7 @@ public class DBManager implements IDBManager {
 			query.append(digest).append('\'');
 			ResultSet rs = statement.executeQuery(query.toString());
 	
-			// check if there are other files with same hash and chunks
+			//TODO check if there are other files with same hash and chunks
 			int i = 0;
 			while (rs.next())
 				i++;

@@ -183,7 +183,7 @@ public class TransactionManager {
 		List<Transaction> tt = new ArrayList<>();
 		while (!getTransactions().isEmpty()) {
 			Transaction t = getTransactions().poll();
-			if (t.getResultCode() != Transaction.NO_ESITO)
+			if (t.getResultCode() != Transaction.Result.NO_RESULT)
 				tt.add(t);
 		}
 		clear();

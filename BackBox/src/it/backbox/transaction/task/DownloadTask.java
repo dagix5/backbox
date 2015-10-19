@@ -13,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -26,7 +27,6 @@ public class DownloadTask extends BoxTask {
 	
 	/** Local operation variables */
 	private byte[] chunkContent;
-	private Chunk chunk;
 	
 	public void setInput(String path, File file) {
 		this.path = path;
@@ -58,16 +58,21 @@ public class DownloadTask extends BoxTask {
 		
 		try {
 			ISplitter s = getSplitter();
-			for (Chunk c : file.getChunks()) {
+			for (final Chunk chunk : file.getChunks()) {
 				if (stop) return;
-				chunk = c;
-				callBox();
+				callBox(new Callable<Void>() {
+					
+					@Override
+					public Void call() throws Exception {
+						chunkContent = getBoxManager().downloadChunk(chunk);
+						return null;
+					}
+				});
 				s.mergeNextChunk(new BufferedInputStream(new ByteArrayInputStream(chunkContent)), out);
 			}
 		} finally {
 			out.close();
 			chunkContent = null;
-			chunk = null;
 		}
 		
 		if (stop) return;
@@ -116,11 +121,6 @@ public class DownloadTask extends BoxTask {
 			in.close();
 			out.close();
 		}
-	}
-
-	@Override
-	protected void boxMethod() throws Exception {
-		chunkContent = getBoxManager().downloadChunk(chunk);
 	}
 
 }
