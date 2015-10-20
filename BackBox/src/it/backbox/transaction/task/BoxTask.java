@@ -20,14 +20,14 @@ public abstract class BoxTask extends Task {
 		if (!bm.isAccessTokenValid()) {
 			if (p.getRegisteredParties() > 0) {
 				int f = p.getPhase();
-				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - waiting -> " + f);
+				if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - waiting -> " + f);
 				int c = p.awaitAdvance(f);
-				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - continuing -> " + c);
+				if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - continuing -> " + c);
 			} else
-				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - no one registered -> not waiting");
+				_log.fine("[" + getId() + "] Phaser - no one registered -> not waiting");
 		} else {
 			int r = p.register();
-			if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - register -> " + r);
+			if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - register -> " + r);
 			registered = true;
 		}
 		
@@ -37,7 +37,7 @@ public abstract class BoxTask extends Task {
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 401)) {
-					if (_log.isLoggable(Level.FINE)) _log.fine("Unauthorized");
+					_log.fine("[" + getId() + "] Box call Unauthorized");
 					//retry because at this point the token should already be refreshed
 					if (bm.isAccessTokenValid())
 						callable.call();
@@ -47,7 +47,7 @@ public abstract class BoxTask extends Task {
 		} finally {
 			if (registered) {
 				int a = p.arriveAndDeregister();
-				if (_log.isLoggable(Level.FINE)) _log.fine("Phaser - arrive -> " + a);
+				if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - arrive -> " + a);
 			}
 		}
 	}

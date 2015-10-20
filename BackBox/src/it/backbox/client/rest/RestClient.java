@@ -51,7 +51,7 @@ public class RestClient implements IRestClient {
 	private static final Logger _log = Logger.getLogger(RestClient.class.getCanonicalName());
 
 	/** Global instance of the HTTP transport. */
-	private static HttpTransport HTTP_TRANSPORT;
+	private HttpTransport HTTP_TRANSPORT;
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -104,7 +104,7 @@ public class RestClient implements IRestClient {
 		
 		credential = OAuth2Client.getCredential(HTTP_TRANSPORT);
 		requestFactory = HTTP_TRANSPORT.createRequestFactory(new RestHttpRequestInitializer());
-		if (_log.isLoggable(Level.INFO)) _log.info("Rest Client init ok");
+		_log.info("Rest Client init ok");
 	}
 	
 	/**
@@ -126,7 +126,7 @@ public class RestClient implements IRestClient {
 			//LOG HERE CLOSE THE RESPONSE CONTENT STREAM, DON'T DO IT
 			//if (_log.isLoggable(Level.FINE)) _log.fine("Response OK: " + response.parseAsString());
 		} catch (HttpResponseException e) {
-			if (_log.isLoggable(Level.INFO)) _log.info("HTTP response exception throwed");
+			_log.info("HTTP response exception throwed");
 			String message = new StringBuilder(request.getRequestMethod()).append(' ').append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
 			BoxError error = null;
 			String content = e.getContent();
@@ -222,7 +222,7 @@ public class RestClient implements IRestClient {
 		} catch (RestException re) {
 			if (re.getHttpException().getStatusCode() != 404)
 				throw re;
-			if (_log.isLoggable(Level.WARNING)) _log.warning(new StringBuilder("Delete file/folder with id ").append(fileID).append(" returned 404").toString());
+			if (_log.isLoggable(Level.WARNING)) _log.warning("Delete file/folder with id " + fileID + " returned 404");
 		}
 	}
 	

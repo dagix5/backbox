@@ -7,14 +7,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.naming.ConfigurationException;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -38,20 +36,18 @@ public class PreferencesDialog extends JDialog {
 
 	private JSpinner defaultUploadSpeed;
 	private JSpinner defaultDownloadSpeed;
-	private JComboBox<Level> cmbLogLevel;
 	private JTextField txtProxyPort;
 	private JTextField txtProxyAddress;
 	private JCheckBox chckbxProxy;
-	private JSpinner logSize;
 	private JCheckBox chckbxAutoUpload;
 	
-	private Level newLevel = null;
-
 	/**
 	 * Create the dialog.
 	 * @throws ConfigurationException 
 	 */
-	public PreferencesDialog() {
+	public PreferencesDialog(JFrame parent) {
+		super(parent);
+		
 		GuiUtility.checkEDT(true);
 		
 		setModalityType(ModalityType.APPLICATION_MODAL);
@@ -74,7 +70,7 @@ public class PreferencesDialog extends JDialog {
 
 		final JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
-		panel.setLayout(new MigLayout("", "[120px:120px][90px:90px][150px:n,grow]", "[][][][][][][][]"));
+		panel.setLayout(new MigLayout("", "[120px:120px][90px:90px][150px:n,grow]", "[][][][][][][]"));
 		
 		JLabel lblDefaultUploadSpeed = new JLabel("Default upload speed");
 		panel.add(lblDefaultUploadSpeed, "cell 0 0,alignx right");
@@ -97,32 +93,6 @@ public class PreferencesDialog extends JDialog {
 		chckbxAutoUpload = new JCheckBox("Auto-Upload configuration on exit");
 		panel.add(chckbxAutoUpload, "cell 1 2 2 1,alignx left,growy");
 		
-		JLabel lblLogLevel = new JLabel("Log level");
-		panel.add(lblLogLevel, "cell 0 3,alignx trailing");
-		
-		cmbLogLevel = new JComboBox<Level>();
-		cmbLogLevel.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent arg0) {
-				newLevel = (Level) arg0.getItem();
-			}
-		});
-		cmbLogLevel.addItem(Level.FINE);
-		cmbLogLevel.addItem(Level.INFO);
-		cmbLogLevel.addItem(Level.WARNING);
-		cmbLogLevel.addItem(Level.SEVERE);
-		cmbLogLevel.addItem(Level.OFF);
-		
-		panel.add(cmbLogLevel, "cell 1 3 2 1,growx");
-		
-		JLabel lblLogSize = new JLabel("Log size");
-		panel.add(lblLogSize, "cell 0 4,alignx right");
-		
-		logSize = new JSpinner();
-		panel.add(logSize, "cell 1 4,grow");
-		
-		JLabel lblKb = new JLabel("KB");
-		panel.add(lblKb, "cell 2 4,alignx left,growy");
-		
 		chckbxProxy = new JCheckBox("Proxy");
 		chckbxProxy.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent arg0) {
@@ -130,22 +100,22 @@ public class PreferencesDialog extends JDialog {
 				txtProxyPort.setEnabled(chckbxProxy.isSelected());
 			}
 		});
-		panel.add(chckbxProxy, "cell 1 5,alignx left,growy");
+		panel.add(chckbxProxy, "cell 1 4,alignx left,growy");
 		
 		JLabel lblProxyAddress = new JLabel("Proxy Address");
-		panel.add(lblProxyAddress, "cell 0 6,alignx trailing");
+		panel.add(lblProxyAddress, "cell 0 5,alignx trailing");
 		
 		txtProxyAddress = new JTextField();
 		txtProxyAddress.setEnabled(false);
-		panel.add(txtProxyAddress, "cell 1 6 2 1,growx");
+		panel.add(txtProxyAddress, "cell 1 5 2 1,growx");
 		txtProxyAddress.setColumns(10);
 		
 		JLabel lblProxyPort = new JLabel("Proxy Port");
-		panel.add(lblProxyPort, "cell 0 7,alignx trailing");
+		panel.add(lblProxyPort, "cell 0 6,alignx trailing");
 		
 		txtProxyPort = new JTextField();
 		txtProxyPort.setEnabled(false);
-		panel.add(txtProxyPort, "cell 1 7 2 1,growx");
+		panel.add(txtProxyPort, "cell 1 6 2 1,growx");
 		Document doc = txtProxyPort.getDocument();
 		if (doc instanceof AbstractDocument) {
 			AbstractDocument abDoc = (AbstractDocument) doc;
@@ -171,19 +141,12 @@ public class PreferencesDialog extends JDialog {
 					helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
 					helper.getConfiguration().setDefaultDownloadSpeed(downSpeed);
 					
-					if (newLevel != null) {
-						Logger.getLogger("it.backbox").setLevel(newLevel);
-						helper.getConfiguration().setLogLevel(newLevel.getName());
-					}
-					
 					helper.getConfiguration().setAutoUploadConf(chckbxAutoUpload.isSelected());
 					
 					ProxyConfiguration pc = new ProxyConfiguration(chckbxProxy.isSelected(), txtProxyAddress.getText(), (txtProxyPort.getText().isEmpty() ? 0 : Integer.parseInt(txtProxyPort.getText())));
 					helper.setProxyConfiguration(pc);
 					
 					helper.getConfiguration().setProxyConfiguration(pc);
-					//after restart, the new size will be read
-					helper.getConfiguration().setLogSize((int) logSize.getValue() * 1024);
 					helper.saveConfiguration();
 					
 					SwingUtilities.invokeLater(new Runnable() {
@@ -212,13 +175,11 @@ public class PreferencesDialog extends JDialog {
 		getRootPane().setDefaultButton(okButton);
 	}
 
-	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, Level logLevel, int logSize, boolean autoUpload) {
+	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, boolean autoUpload) {
 		GuiUtility.checkEDT(true);
 		
 		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
 		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, new Integer(0), null, new Integer(1)));
-		
-		this.logSize.setModel(new SpinnerNumberModel((logSize > 1024) ? logSize / 1024 : 1, new Integer(1), null, new Integer(1)));
 		
 		chckbxAutoUpload.setSelected(autoUpload);
 		
@@ -233,18 +194,6 @@ public class PreferencesDialog extends JDialog {
 			txtProxyPort.setText("");
 		}
 		
-		if (logLevel != null) {
-			if (logLevel.equals(Level.FINE))
-				cmbLogLevel.setSelectedIndex(0);
-			else if (logLevel.equals(Level.INFO))
-				cmbLogLevel.setSelectedIndex(1);
-			else if (logLevel.equals(Level.WARNING))
-				cmbLogLevel.setSelectedIndex(2);
-			else if (logLevel.equals(Level.SEVERE))
-				cmbLogLevel.setSelectedIndex(3);
-			else if (logLevel.equals(Level.OFF))
-				cmbLogLevel.setSelectedIndex(4);
-		}
 	}
 	
 	class DocumentInputFilter extends DocumentFilter {

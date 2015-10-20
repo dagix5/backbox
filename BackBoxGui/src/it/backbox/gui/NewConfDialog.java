@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -37,7 +38,9 @@ public class NewConfDialog extends JDialog {
 	 * Create the dialog.
 	 * @param BackboxGui 
 	 */
-	public NewConfDialog(final BackBoxGui main) {
+	public NewConfDialog(final BackBoxGui main, JFrame parent) {
+		super(parent);
+		
 		GuiUtility.checkEDT(true);
 		
 		setResizable(false);

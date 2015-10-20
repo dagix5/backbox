@@ -65,7 +65,6 @@ public class BackBoxHelper {
 	public static final String DB_FILE = "backbox.db";
 	public static final String DB_FILE_TEMP = "backbox.db.temp";
 	public static final String CONFIG_FILE = "config.json";
-	private static final int DEFAULT_LOG_SIZE = 2097152;
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private static final Set<String> ex = new HashSet<>();
 
@@ -119,10 +118,6 @@ public class BackBoxHelper {
 				_log.log(Level.SEVERE, "Configuration file not found", e);
 			}
 			configuration = new Configuration();
-			
-			// setting default values
-			configuration.setLogLevel(Level.OFF.getName());
-			configuration.setLogSize(2097152);
 		}
 	}
 	
@@ -461,8 +456,6 @@ public class BackBoxHelper {
 		if (_log.isLoggable(Level.INFO)) _log.info("TransactionManager init OK");
 		
 		getConfiguration().setChunkSize(chunksize);
-		
-		getConfiguration().setLogSize(DEFAULT_LOG_SIZE);
 		
 		saveConfiguration();
 	}

@@ -22,11 +22,6 @@ public class Configuration {
 	private String rootFolderID;
 
 	@Key
-	private String logLevel;
-	@Key
-	private int logSize;
-
-	@Key
 	private List<Folder> backupFolders;
 	@Key
 	private ProxyConfiguration proxyConfiguration;
@@ -108,22 +103,6 @@ public class Configuration {
 
 	public boolean isEmpty() {
 		return (pwdDigest == null) || pwdDigest.isEmpty();
-	}
-
-	public String getLogLevel() {
-		return logLevel;
-	}
-
-	public void setLogLevel(String logLevel) {
-		this.logLevel = logLevel;
-	}
-
-	public int getLogSize() {
-		return logSize;
-	}
-
-	public void setLogSize(int logSize) {
-		this.logSize = logSize;
 	}
 
 	public boolean isAutoUploadConf() {

@@ -137,7 +137,8 @@ public class UploadTask extends BoxTask {
 	@Override
 	public boolean rollback() {
 		if ((chunks == null) || (chunks.isEmpty())) {
-			_log.info("Nothing to rollback");
+			if (_log.isLoggable(Level.INFO))
+				_log.info("[" + getId() + "] Nothing to rollback");
 			return false;
 		}
 		
@@ -152,7 +153,8 @@ public class UploadTask extends BoxTask {
 				}
 			});
 		} catch (Exception e) {
-			_log.log(Level.WARNING, "Error rollback, deleting chunks " + file.getName());
+			if (_log.isLoggable(Level.WARNING))
+				_log.log(Level.WARNING, "[" + getId() + "] Error rollback, deleting chunks " + file.getName());
 			return false;
 		}
 		

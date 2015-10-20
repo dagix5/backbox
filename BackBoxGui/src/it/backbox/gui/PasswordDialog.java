@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -34,7 +35,9 @@ public class PasswordDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public PasswordDialog(final BackBoxGui main) {
+	public PasswordDialog(final BackBoxGui main, JFrame parent) {
+		super(parent);
+		
 		GuiUtility.checkEDT(true);
 		
 		setModalityType(ModalityType.APPLICATION_MODAL);

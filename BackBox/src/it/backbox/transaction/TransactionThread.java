@@ -38,7 +38,7 @@ public class TransactionThread implements Runnable {
 		ArrayList<Task> tasks = t.getTasks();
 		for (int i = 0; i < tasks.size(); i++) {
 			currentTask = tasks.get(i);
-			if (_log.isLoggable(Level.INFO)) _log.info(currentTask.getDescription() + "-> start");
+			if (_log.isLoggable(Level.INFO)) _log.info("[" + t.getId() + "] [" + currentTask.getId() + "] " + currentTask.getDescription() + " started");
 			
 			long start = new Date().getTime();
 			try {
@@ -49,14 +49,15 @@ public class TransactionThread implements Runnable {
 				if (currentTask.isCountWeight())
 					tm.weightCompleted(currentTask.getWeight());
 			} catch (Exception e) {
-				_log.log(Level.SEVERE, "Error occurred in transaction " + t.getId() + ", task " + currentTask.getId(), e);
+				_log.log(Level.SEVERE, "[" + t.getId() + "] [" + currentTask.getId() + "] Error", e);
 				int rollbackError = -1;
 				for (int j = 0; j < i; j++) {
 					Task task = tasks.get(j);
 					if (!task.rollback()) {
 						if (rollbackError > -1)
 							rollbackError = j;
-						_log.log(Level.WARNING, "Rollback failed at task: " + task.getId());
+						if (_log.isLoggable(Level.WARNING)) 
+							_log.log(Level.WARNING, "[" + t.getId() + "] [" + currentTask.getId() + "] Rollback failed");
 					}
 				}
 				if (rollbackError == -1) {
@@ -74,7 +75,7 @@ public class TransactionThread implements Runnable {
 			if (inError)
 				break;
 			
-			if (_log.isLoggable(Level.INFO)) _log.info(currentTask.getDescription() + "-> end");
+			if (_log.isLoggable(Level.INFO)) _log.info("[" + t.getId() + "] [" + currentTask.getId() + "] " + currentTask.getDescription() + " end");
 		}
 		if (!inError)
 			t.setResultCode(Transaction.Result.OK);

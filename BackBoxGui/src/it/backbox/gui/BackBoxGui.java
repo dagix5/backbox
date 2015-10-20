@@ -20,10 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -404,12 +402,12 @@ public class BackBoxGui {
 
 		updateStatus();
 		
-		pwdDialog = new PasswordDialog(this);
-		newConfDialog = new NewConfDialog(this);
+		pwdDialog = new PasswordDialog(this, frmBackBox);
+		newConfDialog = new NewConfDialog(this, frmBackBox);
 		loadingDialog = new LoadingDialog(frmBackBox);
-		detailsDialog = new DetailsDialog();
-		preferencesDialog = new PreferencesDialog();
-		configurationDialog = new ConfigurationDialog(this);
+		detailsDialog = new DetailsDialog(frmBackBox);
+		preferencesDialog = new PreferencesDialog(frmBackBox);
+		configurationDialog = new ConfigurationDialog(this, frmBackBox);
 	}
 
 	private final Thread exitThread = new Thread() {
@@ -434,25 +432,6 @@ public class BackBoxGui {
 	private void initializeFrame() {
 		GuiUtility.checkEDT(true);
 		
-		//TODO log4j.xml
-		// Logger configuration
-//		ConsoleHandler ch = new ConsoleHandler();
-//		ch.setLevel(Level.ALL);
-//		_log.addHandler(ch);
-		try {
-			FileHandler fh = new FileHandler("backbox.log", helper.getConfiguration().getLogSize(), 3, true);
-			fh.setFormatter(new SimpleFormatter());
-			fh.setLevel(Level.ALL);
-			_log.addHandler(fh);
-		} catch (SecurityException | IOException e) {
-			GuiUtility.handleException(frmBackBox, "Error open logging file", e);
-		}
-		try {
-			_log.setLevel(Level.parse(helper.getConfiguration().getLogLevel()));
-		} catch (SecurityException | IllegalArgumentException e) {
-			GuiUtility.handleException(frmBackBox, "Error setting logging level", e);
-		}
-		
 		frmBackBox = new JFrame();
 		frmBackBox.setLocationRelativeTo(null);
 		frmBackBox.setSize(750, 700);
@@ -469,7 +448,7 @@ public class BackBoxGui {
 		});
 		
 	}
-
+	
 	private void initializeOp() {
 		GuiUtility.checkEDT(true);
 		
@@ -1124,8 +1103,6 @@ public class BackBoxGui {
 											helper.getConfiguration().getDefaultDownloadSpeed(), 
 											helper.getConfiguration().getProxyConfiguration(), 
 											!running, 
-											Level.parse(helper.getConfiguration().getLogLevel()), 
-											helper.getConfiguration().getLogSize(),
 											helper.getConfiguration().isAutoUploadConf());
 					preferencesDialog.setVisible(true);
 				} catch (Exception e1) {

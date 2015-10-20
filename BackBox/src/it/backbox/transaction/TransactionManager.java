@@ -65,7 +65,7 @@ public class TransactionManager {
 		this.zipper = zipper;
 		
 		this.tempDir = Files.createTempDir();
-		_log.info("Created temp dir: " + tempDir.getAbsolutePath());
+		if (_log.isLoggable(Level.INFO)) _log.info("Created temp dir: " + tempDir.getAbsolutePath());
 		
 		start();
 	}
@@ -103,7 +103,7 @@ public class TransactionManager {
 		}
 
 		getTransactions().add(t);
-		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " added");
+		if (_log.isLoggable(Level.FINE)) _log.fine("Added transaction " + t.getId());
 	}
 	
 	/**
@@ -115,7 +115,7 @@ public class TransactionManager {
 	private void startTransaction(Transaction t) {
 		Runnable tt = new TransactionThread(this, t);
 		executor.execute(tt);
-		if (_log.isLoggable(Level.FINE)) _log.fine(t.getId() + " transaction thread running");
+		if (_log.isLoggable(Level.FINE)) _log.fine("Transaction started " + t.getId());
 	}
 	
 	/**
@@ -219,9 +219,9 @@ public class TransactionManager {
 		if (executor == null)
 			return false;
 		
-		if (_log.isLoggable(Level.INFO)) {
+		if (_log.isLoggable(Level.FINE)) {
 			ThreadPoolExecutor tpEx = (ThreadPoolExecutor) executor;
-			_log.info(String.format("[Executor monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
+			_log.fine(String.format("[Executor monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s",
 					tpEx.getPoolSize(), 
 					tpEx.getCorePoolSize(),
 					tpEx.getActiveCount(),
@@ -232,7 +232,7 @@ public class TransactionManager {
 			
 			Runtime runtime = Runtime.getRuntime();
 			int mb = 1024*1024;
-			_log.info(String.format("[JVM monitor] Used Memory: %d, Free Memory: %d, Total Memory: %d, Max Memory: %d",
+			_log.fine(String.format("[JVM monitor] Used Memory: %d, Free Memory: %d, Total Memory: %d, Max Memory: %d",
 					(runtime.totalMemory() - runtime.freeMemory()) / mb,
 					runtime.freeMemory() / mb,
 					runtime.totalMemory() / mb,

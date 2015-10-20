@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -31,7 +32,9 @@ public class ConfigurationDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public ConfigurationDialog(final BackBoxGui main) {
+	public ConfigurationDialog(final BackBoxGui main, JFrame parent) {
+		super(parent);
+		
 		GuiUtility.checkEDT(true);
 		
 		setModalityType(ModalityType.APPLICATION_MODAL);

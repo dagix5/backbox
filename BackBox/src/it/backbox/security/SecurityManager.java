@@ -1,10 +1,5 @@
 package it.backbox.security;
 
-import it.backbox.ISecurityManager;
-import it.backbox.exception.BackBoxException;
-import it.backbox.exception.BackBoxWrongPasswordException;
-import it.backbox.utility.Utility;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +17,6 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.BadPaddingException;
@@ -38,6 +32,11 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+
+import it.backbox.ISecurityManager;
+import it.backbox.exception.BackBoxException;
+import it.backbox.exception.BackBoxWrongPasswordException;
+import it.backbox.utility.Utility;
 
 public class SecurityManager implements ISecurityManager{
 	private static final Logger _log = Logger.getLogger(SecurityManager.class.getCanonicalName());
@@ -147,7 +146,7 @@ public class SecurityManager implements ISecurityManager{
 	 * @throws InvalidKeySpecException
 	 */
 	private void generateKey(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		if ((password != null) || (salt != null)) {
+		if ((password != null) && (salt != null)) {
 			SecretKeyFactory factory = SecretKeyFactory.getInstance(GEN_KEY_ALGO);
 			KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, GEN_KEY_ITERATIONS, GEN_KEY_LENGTH);
 			SecretKey tmp = factory.generateSecret(spec);
@@ -181,7 +180,7 @@ public class SecurityManager implements ISecurityManager{
 			out.write(c.doFinal());
 			out.flush();
 
-			if (_log.isLoggable(Level.INFO)) _log.info("encrypt ok");
+			_log.info("encrypt ok");
 		} finally {
 			if (in != null)
 				in.close();
@@ -249,7 +248,7 @@ public class SecurityManager implements ISecurityManager{
 			out.write(c.doFinal());
 			out.flush();
 			
-			if (_log.isLoggable(Level.INFO)) _log.info("decrypt ok");
+			_log.info("decrypt ok");
 		} finally {
 			if (in != null)
 				in.close();

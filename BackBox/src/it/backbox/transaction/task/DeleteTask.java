@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 
+import it.backbox.exception.BackBoxException;
+
 public class DeleteTask extends Task {
 	private String srcFolder;
 	private String deletePath;
@@ -30,27 +32,32 @@ public class DeleteTask extends Task {
 
 	@Override
 	public void run() throws Exception {
+		Path dest = Paths.get(deletePath).resolve(Paths.get(this.src));
+		if (dest == null)
+			throw new BackBoxException("Delete path not found");
+		
+		File filedest = dest.toFile();
+		if (!filedest.exists())
+			filedest.mkdirs();
+
 		Path source = Paths.get(srcFolder);
-		Path src = Paths.get(this.src);
-		Path dest = Paths.get(deletePath).resolve(src);
-		if (dest != null) {
-			File filedest = dest.toFile();
-			if (!filedest.exists())
-				filedest.mkdirs();
-		}
 		Path srcPath = source.resolve(this.src); 
 		
 		Files.move(srcPath, dest, StandardCopyOption.REPLACE_EXISTING);
 		
 		Path path = srcPath.getParent();
-		while ((path.getParent() != null) && !path.equals(source)) {
+		while ((path != null) && (path.getParent() != null) && !path.equals(source)) {
 			File file = path.toFile();
-			if (file.exists() && (file.list().length == 0)) {
-				try {
-					Files.delete(path);
-				} catch (NoSuchFileException e) {
-					_log.log(Level.FINE, "Error deleting folder, file already deleted by another thread?",  e);
-					//file already deleted by another thread?
+			if ((file != null) && file.exists()) {
+				String[] list = file.list();
+				if ((list != null) && (list.length == 0)) {
+					try {
+						Files.delete(path);
+					} catch (NoSuchFileException e) {
+						if (_log.isLoggable(Level.WARNING)) 
+								_log.log(Level.WARNING, "[" + getId() + "] Error deleting folder, file already deleted by another thread?", e);
+						// file already deleted by another thread?
+					}
 				}
 			}
 			path = path.getParent();

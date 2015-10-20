@@ -12,7 +12,8 @@ public class BBPhaser extends Phaser {
 	 * @see java.util.concurrent.Phaser#onAdvance(int, int)
 	 */
 	protected boolean onAdvance(int phase, int registeredParties) {
-		if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("Phaser advancing to phase ").append(phase).append(" with ").append(registeredParties).append(" registered threads").toString());
+		if (_log.isLoggable(Level.FINE)) 
+			_log.fine("Phaser advancing to phase " + phase + " with " + registeredParties + " registered threads");
 		//the phaser won't terminate
 		return false;
 	}

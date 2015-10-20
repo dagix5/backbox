@@ -121,7 +121,7 @@ public class BoxManager implements IBoxManager {
 		
 		byte[] content = Utility.read(filename);
 		BoxFile file = upload(n, fileID, content, folderID, DigestUtils.sha1Hex(content));
-		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
+		if (_log.isLoggable(Level.INFO)) _log.info(n + " uploaded with id " + file.id);
 		return file.id;
 	}
 	
@@ -209,19 +209,19 @@ public class BoxManager implements IBoxManager {
 		} catch (RestException e) {
 			HttpResponseException httpe = e.getHttpException();
 			if ((httpe != null) && (httpe.getStatusCode() == 409)) {
-				if (_log.isLoggable(Level.INFO)) _log.info("Uploading new version");
+				_log.info("Uploading new version");
 				BoxError error = e.getError();
 				BoxFile conflict = getBoxFileFromConflict(error);
 				if (conflict != null) {
-					if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, fileID " + conflict.id);
+					if (_log.isLoggable(Level.WARNING)) _log.warning("upload: 409 Conflict, fileID " + conflict.id);
 					if ((conflict.sha1 != null) &&
 							!conflict.sha1.isEmpty() &&
 							(hash != null) &&
 							conflict.sha1.equalsIgnoreCase(hash)) {
 						file = conflict;
-						if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, new file is the same");
+						_log.info("upload: 409 Conflict, new file is the same");
 					} else {
-						if (_log.isLoggable(Level.INFO)) _log.info("upload: 409 Conflict, uploading new version...");
+						_log.info("upload: 409 Conflict, uploading new version...");
 						file = client.upload(name, conflict.id, content, folderID, hash);
 					}
 				} else {
@@ -247,7 +247,7 @@ public class BoxManager implements IBoxManager {
 		String n = ns[ns.length - 1];
 		
 		BoxFile file = upload(n, null, chunk.getContent(), folderID, chunk.getChunkhash());
-		if (_log.isLoggable(Level.INFO)) _log.info(new StringBuilder(n).append(" uploaded with id ").append(file.id).toString());
+		if (_log.isLoggable(Level.INFO)) _log.info(n + " uploaded with id " + file.id);
 		chunk.setBoxid(file.id);
 	}
 	
