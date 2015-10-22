@@ -14,16 +14,16 @@
 
 package it.backbox.client.oauth;
 
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Request;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.handler.AbstractHandler;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.Request;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.handler.AbstractHandler;
 
 /**
  * Runs a Jetty server on a free port, waiting for OAuth to redirect to it with
@@ -45,7 +45,13 @@ public final class LocalServerReceiver implements VerificationCodeReceiver {
 
 	/** Verification code or {@code null} before received. */
 	volatile String code;
-
+	
+	/** Verification error or {@code null} before received. */
+	volatile String error;
+	
+	/** Verification error description or {@code null} before received. */
+	volatile String errorDescription;
+	
 	@Override
 	public String getRedirectUri() throws Exception {
 		server = new Server(PORT);
@@ -59,13 +65,16 @@ public final class LocalServerReceiver implements VerificationCodeReceiver {
 
 	@Override
 	public synchronized String waitForCode() {
-		while (code == null)
+		while ((code == null) && (error == null))
 			try {
 				this.wait();
 			} catch (InterruptedException exception) {
 				// should not happen
 			}
-		return code;
+		if (code != null)
+			return code;
+		else 
+			throw new RuntimeException("Error retrieving OAuth code: " + ((errorDescription != null) ? errorDescription : error));
 	}
 
 	@Override
@@ -91,12 +100,8 @@ public final class LocalServerReceiver implements VerificationCodeReceiver {
 			writeLandingHtml(response);
 			response.flushBuffer();
 			((Request) request).setHandled(true);
-			String error = request.getParameter("error");
-			if (error != null) {
-				System.out.println("Authorization failed. Error: " + error);
-				System.out.println("Quitting.");
-				System.exit(1);
-			}
+			error = request.getParameter("error");
+			errorDescription = request.getParameter("error_description");
 			code = request.getParameter("code");
 			synchronized (LocalServerReceiver.this) {
 				LocalServerReceiver.this.notify();
