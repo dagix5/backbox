@@ -106,7 +106,7 @@ public class BackBoxGui {
 	private JMenuItem mntmConfiguration;
 	private JLabel lblFreeSpaceValue;
 	private JMenuItem mntmCheck;
-	private JMenu mnBackup;
+	private JMenu mntmBackup;
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
@@ -270,19 +270,19 @@ public class BackBoxGui {
 					updateStatus();
 				}
 			});
-			mnBackup.add(mntmFolder);
+			mntmBackup.add(mntmFolder);
 		}
 		
-		mnBackup.setEnabled(true);
+		mntmBackup.setEnabled(true);
 	}
 	
 	public void clearMenu() {
 		GuiUtility.checkEDT(true);
 		
-		for (Component c : mnBackup.getComponents())
-			mnBackup.remove(c);
+		for (Component c : mntmBackup.getComponents())
+			mntmBackup.remove(c);
 		
-		mnBackup.setEnabled(false);
+		mntmBackup.setEnabled(false);
 	}
 	
 	private void updateFileBrowser() {
@@ -368,6 +368,7 @@ public class BackBoxGui {
 		mntmNewConfiguration.setEnabled(!running);
 		mntmConfiguration.setEnabled(connected && !running);
 		mntmCheck.setEnabled(connected && !running);
+		mntmBackup.setEnabled(connected && !running);
 		
 		if (connected && !running && !pending)
 			try {
@@ -395,9 +396,14 @@ public class BackBoxGui {
 		
 		initializeFrame();
 		initializeMenu();
-		initializeFileBrowser();
-		initializeOp();
-
+		Component up = initializeFileBrowser();
+		Component down = initializeOp();
+		JSplitPane splitPane = new JSplitPane(
+                JSplitPane.VERTICAL_SPLIT, up, down);
+		Dimension preferredSize = up.getPreferredSize();
+		Dimension halfSize = new Dimension((int) preferredSize.getWidth(), frmBackBox.getHeight() / 2);
+		up.setMinimumSize(halfSize);
+		frmBackBox.getContentPane().add(splitPane, BorderLayout.CENTER);
 		updateStatus();
 		
 		pwdDialog = new PasswordDialog(this, frmBackBox);
@@ -447,12 +453,11 @@ public class BackBoxGui {
 		
 	}
 	
-	private void initializeOp() {
+	private Component initializeOp() {
 		GuiUtility.checkEDT(true);
 		
 		JPanel pnlOp = new JPanel();
-		frmBackBox.getContentPane().add(pnlOp, BorderLayout.SOUTH);
-		pnlOp.setLayout(new MigLayout("", "[90px:n:90px][90px:n:90px][90px:n:90px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][90px:90px:90px]", "[20px][282.00][]"));
+		pnlOp.setLayout(new MigLayout("", "[90px:n:90px][90px:n:90px][90px:n:90px][40px:40px][35px][201.00,grow][100px:100px:100px][35.00:35.00:35.00][90px:90px:90px]", "[20px][282.00,grow,fill][]"));
 		
 		btnBackupAll = new JButton("Backup All");
 		btnBackupAll.setMnemonic('B');
@@ -797,9 +802,11 @@ public class BackBoxGui {
 		
 		lblEtaValue = new JLabel("");
 		pnlOp.add(lblEtaValue, "cell 8 2");
+		
+		return pnlOp;
 	}
 
-	private void initializeFileBrowser() {
+	private Component initializeFileBrowser() {
 		GuiUtility.checkEDT(true);
 		
 		table = new JTable();
@@ -873,8 +880,6 @@ public class BackBoxGui {
                 treeScroll,
                 scpTable);
 		
-		frmBackBox.getContentPane().add(splitPane, BorderLayout.CENTER);
-		
 		final JPopupMenu popupMenu = new JPopupMenu();
 		GuiUtility.addPopup(table, popupMenu);
 		
@@ -918,6 +923,8 @@ public class BackBoxGui {
 		});
 		popupMenu.add(mntmDownload);
 		popupMenu.add(mntmDelete);
+		
+		return splitPane;
 	}
 
 	private void initializeMenu() {
@@ -948,9 +955,9 @@ public class BackBoxGui {
 		mntmNewConfiguration.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
 		mnFile.add(mntmNewConfiguration);
 		
-		mnBackup = new JMenu("Backup");
-		mnBackup.setEnabled(false);
-		mnFile.add(mnBackup);
+		mntmBackup = new JMenu("Backup");
+		mntmBackup.setEnabled(false);
+		mnFile.add(mntmBackup);
 		
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
