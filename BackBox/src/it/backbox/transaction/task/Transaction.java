@@ -63,5 +63,13 @@ public class Transaction {
 	public void setId(String id) {
 		this.id = id;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Transaction))
+			return super.equals(obj);
+		Transaction t = (Transaction) obj;
+		return t.id.equals(id);
+	}
 
 }

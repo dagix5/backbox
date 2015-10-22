@@ -106,6 +106,13 @@ public class TransactionManager {
 		if (_log.isLoggable(Level.FINE)) _log.fine("Added transaction " + t.getId());
 	}
 	
+	public boolean removeTransaction(Transaction t) {
+		if (isRunning())
+			return false;
+		
+		return getTransactions().remove(t);
+	}
+	
 	/**
 	 * Start a transaction
 	 * 
@@ -239,7 +246,7 @@ public class TransactionManager {
 					runtime.maxMemory() / mb));
 		}
 		
-		return !executor.isTerminated();
+		return !executor.isTerminated() && executor.isShutdown();
 	}
 	
 	/**

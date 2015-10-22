@@ -58,17 +58,28 @@ public class DownloadTask extends BoxTask {
 		
 		try {
 			ISplitter s = getSplitter();
-			for (final Chunk chunk : file.getChunks()) {
+			boolean secondChance = false;
+			for (int i = 0; i < file.getChunks().size();) {
+				final Chunk chunk = file.getChunks().get(i);
 				if (stop) return;
-				callBox(new Callable<Void>() {
-					
-					@Override
-					public Void call() throws Exception {
-						chunkContent = getBoxManager().downloadChunk(chunk);
-						return null;
-					}
-				});
-				s.mergeNextChunk(new BufferedInputStream(new ByteArrayInputStream(chunkContent)), out);
+				try {
+					callBox(new Callable<Void>() {
+						
+						@Override
+						public Void call() throws Exception {
+							chunkContent = getBoxManager().downloadChunk(chunk);
+							return null;
+						}
+					});
+					s.mergeNextChunk(new BufferedInputStream(new ByteArrayInputStream(chunkContent)), out);
+					i++;
+					secondChance = false;
+				} catch (Exception e) {
+					if (secondChance)
+						throw e;
+					_log.warning("[" + getId() +"] Second chance for " + file.getFilename());
+					secondChance = true;
+				}
 			}
 		} finally {
 			out.close();

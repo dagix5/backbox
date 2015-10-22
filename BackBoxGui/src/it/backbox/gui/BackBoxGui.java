@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -15,10 +16,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -111,7 +110,6 @@ public class BackBoxGui {
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
-	private Map<String, Integer> taskRow;
 	private boolean connected = false;
 	private boolean running = false;
 	private boolean pending = false;
@@ -306,15 +304,10 @@ public class BackBoxGui {
 		GuiUtility.checkEDT(true);		
 		
 		final DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
-		taskRow = new HashMap<String, Integer>();
-		if (transactions != null) {
+		if (transactions != null)
 			for (Transaction tt : transactions)
-				for (final Task t : tt.getTasks()) {
+				for (final Task t : tt.getTasks())
 					model.addRow(new Object[] {t.getDescription(), GuiUtility.getTaskSize(t), GuiUtility.getTaskType(t), "", tt, t});
-					
-					taskRow.put(t.getId(), model.getRowCount() - 1);
-				}
-		}
 		pending = ((transactions != null) && !transactions.isEmpty());
 	}
 	
@@ -334,18 +327,21 @@ public class BackBoxGui {
 		
 		DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
 		for (Task task : transaction.getTasks()) {
-			if (!taskRow.containsKey(task.getId()))
-				break;
-			final Integer row = taskRow.get(task.getId());
-			final short resultCode = transaction.getResultCode();
-			
-			model.setValueAt(transaction, row, PreviewTableModel.TRANSACTION_COLUMN_INDEX);
-			model.setValueAt(task, row, PreviewTableModel.TASK_COLUMN_INDEX);
-			
-			if (resultCode < 0)
-				model.setValueAt(GuiConstant.RESULT_ERROR, row, PreviewTableModel.RESULT_COLUMN_INDEX);
-			else if (resultCode == Transaction.Result.OK)
-				model.setValueAt(GuiConstant.RESULT_SUCCESS, row, PreviewTableModel.RESULT_COLUMN_INDEX);
+			for (int i = 0; i < model.getRowCount(); i++) {
+				Task tm = (Task) model.getValueAt(i, PreviewTableModel.TASK_COLUMN_INDEX);
+				if (tm.getId().equals(task.getId())) {
+					short resultCode = transaction.getResultCode();
+					
+					model.setValueAt(transaction, i, PreviewTableModel.TRANSACTION_COLUMN_INDEX);
+					model.setValueAt(task, i, PreviewTableModel.TASK_COLUMN_INDEX);
+					
+					if (resultCode < 0)
+						model.setValueAt(GuiConstant.RESULT_ERROR, i, PreviewTableModel.RESULT_COLUMN_INDEX);
+					else if (resultCode == Transaction.Result.OK)
+						model.setValueAt(GuiConstant.RESULT_SUCCESS, i, PreviewTableModel.RESULT_COLUMN_INDEX);
+					break;
+				}
+			}
 		}
 	}
 	
@@ -581,7 +577,7 @@ public class BackBoxGui {
 		pnlOp.add(scrollPanePreview, "cell 0 1 9 1,grow");
 		
 		tablePreview = new JTable();
-		tablePreview.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tablePreview.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		tablePreview.setModel(new PreviewTableModel());
 		TableColumnModel columnModel = tablePreview.getColumnModel();
 		columnModel.getColumn(0).setPreferredWidth(300);
@@ -604,6 +600,13 @@ public class BackBoxGui {
 					showDetails();
 			}
 		});
+		tablePreview.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_DELETE)
+					deleteTransactions();				
+			}
+		});
 		
 		scrollPanePreview.setViewportView(tablePreview);
 		scrollPanePreview.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -619,7 +622,14 @@ public class BackBoxGui {
 				showDetails();
 			}
 		});
+		JMenuItem mntmDelete = new JMenuItem("Delete");
+		mntmDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				deleteTransactions();
+			}
+		});
 		popupPreviewMenu.add(mntmDetails);
+		popupPreviewMenu.add(mntmDelete);
 		
 		spnCurrentUploadSpeed = new JSpinner();
 		spnCurrentUploadSpeed.addChangeListener(new ChangeListener() {
@@ -1121,10 +1131,6 @@ public class BackBoxGui {
 	private void showDetails() {
 		GuiUtility.checkEDT(true);
 		
-		if (running) {
-			JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
 		loadingDialog.showLoading();
 		Thread worker = new Thread() {
 			public void run() {
@@ -1243,6 +1249,27 @@ public class BackBoxGui {
 				}
 			};
 			worker.start();
+		}
+	}
+
+	private void deleteTransactions() {
+		int[] ss = tablePreview.getSelectedRows();
+		PreviewTableModel model = (PreviewTableModel) tablePreview.getModel();
+		List<Transaction> tToDel = new ArrayList<>();
+		for (int s : ss) {
+			s = tablePreview.convertRowIndexToModel(s);
+			tToDel.add((Transaction) model.getValueAt(s, PreviewTableModel.TRANSACTION_COLUMN_INDEX));
+		}
+		for (Transaction tt : tToDel) {
+			if (!helper.getTransactionManager().removeTransaction(tt))
+				continue;
+			for (Task t : tt.getTasks()) {
+				for (int i = 0; i < model.getRowCount(); i++) {
+					Task tm = (Task) model.getValueAt(i, PreviewTableModel.TASK_COLUMN_INDEX);
+					if (tm.getId().equals(t.getId()))
+						model.removeRow(i);
+				}
+			}
 		}
 	}
 
