@@ -1,5 +1,7 @@
 /target/
-/backbox.db
-/backbox.log.*
-/config.json
-/credentialStore.json
+backbox.db
+backbox.db.temp
+backbox.log.*
+config.json
+credentialStore.json
+*.jardesc

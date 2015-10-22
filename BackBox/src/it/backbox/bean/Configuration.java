@@ -32,6 +32,8 @@ public class Configuration {
 	private String dbFileID;
 	@Key
 	private String confFileID;
+	
+	private boolean modified = false;;
 
 	public String getPwdDigest() {
 		return pwdDigest;
@@ -39,6 +41,7 @@ public class Configuration {
 
 	public void setPwdDigest(String pwdDigest) {
 		this.pwdDigest = pwdDigest;
+		modified = true;
 	}
 
 	public String getSalt() {
@@ -47,6 +50,7 @@ public class Configuration {
 
 	public void setSalt(String salt) {
 		this.salt = salt;
+		modified = true;
 	}
 
 	public int getDefaultUploadSpeed() {
@@ -55,6 +59,7 @@ public class Configuration {
 
 	public void setDefaultUploadSpeed(int defaultUploadSpeed) {
 		this.defaultUploadSpeed = defaultUploadSpeed;
+		modified = true;
 	}
 
 	public int getDefaultDownloadSpeed() {
@@ -63,6 +68,7 @@ public class Configuration {
 
 	public void setDefaultDownloadSpeed(int defaultDownloadSpeed) {
 		this.defaultDownloadSpeed = defaultDownloadSpeed;
+		modified = true;
 	}
 
 	public int getChunkSize() {
@@ -71,6 +77,7 @@ public class Configuration {
 
 	public void setChunkSize(int chunkSize) {
 		this.chunkSize = chunkSize;
+		modified = true;
 	}
 
 	public String getRootFolderID() {
@@ -79,6 +86,7 @@ public class Configuration {
 
 	public void setRootFolderID(String rootFolderID) {
 		this.rootFolderID = rootFolderID;
+		modified = true;
 	}
 
 	public List<Folder> getBackupFolders() {
@@ -89,6 +97,7 @@ public class Configuration {
 
 	public void setBackupFolders(List<Folder> backupFolders) {
 		this.backupFolders = backupFolders;
+		modified = true;
 	}
 
 	public ProxyConfiguration getProxyConfiguration() {
@@ -99,6 +108,7 @@ public class Configuration {
 
 	public void setProxyConfiguration(ProxyConfiguration proxyConfiguration) {
 		this.proxyConfiguration = proxyConfiguration;
+		modified = true;
 	}
 
 	public boolean isEmpty() {
@@ -111,6 +121,7 @@ public class Configuration {
 
 	public void setAutoUploadConf(boolean autoUploadConf) {
 		this.autoUploadConf = autoUploadConf;
+		modified = true;
 	}
 
 	public String getDbFileID() {
@@ -119,6 +130,7 @@ public class Configuration {
 
 	public void setDbFileID(String dbFileID) {
 		this.dbFileID = dbFileID;
+		modified = true;
 	}
 
 	public String getConfFileID() {
@@ -127,6 +139,11 @@ public class Configuration {
 
 	public void setConfFileID(String confFileID) {
 		this.confFileID = confFileID;
+		modified = true;
+	}
+
+	public boolean isModified() {
+		return modified;
 	}
 
 }

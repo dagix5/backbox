@@ -171,8 +171,8 @@ public class BackBoxHelper {
 		if (!confExists())
 			throw new BackBoxException("Configuration not found");
 		
-		if ((dbm != null) && dbm.isModified())
-			force = true;
+		boolean uploadDB = ((dbm != null) && dbm.isModified()) || force;
+		boolean uploadConf = ((configuration != null) && configuration.isModified()) || force;
 		
 		logout();
 		
@@ -183,14 +183,16 @@ public class BackBoxHelper {
 		if ((rootFolderID == null) || rootFolderID.isEmpty())
 			rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
 		
-		if (force) {
+		if (uploadDB) {
 			String id = bm.upload(DB_FILE, getConfiguration().getDbFileID(), rootFolderID);
 			getConfiguration().setDbFileID(id);
 		}
-		String id = bm.upload(CONFIG_FILE, getConfiguration().getConfFileID(), rootFolderID);
-		getConfiguration().setConfFileID(id);
-
-		saveConfiguration();
+		if (uploadConf) {
+			//TODO save conf file id in a different file
+			String id = bm.upload(CONFIG_FILE, getConfiguration().getConfFileID(), rootFolderID);
+			getConfiguration().setConfFileID(id);
+			saveConfiguration();
+		}
 	}
 	
 	/**
