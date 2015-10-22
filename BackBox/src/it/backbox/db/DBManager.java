@@ -331,15 +331,16 @@ public class DBManager implements IDBManager {
 
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IDBManager#getFileRecord(java.lang.String)
+	 * @see it.backbox.IDBManager#getFileRecord(java.lang.String, java.lang.String)
 	 */
 	@Override
-	public it.backbox.bean.File getFileRecord(String key) throws SQLException {
+	public it.backbox.bean.File getFileRecord(String hash, String filename) throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.setQueryTimeout(QUERY_TIMEOUT);
 
 		StringBuilder query = new StringBuilder("select * from files where hash='");
-		query.append(key).append('\'');
+		query.append(hash).append("' and filename='");
+		query.append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename))).append('\'');
 		ResultSet rs = statement.executeQuery(query.toString());
 
 		if (!rs.next()) 
@@ -356,7 +357,7 @@ public class DBManager implements IDBManager {
 		file.setSplitted(rs.getBoolean("splitted"));
 
 		query = new StringBuilder("select * from chunks where filehash='");
-		query.append(key).append('\'');
+		query.append(hash).append('\'');
 
 		rs = statement.executeQuery(query.toString());
 

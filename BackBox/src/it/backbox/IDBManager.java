@@ -58,12 +58,14 @@ public interface IDBManager {
 	/**
 	 * Get the record of a file
 	 * 
-	 * @param key
-	 *            Key of the record
+	 * @param hash
+	 *            Hash of the file
+	 * @param filename
+	 *            Name of the file
 	 * @return The file record
 	 * @throws SQLException
 	 */
-	public it.backbox.bean.File getFileRecord(String key) throws SQLException;
+	public it.backbox.bean.File getFileRecord(String hash, String filename) throws SQLException;
 	
 	/**
 	 * Load all the files information from database

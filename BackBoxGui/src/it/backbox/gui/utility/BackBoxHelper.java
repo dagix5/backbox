@@ -579,19 +579,21 @@ public class BackBoxHelper {
 	/**
 	 * Download a single file
 	 * 
-	 * @param key
-	 *            File key
+	 * @param hash
+	 *            Hash of the file
+	 * @param filename
+	 *            Name of the file
 	 * @param downloadPath
 	 *            Path where download
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
 	 * @return The created transaction
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
-	public Transaction downloadFile(String key, String downloadPath, boolean startNow) throws SQLException {
+	public Transaction downloadFile(String hash, String filename, String downloadPath, boolean startNow) throws SQLException {
 		GuiUtility.checkEDT(false);
 		
-		it.backbox.bean.File file = dbm.getFileRecord(key);
+		it.backbox.bean.File file = dbm.getFileRecord(hash, filename);
 		
 		Transaction t = new Transaction();
 		t.setId(file.getHash());
@@ -766,20 +768,21 @@ public class BackBoxHelper {
 		for (String hash : toUpload.keySet()) {
 			Transaction t = new Transaction();
 			t.setId(hash);
-			boolean first = true;
+			String firstPath = null;
 			for (String path : toUpload.get(hash).keySet()) {
 				if ((c.getRecords().containsKey(hash) && !c.getRecords().get(hash).containsKey(path)) || 
-						(!c.getRecords().containsKey(hash) && !first)) {
-					InsertTask it =  new InsertTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
+						(!c.getRecords().containsKey(hash) && (firstPath != null))) {
+					String otherPath = (firstPath != null) ? firstPath : c.getRecords().get(hash).keySet().iterator().next();
+					InsertTask it =  new InsertTask(hash, c.getFiles().get(hash).get(path), path, otherPath, backupFolder);
 					it.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
 					t.addTask(it);
-				} else if (!c.getRecords().containsKey(hash) && first) {
+				} else if (!c.getRecords().containsKey(hash) && (firstPath == null)) {
 					UploadTask ut = new UploadTask(hash, c.getFiles().get(hash).get(path), path, backupFolder);
 					ut.setWeight(c.getFiles().get(hash).get(path).length());
 					ut.setCountWeight(false);
 					ut.setDescription(new StringBuilder(backupFolder.getAlias()).append('\\').append(path).toString());
 					t.addTask(ut);
-					first = false;
+					firstPath = path;
 				}
 			}
 			if (!t.getTasks().isEmpty()) {
@@ -827,17 +830,19 @@ public class BackBoxHelper {
 	/**
 	 * Delete a file from backup
 	 * 
-	 * @param key
-	 *            Key of the file to delete
+	 * @param hash
+	 *            Hash of the file to delete
+	 * @param filename
+	 *            Name of the file to delete
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
 	 * @return The created transaction
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
-	public Transaction delete(String key, boolean startNow) throws SQLException {
+	public Transaction delete(String hash, String filename, boolean startNow) throws SQLException {
 		GuiUtility.checkEDT(false);
 		
-		it.backbox.bean.File file = dbm.getFileRecord(key);
+		it.backbox.bean.File file = dbm.getFileRecord(hash, filename);
 		
 		Transaction t = new Transaction();
 		t.setId(file.getHash());

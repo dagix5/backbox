@@ -211,6 +211,8 @@ public class BackBoxGui {
 	public void updateMenu() {
 		GuiUtility.checkEDT(true);
 		
+		clearMenu();
+		
 		final List<Folder> folders = helper.getConfiguration().getBackupFolders();
 		for (final Folder f : folders) {
 			JMenuItem mntmFolder = new JMenuItem(f.getAlias());
@@ -885,9 +887,9 @@ public class BackBoxGui {
 					public void run() {
 						List<Transaction> tt = new ArrayList<Transaction>();
 						try {
-							List<String> ids = getSelectedFilesId();
-							for (String id : ids)
-								tt.add(helper.delete(id, false));
+							List<File> fs = getSelectedFiles();
+							for (File f : fs)
+								tt.add(helper.delete(f.getHash(), f.getFilename(), false));
 						} catch (Exception e1) {
 							loadingDialog.hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
@@ -1160,32 +1162,41 @@ public class BackBoxGui {
 		Enumeration<FileBrowserTreeNode> e = node.children();
 		while (e.hasMoreElements()) {
 			FileBrowserTreeNode cnode = e.nextElement();
+			if (cnode.getType() == TreeNodeType.PREV_FOLDER)
+				return;
 			Object obj = cnode.getUserObject();
 			if (obj instanceof String)
 				listAllFiles(cnode, list);
-			else if (obj instanceof File)
+			else if (obj instanceof File) {
 				list.add((File) obj);
+				if (_log.isLoggable(Level.FINE)) {
+					FileBrowserTreeNode c = (FileBrowserTreeNode) cnode.getParent();
+					StringBuilder sb = new StringBuilder("Selected files: \n");
+					while (!c.isRoot()) {
+						sb.insert(0, c.getUserObject() + "->");
+						c = (FileBrowserTreeNode) c.getParent();
+					}
+					_log.fine(sb.toString());
+				}
+			}
 		}
 	}
 	
-	private List<String> getSelectedFilesId() {
+	private List<File> getSelectedFiles() {
 		GuiUtility.checkEDT(false);
 		
 		int[] selectedRows = table.getSelectedRows();
 		FileBrowserTableModel model = (FileBrowserTableModel) table.getModel();
-		List<String> res = new ArrayList<>();
+		List<File> res = new ArrayList<>();
 		for (int i : selectedRows) {
 			int row = table.convertRowIndexToModel(i);
-			String id = model.getId(row);
-			if ((id == null) || id.isEmpty()) {
-				FileBrowserTreeNode node = model.getNode(row);
+			FileBrowserTreeNode node = model.getNode(row);
+			if (node.getType() == TreeNodeType.FOLDER) {
 				List<File> list = new ArrayList<>();
 				listAllFiles(node, list);
-				
-				for (File f : list)
-					res.add(f.getHash());
-			} else
-				res.add(id);
+				res.addAll(list);
+			} else if (node.getType() == TreeNodeType.FILE)
+				res.add((File) node.getUserObject());
 		}
 		return res;
 	}
@@ -1204,9 +1215,9 @@ public class BackBoxGui {
 				public void run() {
 					final List<Transaction> tt = new ArrayList<Transaction>();
 					try {
-						List<String> ids = getSelectedFilesId();
-						for (String id : ids)
-							tt.add(helper.downloadFile(id, fc.getSelectedFile().getCanonicalPath(), false));
+						List<File> fs = getSelectedFiles();
+						for (File f : fs)
+							tt.add(helper.downloadFile(f.getHash(), f.getFilename(), fc.getSelectedFile().getCanonicalPath(), false));
 					} catch (final Exception e1) {
 						SwingUtilities.invokeLater(new Runnable() {
 							

@@ -7,9 +7,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.apache.commons.io.FilenameUtils;
 
 import it.backbox.bean.File;
+import it.backbox.gui.bean.Filename;
 import it.backbox.gui.bean.Size;
 import it.backbox.gui.model.FileBrowserTreeNode.TreeNodeType;
-import it.backbox.gui.bean.Filename;
 import it.backbox.gui.utility.FileUtility;
 import it.backbox.gui.utility.GuiUtility;
 
@@ -17,7 +17,6 @@ public class FileBrowserTableModel extends DefaultTableModel {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final int ID_COLUMN_INDEX = 5;
 	public static final int NODE_COLUMN_INDEX = 6;
 
 	private Class[] columnTypes = new Class[] { Icon.class, Filename.class, Size.class, String.class, String.class,
@@ -33,10 +32,6 @@ public class FileBrowserTableModel extends DefaultTableModel {
 
 	public boolean isCellEditable(int row, int column) {
 		return false;
-	}
-
-	public String getId(int row) {
-		return (String) getValueAt(row, ID_COLUMN_INDEX);
 	}
 
 	public FileBrowserTreeNode getNode(int row) {

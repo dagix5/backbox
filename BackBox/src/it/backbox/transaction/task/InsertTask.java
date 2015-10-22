@@ -11,12 +11,14 @@ public class InsertTask extends Task {
 	private String hash;
 	private File file;
 	private String relativePath;
+	private String otherRelativePath;
 	private Folder folder;
 	
-	public void setInput(String hash, File file, String relativePath, Folder folder) {
+	public void setInput(String hash, File file, String relativePath, String otherRelativePath, Folder folder) {
 		this.hash = hash;
 		this.file = file;
 		this.relativePath = relativePath;
+		this.otherRelativePath = otherRelativePath;
 		this.folder = folder;
 	}
 	
@@ -24,16 +26,16 @@ public class InsertTask extends Task {
 		super();
 	}
 	
-	public InsertTask(String hash, File file, String relativePath, Folder folder) {
+	public InsertTask(String hash, File file, String relativePath, String otherRelativePath, Folder folder) {
 		super();
-		setInput(hash, file, relativePath, folder);
+		setInput(hash, file, relativePath, otherRelativePath, folder);
 	}
 
 	@Override
 	public void run() throws Exception {
 		IDBManager dbm = getDbManager();
 		
-		it.backbox.bean.File f = dbm.getFileRecord(hash);
+		it.backbox.bean.File f = dbm.getFileRecord(hash, otherRelativePath);
 		if (f == null)
 			throw new BackBoxException("DB record not found");
 		
