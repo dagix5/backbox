@@ -3,23 +3,19 @@ package it.backbox.boxcom;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import it.backbox.client.rest.RestClient;
 import it.backbox.progress.ProgressManager;
 import it.backbox.util.TestUtil;
 import it.backbox.utility.Utility;
 
-import java.util.Arrays;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 public class BoxManagerTest {
 
-	private static Logger _log = Logger.getLogger("it.backbox");
-	
 	private static BoxManager bm;
 	
 	private static byte[] plain;
@@ -27,11 +23,6 @@ public class BoxManagerTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		ConsoleHandler ch = new ConsoleHandler();
-		_log.addHandler(ch);
-		ch.setLevel(Level.ALL);
-		_log.setLevel(Level.ALL);
-		
 		bm = new BoxManager(new RestClient());
 		
 		folderID = bm.getBoxID("Test");
