@@ -5,15 +5,15 @@ import java.util.Date;
 
 public class File {
 	public static final String EXT = ".bup";
-	
+
 	private String hash;
 	private String filename;
 	private String folder;
 	private Date timestamp;
 	private long size;
-	private boolean encrypted;
-	private boolean compressed;
-	private boolean splitted;
+	private short encrypted;
+	private short compressed;
+	private short splitted;
 	private ArrayList<Chunk> chunks;
 
 	public String getHash() {
@@ -30,30 +30,6 @@ public class File {
 
 	public void setFilename(String filename) {
 		this.filename = filename;
-	}
-
-	public boolean isEncrypted() {
-		return encrypted;
-	}
-
-	public void setEncrypted(boolean encrypted) {
-		this.encrypted = encrypted;
-	}
-
-	public boolean isCompressed() {
-		return compressed;
-	}
-
-	public void setCompressed(boolean compressed) {
-		this.compressed = compressed;
-	}
-
-	public boolean isSplitted() {
-		return splitted;
-	}
-
-	public void setSplitted(boolean splitted) {
-		this.splitted = splitted;
 	}
 
 	public ArrayList<Chunk> getChunks() {
@@ -88,6 +64,30 @@ public class File {
 
 	public void setFolder(String folder) {
 		this.folder = folder;
+	}
+
+	public short getEncrypted() {
+		return encrypted;
+	}
+
+	public void setEncrypted(short encrypted) {
+		this.encrypted = encrypted;
+	}
+
+	public short getCompressed() {
+		return compressed;
+	}
+
+	public void setCompressed(short compressed) {
+		this.compressed = compressed;
+	}
+
+	public short getSplitted() {
+		return splitted;
+	}
+
+	public void setSplitted(short splitted) {
+		this.splitted = splitted;
 	}
 
 }

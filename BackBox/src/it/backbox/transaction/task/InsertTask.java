@@ -39,7 +39,7 @@ public class InsertTask extends Task {
 		if (f == null)
 			throw new BackBoxException("DB record not found");
 		
-		dbm.insert(file, relativePath, folder.getAlias(), hash, f.getChunks(), f.isEncrypted(), f.isCompressed(), f.isSplitted());
+		dbm.insert(file, relativePath, folder.getAlias(), hash, f.getChunks(), f.getEncrypted(), f.getCompressed(), f.getSplitted());
 		
 	}
 

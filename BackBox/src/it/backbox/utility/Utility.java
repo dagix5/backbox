@@ -11,10 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang.math.RandomUtils;
+
+import it.backbox.ICompress;
 
 public class Utility {
 	
@@ -151,4 +154,25 @@ public class Utility {
 			return new BufferedInputStream(new FileInputStream(out.getFile()));
 	}
 
+	/**
+	 * Checks if an input stream is compressed.
+	 * 
+	 * @param in
+	 *            InputStream to check
+	 * @return true if the stream is gzipped, false otherwise
+	 * @throws IOException 
+	 */
+	public static short getCompressMode(InputStream in) throws IOException {
+		if (!in.markSupported())
+			in = new BufferedInputStream(in);
+		in.mark(2);
+		int magic = in.read() & 0xff | ((in.read() << 8) & 0xff00);
+		in.reset();
+		if (magic == GZIPInputStream.GZIP_MAGIC)
+			return ICompress.GZIP_MODE;
+		else if (magic == 0x504b0304)
+			return ICompress.ZIP_MODE;
+		return ICompress.DISABLED_MODE;
+	}
+	
 }

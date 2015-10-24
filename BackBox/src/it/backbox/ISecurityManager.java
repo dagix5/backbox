@@ -14,6 +14,9 @@ import javax.crypto.NoSuchPaddingException;
 
 public interface ISecurityManager {
 	
+	public static final short DISABLED_MODE = 0;
+	public static final short ENABLED_MODE = 1;
+	
 	/**
 	 * Get the user password digest
 	 * 

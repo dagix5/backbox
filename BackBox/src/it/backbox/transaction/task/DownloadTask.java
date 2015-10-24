@@ -1,14 +1,5 @@
 package it.backbox.transaction.task;
 
-import it.backbox.ICompress;
-import it.backbox.ISecurityManager;
-import it.backbox.ISplitter;
-import it.backbox.bean.Chunk;
-import it.backbox.bean.File;
-import it.backbox.compress.Zipper;
-import it.backbox.exception.BackBoxException;
-import it.backbox.utility.Utility;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -19,6 +10,16 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
+
+import it.backbox.ICompress;
+import it.backbox.ISecurityManager;
+import it.backbox.ISplitter;
+import it.backbox.bean.Chunk;
+import it.backbox.bean.File;
+import it.backbox.compress.GZipper;
+import it.backbox.compress.Zipper;
+import it.backbox.exception.BackBoxException;
+import it.backbox.utility.Utility;
 
 public class DownloadTask extends BoxTask {
 
@@ -88,7 +89,7 @@ public class DownloadTask extends BoxTask {
 		
 		if (stop) return;
 		
-		if (file.isEncrypted()) {
+		if (file.getEncrypted() == ISecurityManager.ENABLED_MODE) {
 			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
 			
@@ -102,23 +103,29 @@ public class DownloadTask extends BoxTask {
 		}
 		
 		if (stop) return;
+
+		InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
+		if (file.getCompressed() == ICompress.UNKNOWN_MODE)
+			file.setCompressed(Utility.getCompressMode(in));
 		
-		if (file.isCompressed()) {
-			InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
+		if (file.getCompressed() != ICompress.DISABLED_MODE) {
 			out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-			
+			ICompress z;
+			if (file.getCompressed() == ICompress.ZIP_MODE)
+				z = new Zipper();
+			else
+				z = new GZipper();
 			try {
-				ICompress z = new Zipper();
 				z.decompress(in, out, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
 			} finally {
 				in.close();
 				out.close();
 			}
+			
+			in = Utility.getInputStream((DeferredFileOutputStream) out);
 		}
 		
 		if (stop) return;
-		
-		InputStream in = Utility.getInputStream((DeferredFileOutputStream) out);
 		
 		if (!file.getHash().equals(DigestUtils.sha1Hex(in)))
 			throw new BackBoxException(filename + ": File integrity check failed");

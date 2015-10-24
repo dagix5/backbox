@@ -19,14 +19,15 @@ import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
 import it.backbox.bean.Folder;
+import it.backbox.compress.GZipper;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
 import it.backbox.utility.Utility;
 
 public class UploadTask extends BoxTask {
 	
-	private boolean encryptEnabled = true;
-	private boolean compressEnabled = true;
+	private short encryptEnabled = ISecurityManager.ENABLED_MODE;
+	private short compressEnabled = ICompress.GZIP_MODE;
 	
 	private String hash;
 	private File file;
@@ -71,8 +72,13 @@ public class UploadTask extends BoxTask {
 			
 			if (stop) { in.close(); out.close(); return; }
 			
-			if (isCompressEnabled()) {
-				ICompress z = new Zipper();
+			if (compressEnabled != ICompress.DISABLED_MODE) {
+				ICompress z;
+				if (compressEnabled == ICompress.ZIP_MODE)
+					z = new Zipper();
+				else
+					z = new GZipper();
+				
 				String filename = file.getCanonicalPath();
 				String name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
 				z.compress(in, out, name);
@@ -85,7 +91,7 @@ public class UploadTask extends BoxTask {
 			
 			if (stop) { in.close(); out.close(); return; }
 			
-			if (isEncryptEnabled()) {
+			if (encryptEnabled == ISecurityManager.ENABLED_MODE) {
 				ISecurityManager sm = getSecurityManager();
 				sm.encrypt(in, out);
 				
@@ -127,7 +133,7 @@ public class UploadTask extends BoxTask {
 				c = null;
 			}
 			
-			getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, isEncryptEnabled(), isCompressEnabled(), (chunks.size() > 1));
+			getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, encryptEnabled, compressEnabled, (short) ((chunks.size() > 1) ? 1 : 0));
 		} finally {
 			in.close();
 			out.close();
@@ -160,21 +166,5 @@ public class UploadTask extends BoxTask {
 		
 		return true;
 	};
-
-	public boolean isEncryptEnabled() {
-		return encryptEnabled;
-	}
-
-	public void setEncryptEnabled(boolean encryptEnabled) {
-		this.encryptEnabled = encryptEnabled;
-	}
-
-	public boolean isCompressEnabled() {
-		return compressEnabled;
-	}
-
-	public void setCompressEnabled(boolean compressEnabled) {
-		this.compressEnabled = compressEnabled;
-	}
 
 }

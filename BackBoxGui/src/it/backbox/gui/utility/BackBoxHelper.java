@@ -912,7 +912,8 @@ public class BackBoxHelper {
 				for (String path : fileInfo.keySet()) {
 					File file = fileInfo.get(path);
 					if (_log.isLoggable(Level.INFO)) _log.info("Insert " + hash + " " + path + " " + chunks.size());
-					dbm.insert(file, path, f.getPath(), hash, chunks, true, true, chunks.size() > 1);
+					//TODO manage different compress/security algorithms
+					dbm.insert(file, path, f.getPath(), hash, chunks, ISecurityManager.ENABLED_MODE, ICompress.UNKNOWN_MODE, (short) ((chunks.size() > 1) ? 1 : 0));
 				}
 			}
 		}

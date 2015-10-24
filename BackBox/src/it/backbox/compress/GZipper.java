@@ -1,8 +1,5 @@
 package it.backbox.compress;
 
-import it.backbox.ICompress;
-import it.backbox.utility.Utility;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,70 +9,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
 
-public class Zipper implements ICompress{
-	private static final Logger _log = Logger.getLogger(Zipper.class.getCanonicalName());
+import it.backbox.ICompress;
+import it.backbox.utility.Utility;
+
+public class GZipper implements ICompress {
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#zip(java.io.InputStream, java.io.OutputStream, java.lang.String)
-	 */
-	@Override
-	public void compress(InputStream in, OutputStream out, String name) throws IOException {
-		ZipOutputStream zout = null;
-		try {
-			zout = new ZipOutputStream(out);
-		
-			ZipEntry entry = new ZipEntry(name);
-			zout.putNextEntry(entry);
-			
-			byte[] buffer = new byte[Utility.BUFFER];
-		    int len;
-	
-		    while((len = in.read(buffer)) >= 0)
-		    	zout.write(buffer, 0, len);
-	
-		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry zipped");
-		} finally {
-		    if (in != null) in.close();
-		    if (zout != null) zout.close();
-		    if (out != null) out.close();
-		}
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#decompress(java.io.InputStream, java.io.OutputStream, java.lang.String)
-	 */
-	@Override
-	public void decompress(InputStream in, OutputStream out, String name) throws IOException {
-		ZipInputStream zin = null;
-		try {
-			zin = new ZipInputStream(in);
-			// Take the first and only entry
-			// Don't check the name entry because it can be different from file name
-			// in case of more file with same content (just one of those was uploaded)
-			zin.getNextEntry();
-			
-			byte[] buffer = new byte[Utility.BUFFER];
-		    int len;
-	
-		    while((len = zin.read(buffer)) >= 0)
-		    	out.write(buffer, 0, len);
-	
-		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry unzipped");
-		} finally {
-		    if (in != null) in.close();
-		    if (zin != null) zin.close();
-		    if (out != null) out.close();
-		}
-	}
-	
+	private static final Logger _log = Logger.getLogger(GZipper.class.getCanonicalName());
+
 	/*
 	 * (non-Javadoc)
 	 * @see it.backbox.ICompress#compress(byte[], java.lang.String)
@@ -132,6 +77,54 @@ public class Zipper implements ICompress{
 		
 		decompress(in, out, name);
 		
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ICompress#compress(java.io.InputStream, java.io.OutputStream, java.lang.String)
+	 */
+	@Override
+	public void compress(InputStream in, OutputStream out, String name) throws IOException {
+		GZIPOutputStream gzout = null;
+		try {
+			gzout = new GZIPOutputStream(out);
+			byte[] buffer = new byte[Utility.BUFFER];
+		    int len;
+	
+		    while((len = in.read(buffer)) >= 0)
+		    	gzout.write(buffer, 0, len);
+		    
+		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry gzipped");
+			
+		} finally {
+		    if (in != null) in.close();
+		    if (gzout != null) gzout.close();
+		    if (out != null) out.close();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see it.backbox.ICompress#decompress(java.io.InputStream, java.io.OutputStream, java.lang.String)
+	 */
+	@Override
+	public void decompress(InputStream in, OutputStream out, String name) throws IOException {
+		GZIPInputStream gzin = null;
+		try {
+			gzin = new GZIPInputStream(in);
+			
+			byte[] buffer = new byte[Utility.BUFFER];
+		    int len;
+	
+		    while((len = gzin.read(buffer)) >= 0)
+		    	out.write(buffer, 0, len);
+	
+		    if (_log.isLoggable(Level.INFO)) _log.info(name + " entry gunzipped");
+		} finally {
+		    if (in != null) in.close();
+		    if (gzin != null) gzin.close();
+		    if (out != null) out.close();
+		}
 	}
 
 }

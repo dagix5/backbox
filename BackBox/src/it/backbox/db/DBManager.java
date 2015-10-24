@@ -107,10 +107,10 @@ public class DBManager implements IDBManager {
 	
 	/*
 	 * (non-Javadoc)
-	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.lang.String, java.util.List, boolean, boolean, boolean)
+	 * @see it.backbox.IDBManager#insert(java.io.File, java.lang.String, java.lang.String, java.lang.String, java.util.List, short, short, short)
 	 */
 	@Override
-	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, short encrypted, short compressed, short splitted) throws BackBoxException {
 		insert(file.lastModified(), file.length(), relativePath, folder, digest, chunks, encrypted, compressed, splitted);
 	}
 	
@@ -134,7 +134,7 @@ public class DBManager implements IDBManager {
 	 * @param splitted
 	 * @throws BackBoxException
 	 */
-	public void insert(long fileLastModified, long fileSize, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException {
+	public void insert(long fileLastModified, long fileSize, String relativePath, String folder, String digest, List<Chunk> chunks, short encrypted, short compressed, short splitted) throws BackBoxException {
 		StringBuilder query = null;
 		try {
 			Statement statement = connection.createStatement();
@@ -146,9 +146,9 @@ public class DBManager implements IDBManager {
 			query.append(folder).append("','");
 			query.append(fileLastModified).append("',");
             query.append(fileSize).append(',');
-            query.append(encrypted ? 1 : 0).append(',');
-            query.append(compressed ? 1 : 0).append(',');
-            query.append(splitted ? 1 : 0).append(')');
+            query.append(encrypted).append(',');
+            query.append(compressed).append(',');
+            query.append(splitted).append(')');
             
 			statement.executeUpdate(query.toString());
 			
@@ -247,9 +247,9 @@ public class DBManager implements IDBManager {
 			file.setFolder(rs.getString("folder"));
 			file.setTimestamp(rs.getDate("timestamp"));
 			file.setSize(rs.getLong("size"));
-			file.setEncrypted(rs.getBoolean("encrypted"));
-			file.setCompressed(rs.getBoolean("compressed"));
-			file.setSplitted(rs.getBoolean("splitted"));
+			file.setEncrypted(rs.getShort("encrypted"));
+			file.setCompressed(rs.getShort("compressed"));
+			file.setSplitted(rs.getShort("splitted"));
 
 			if (loadChunks) {
 				StringBuilder query = new StringBuilder("select * from chunks where filehash='");
@@ -303,9 +303,9 @@ public class DBManager implements IDBManager {
 			file.setTimestamp(rs.getDate("timestamp"));
 			file.setFolder(rs.getString("folder"));
 			file.setSize(rs.getLong("size"));
-			file.setEncrypted(rs.getBoolean("encrypted"));
-			file.setCompressed(rs.getBoolean("compressed"));
-			file.setSplitted(rs.getBoolean("splitted"));
+			file.setEncrypted(rs.getShort("encrypted"));
+			file.setCompressed(rs.getShort("compressed"));
+			file.setSplitted(rs.getShort("splitted"));
 	
 			StringBuilder query = new StringBuilder("select * from chunks where filehash='");
 			query.append(file.getHash()).append('\'');
@@ -352,9 +352,9 @@ public class DBManager implements IDBManager {
 		file.setTimestamp(rs.getDate("timestamp"));
 		file.setFolder(rs.getString("folder"));
 		file.setSize(rs.getLong("size"));
-		file.setEncrypted(rs.getBoolean("encrypted"));
-		file.setCompressed(rs.getBoolean("compressed"));
-		file.setSplitted(rs.getBoolean("splitted"));
+		file.setEncrypted(rs.getShort("encrypted"));
+		file.setCompressed(rs.getShort("compressed"));
+		file.setSplitted(rs.getShort("splitted"));
 
 		query = new StringBuilder("select * from chunks where filehash='");
 		query.append(hash).append('\'');

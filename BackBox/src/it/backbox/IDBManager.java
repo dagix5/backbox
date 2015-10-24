@@ -53,7 +53,7 @@ public interface IDBManager {
 	 * @param splitted
 	 * @throws BackBoxException
 	 */
-	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, boolean encrypted, boolean compressed, boolean splitted) throws BackBoxException;
+	public void insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, short encrypted, short compressed, short splitted) throws BackBoxException;
 	
 	/**
 	 * Get the record of a file

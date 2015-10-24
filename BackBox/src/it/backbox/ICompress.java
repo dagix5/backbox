@@ -6,6 +6,11 @@ import java.io.OutputStream;
 
 public interface ICompress {
 	
+	public static final short DISABLED_MODE = 0;
+	public static final short ZIP_MODE = 1;
+	public static final short GZIP_MODE = 2;
+	public static final short UNKNOWN_MODE = 99;
+	
 	/**
 	 * Compress a byte array content
 	 * 
