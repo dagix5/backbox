@@ -35,13 +35,10 @@ public class FileBrowserTreeNode extends DefaultMutableTreeNode {
 			return 0;
 		
 		int c = 0;
-		@SuppressWarnings("rawtypes")
-		Enumeration e = children.elements();
-	    while (e.hasMoreElements()) {
-	    	FileBrowserTreeNode n = (FileBrowserTreeNode) e.nextElement();
-	    	if (n.getType() == TreeNodeType.FOLDER)
+		Enumeration<FileBrowserTreeNode> e = children.elements();
+	    while (e.hasMoreElements())
+	    	if (e.nextElement().getType() == TreeNodeType.FOLDER)
 	    		c++;
-	    }
 	    return c;
 	}
 

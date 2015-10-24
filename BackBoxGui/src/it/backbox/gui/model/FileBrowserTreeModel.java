@@ -23,10 +23,10 @@ public class FileBrowserTreeModel extends DefaultTreeModel {
 		GuiUtility.checkEDT(true);
 		
 		int i = 0;
-		Enumeration e = parent.children();
+		Enumeration<FileBrowserTreeNode> e = parent.children();
 		while (e.hasMoreElements()) {
 			Object objn = newChild.getUserObject();
-			Object objc = ((FileBrowserTreeNode) e.nextElement()).getUserObject();
+			Object objc = e.nextElement().getUserObject();
 			if (objn instanceof String) {
 				String n = (String) objn;
 				if (objc instanceof String) {

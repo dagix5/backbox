@@ -51,12 +51,11 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 				FileBrowserTreeModel model = (FileBrowserTreeModel) tree.getModel();
 
 				for (File f : list) {
-					// TODO File separator depends upload SO
+					// in DB files have always windows file separators
 					String[] splitted = f.getFilename().split("\\\\");
 					FileBrowserTreeNode cnode = node;
 					int i = 0;
 					for (; i < splitted.length - 1; i++) {
-						@SuppressWarnings("unchecked")
 						Enumeration<FileBrowserTreeNode> cc = cnode.children();
 						boolean found = false;
 						while (cc.hasMoreElements()) {
@@ -108,7 +107,6 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 					publish(fp);
 				}
 				
-				@SuppressWarnings("unchecked")
 				Enumeration<FileBrowserTreeNode> cc = node.children();
 				while (cc.hasMoreElements()) 
 					publish(cc.nextElement());

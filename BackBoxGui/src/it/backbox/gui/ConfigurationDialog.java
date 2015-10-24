@@ -73,7 +73,6 @@ public class ConfigurationDialog extends JDialog {
 						
 						@Override
 						public void run() {
-							main.clearMenu();
 							main.updateMenu();
 							
 						}

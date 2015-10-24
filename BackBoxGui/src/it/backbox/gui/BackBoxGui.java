@@ -107,6 +107,7 @@ public class BackBoxGui {
 	private JLabel lblFreeSpaceValue;
 	private JMenuItem mntmCheck;
 	private JMenu mntmBackup;
+	private JMenu mntmRestore;
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
@@ -194,7 +195,10 @@ public class BackBoxGui {
 							model.removeRow(0);
 						
 						clearPreviewTable();
-						clearMenu();
+						mntmBackup.removeAll();
+						mntmBackup.setEnabled(false);
+						mntmRestore.removeAll();
+						mntmRestore.setEnabled(false);
 					}
 					
 					updateStatus();
@@ -209,12 +213,15 @@ public class BackBoxGui {
 	public void updateMenu() {
 		GuiUtility.checkEDT(true);
 		
-		clearMenu();
+		mntmBackup.removeAll();
+		mntmBackup.setEnabled(false);
+		mntmRestore.removeAll();
+		mntmRestore.setEnabled(false);
 		
 		final List<Folder> folders = helper.getConfiguration().getBackupFolders();
 		for (final Folder f : folders) {
-			JMenuItem mntmFolder = new JMenuItem(f.getAlias());
-			mntmFolder.addActionListener(new ThreadActionListener() {
+			JMenuItem mntmFolderB = new JMenuItem(f.getAlias());
+			mntmFolderB.addActionListener(new ThreadActionListener() {
 				private List<Transaction> tt = null;
 				
 				@Override
@@ -236,11 +243,6 @@ public class BackBoxGui {
 					helper.getTransactionManager().clear();
 					try {
 						tt = helper.backup(f, false);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultUploadSpeed() / 1024);
-							}
-						});
 					} catch (final Exception e) {
 						SwingUtilities.invokeLater(new Runnable() {
 							
@@ -270,19 +272,69 @@ public class BackBoxGui {
 					updateStatus();
 				}
 			});
-			mntmBackup.add(mntmFolder);
+			JMenuItem mntmFolderR = new JMenuItem(f.getAlias());
+			mntmFolderR.addActionListener(new ThreadActionListener() {
+				private List<Transaction> tt = null;
+				
+				@Override
+				protected boolean preaction(ActionEvent event) {
+					if (running) {
+						JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+						return false;
+					}
+					
+					if (!connected) {
+						JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+						return false;
+					}
+					return true;
+				}
+				
+				@Override
+				protected void action(ActionEvent event) {
+					final JFileChooser fc = new JFileChooser();
+					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+					int returnVal = fc.showOpenDialog(frmBackBox);
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						helper.getTransactionManager().clear();
+						try {
+							tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), f, false);
+						} catch (final Exception e) {
+							SwingUtilities.invokeLater(new Runnable() {
+								
+								@Override
+								public void run() {
+									loadingDialog.hideLoading();
+									GuiUtility.handleException(frmBackBox, "Error building restore transactions", e);
+									
+								}
+							});
+						}
+					}
+					
+				}
+				
+				@Override
+				protected void postaction(ActionEvent event) {
+					clearPreviewTable();
+					updatePreviewTable(tt);
+					
+					if ((tt == null) ||	tt.isEmpty()) {
+						loadingDialog.hideLoading();
+						JOptionPane.showMessageDialog(frmBackBox, "No files to restore", "Info", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						pending = true;
+						pendingDone = false;
+					}
+					updateStatus();
+				}
+			});
+			mntmBackup.add(mntmFolderB);
+			mntmRestore.add(mntmFolderR);
 		}
 		
 		mntmBackup.setEnabled(true);
-	}
-	
-	public void clearMenu() {
-		GuiUtility.checkEDT(true);
-		
-		for (Component c : mntmBackup.getComponents())
-			mntmBackup.remove(c);
-		
-		mntmBackup.setEnabled(false);
+		mntmRestore.setEnabled(true);
 	}
 	
 	private void updateFileBrowser() {
@@ -369,6 +421,7 @@ public class BackBoxGui {
 		mntmConfiguration.setEnabled(connected && !running);
 		mntmCheck.setEnabled(connected && !running);
 		mntmBackup.setEnabled(connected && !running);
+		mntmRestore.setEnabled(connected && !running);
 		
 		if (connected && !running && !pending)
 			try {
@@ -476,8 +529,6 @@ public class BackBoxGui {
 							List<Transaction> tt = null;
 							try {
 								tt = helper.backupAll();
-								
-								spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultUploadSpeed() / 1024);
 							} catch (Exception e) {
 								loadingDialog.hideLoading();
 								GuiUtility.handleException(frmBackBox, "Error building backup transactions", e);
@@ -540,8 +591,6 @@ public class BackBoxGui {
 								List<Transaction> tt = null;
 								try {
 									tt = helper.restoreAll(fc.getSelectedFile().getCanonicalPath());
-									
-									spnCurrentUploadSpeed.setValue(helper.getConfiguration().getDefaultDownloadSpeed() / 1024);
 								} catch (Exception e) {
 									loadingDialog.hideLoading();
 									GuiUtility.handleException(frmBackBox, "Error building restore transactions", e);
@@ -959,6 +1008,10 @@ public class BackBoxGui {
 		mntmBackup.setEnabled(false);
 		mnFile.add(mntmBackup);
 		
+		mntmRestore = new JMenu("Restore");
+		mntmRestore.setEnabled(false);
+		mnFile.add(mntmRestore);
+		
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 		
@@ -1150,12 +1203,12 @@ public class BackBoxGui {
 						selectedIndex = i;
 				}
 				DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
-				Vector vv = model.getDataVector();
+				Vector<Vector<Object>> vv = model.getDataVector();
 				List<Transaction> transactions = new ArrayList<>();
 				List<Task> tasks = new ArrayList<>();
-				Iterator i = vv.iterator();
+				Iterator<Vector<Object>> i = vv.iterator();
 				while (i.hasNext()) {
-					Vector v = (Vector) i.next();
+					Vector<Object> v = i.next();
 					transactions.add((Transaction) v.elementAt(PreviewTableModel.TRANSACTION_COLUMN_INDEX));
 					tasks.add((Task) v.elementAt(PreviewTableModel.TASK_COLUMN_INDEX));
 				}
