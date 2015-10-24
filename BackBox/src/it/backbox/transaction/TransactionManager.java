@@ -110,7 +110,13 @@ public class TransactionManager {
 		if (isRunning())
 			return false;
 		
-		return getTransactions().remove(t);
+		if (getTransactions().remove(t)) {
+			for (Task task : t.getTasks())
+				allTasksWeight-=task.getWeight();
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
