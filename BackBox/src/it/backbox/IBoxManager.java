@@ -162,7 +162,7 @@ public interface IBoxManager {
 	 * 
 	 * @param folderID
 	 *            ID of the folder to scan
-	 * @return Map with <File hash, List of Chunks>
+	 * @return Map with < File hash, List of Chunks >
 	 * @throws IOException
 	 * @throws RestException 
 	 */

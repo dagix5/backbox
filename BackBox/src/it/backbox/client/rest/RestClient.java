@@ -269,7 +269,7 @@ public class RestClient implements IRestClient {
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
 		BoxItemCollection toReturn = new BoxItemCollection();
 		toReturn.entries = new ArrayList<>();
-		int limit = 1;
+		int limit = 100;
 		int returned = 0;
 		int total_count = 0;
 		do {

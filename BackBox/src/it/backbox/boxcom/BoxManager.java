@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.google.api.client.http.HttpResponseException;
 
@@ -264,7 +265,7 @@ public class BoxManager implements IBoxManager {
 			c.setBoxid(file.id);
 			c.setChunkhash(file.sha1);
 			c.setChunkname(file.name);
-			String hash = file.name.split("\\.")[0];
+			String hash = FilenameUtils.getBaseName(file.name);
 			if (!info.containsKey(hash)) {
 				List<Chunk> chunks = new ArrayList<>();
 				info.put(hash, chunks);
@@ -305,8 +306,11 @@ public class BoxManager implements IBoxManager {
 	public boolean checkRemoteFile(String fileID) throws IOException, RestException {
 		try {
 			BoxFile file = client.getFileInfo(fileID);
-			if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null"))
+			if  ((file.id == null) || file.id.isEmpty() || file.id.equals("null")) {
+				if (_log.isLoggable(Level.WARNING))
+					_log.warning("File ID " + fileID + " not found but status 200");
 				return false;
+			}
 		} catch (RestException e) {
 			if (e.getHttpException().getStatusCode() == 404)
 				return false;

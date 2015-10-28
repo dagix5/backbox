@@ -2,6 +2,7 @@ package it.backbox.bean;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class File {
 	public static final String EXT = ".bup";
@@ -14,7 +15,7 @@ public class File {
 	private short encrypted;
 	private short compressed;
 	private short splitted;
-	private ArrayList<Chunk> chunks;
+	private List<Chunk> chunks;
 
 	public String getHash() {
 		return hash;
@@ -32,14 +33,14 @@ public class File {
 		this.filename = filename;
 	}
 
-	public ArrayList<Chunk> getChunks() {
+	public List<Chunk> getChunks() {
 		if (chunks == null)
 			chunks = new ArrayList<Chunk>();
 		return chunks;
 	}
 
-	public void setChunks(ArrayList<Chunk> chunknames) {
-		this.chunks = chunknames;
+	public void setChunks(List<Chunk> chunks) {
+		this.chunks = chunks;
 	}
 
 	public Date getTimestamp() {
