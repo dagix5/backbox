@@ -17,6 +17,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.KeySpec;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import javax.crypto.BadPaddingException;
@@ -156,10 +157,6 @@ public class SecurityManager implements ISecurityManager{
 			_log.severe("Password/Salt null: key not generated");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#encrypt(java.io.InputStream, java.io.OutputStream)
-	 */
 	@Override
 	public void encrypt(InputStream in, OutputStream out) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidParameterSpecException, IOException, IllegalBlockSizeException, BadPaddingException {
 		try {
@@ -189,10 +186,6 @@ public class SecurityManager implements ISecurityManager{
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#encrypt(byte[])
-	 */
 	@Override
 	public byte[] encrypt(byte[] src) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
@@ -201,10 +194,6 @@ public class SecurityManager implements ISecurityManager{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#ecnrypt(java.lang.String)
-	 */
 	@Override
 	public byte[] encrypt(String filename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
@@ -213,10 +202,6 @@ public class SecurityManager implements ISecurityManager{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#encrypt(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public void encrypt(String srcfilename, String destfilename) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidParameterSpecException, IllegalBlockSizeException, BadPaddingException, IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
@@ -224,10 +209,6 @@ public class SecurityManager implements ISecurityManager{
 		encrypt(in, out);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#decrypt(java.io.InputStream, java.io.OutputStream)
-	 */
 	@Override
 	public void decrypt(InputStream in, OutputStream out) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		try {
@@ -257,10 +238,6 @@ public class SecurityManager implements ISecurityManager{
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#decrypt(byte[])
-	 */
 	@Override
 	public byte[] decrypt(byte[] src) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
@@ -269,10 +246,6 @@ public class SecurityManager implements ISecurityManager{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#decrypt(java.lang.String)
-	 */
 	@Override
 	public byte[] decrypt(String filename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
@@ -281,10 +254,6 @@ public class SecurityManager implements ISecurityManager{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#decrypt(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public void decrypt(String srcfilename, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new FileInputStream(srcfilename));
@@ -292,10 +261,6 @@ public class SecurityManager implements ISecurityManager{
 		decrypt(in, out);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#decrypt(byte[], java.lang.String)
-	 */
 	@Override
 	public void decrypt(byte[] src, String destfilename) throws IOException, IllegalBlockSizeException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, BadPaddingException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
@@ -303,19 +268,11 @@ public class SecurityManager implements ISecurityManager{
 		decrypt(in, out);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#getSalt()
-	 */
 	@Override
 	public byte[] getSalt() {
-		return salt;
+		return Arrays.copyOf(salt, salt.length);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISecurityManager#getPwdDigest()
-	 */
 	@Override
 	public String getPwdDigest() {
 		return pwdDigest;

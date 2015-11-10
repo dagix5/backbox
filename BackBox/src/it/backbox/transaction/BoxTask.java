@@ -24,7 +24,7 @@ public abstract class BoxTask extends Task {
 				int c = p.awaitAdvance(f);
 				if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - continuing -> " + c);
 			} else
-				_log.fine("[" + getId() + "] Phaser - no one registered -> not waiting");
+				if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - no one registered -> not waiting");
 		} else {
 			int r = p.register();
 			if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Phaser - register -> " + r);
@@ -37,7 +37,7 @@ public abstract class BoxTask extends Task {
 			} catch (RestException e) {
 				HttpResponseException httpe = e.getHttpException();
 				if ((httpe != null) && (httpe.getStatusCode() == 401)) {
-					_log.fine("[" + getId() + "] Box call Unauthorized");
+					if (_log.isLoggable(Level.FINE)) _log.fine("[" + getId() + "] Box call Unauthorized");
 					//retry because at this point the token should already be refreshed
 					if (bm.isAccessTokenValid())
 						callable.call();
