@@ -1,4 +1,4 @@
-package it.backbox.transaction.task;
+package it.backbox.transaction;
 
 import it.backbox.IBoxManager;
 import it.backbox.exception.RestException;

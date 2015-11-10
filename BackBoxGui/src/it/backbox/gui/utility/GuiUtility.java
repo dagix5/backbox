@@ -2,14 +2,14 @@ package it.backbox.gui.utility;
 
 import it.backbox.gui.BackBoxGui;
 import it.backbox.gui.bean.Size;
-import it.backbox.transaction.task.CopyTask;
-import it.backbox.transaction.task.DeleteBoxTask;
-import it.backbox.transaction.task.DeleteDBTask;
-import it.backbox.transaction.task.DeleteTask;
-import it.backbox.transaction.task.DownloadTask;
-import it.backbox.transaction.task.InsertTask;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.UploadTask;
+import it.backbox.transaction.CopyTask;
+import it.backbox.transaction.DeleteBoxTask;
+import it.backbox.transaction.DeleteDBTask;
+import it.backbox.transaction.DeleteTask;
+import it.backbox.transaction.DownloadTask;
+import it.backbox.transaction.InsertTask;
+import it.backbox.transaction.Task;
+import it.backbox.transaction.UploadTask;
 
 import java.awt.Component;
 import java.awt.event.MouseAdapter;

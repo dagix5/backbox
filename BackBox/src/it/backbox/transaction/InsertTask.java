@@ -1,4 +1,4 @@
-package it.backbox.transaction.task;
+package it.backbox.transaction;
 
 import it.backbox.IDBManager;
 import it.backbox.bean.Folder;

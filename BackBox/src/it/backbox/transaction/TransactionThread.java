@@ -1,8 +1,6 @@
 package it.backbox.transaction;
 
 import it.backbox.exception.BackBoxException;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.Transaction;
 
 import java.util.ArrayList;
 import java.util.Date;

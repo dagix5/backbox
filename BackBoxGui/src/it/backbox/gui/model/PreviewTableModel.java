@@ -3,8 +3,8 @@ package it.backbox.gui.model;
 import javax.swing.table.DefaultTableModel;
 
 import it.backbox.gui.bean.Size;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.Transaction;
+import it.backbox.transaction.Task;
+import it.backbox.transaction.Transaction;
 
 public class PreviewTableModel extends DefaultTableModel {
 

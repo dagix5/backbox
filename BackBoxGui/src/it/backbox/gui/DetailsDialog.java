@@ -16,8 +16,8 @@ import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import it.backbox.gui.utility.GuiUtility;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.Transaction;
+import it.backbox.transaction.Task;
+import it.backbox.transaction.Transaction;
 import net.miginfocom.swing.MigLayout;
 
 public class DetailsDialog extends JDialog {

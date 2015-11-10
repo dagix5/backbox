@@ -73,8 +73,8 @@ import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
 import it.backbox.transaction.TransactionManager;
 import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.Transaction;
+import it.backbox.transaction.Task;
+import it.backbox.transaction.Transaction;
 import it.backbox.utility.Utility;
 import net.miginfocom.swing.MigLayout;
 

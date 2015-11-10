@@ -1,4 +1,4 @@
-package it.backbox.transaction.task;
+package it.backbox.transaction;
 
 import java.io.BufferedInputStream;
 import java.io.File;

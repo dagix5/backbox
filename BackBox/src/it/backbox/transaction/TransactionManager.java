@@ -5,8 +5,6 @@ import it.backbox.ICompress;
 import it.backbox.IDBManager;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
-import it.backbox.transaction.task.Task;
-import it.backbox.transaction.task.Transaction;
 
 import java.io.File;
 import java.util.ArrayList;
