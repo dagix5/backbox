@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
@@ -51,7 +52,7 @@ public class DownloadTask extends BoxTask {
 	@Override
 	public void run() throws Exception {
 		OutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-		String filename = path + File.separatorChar + file.getFilename();
+		String filename = FilenameUtils.separatorsToSystem(path + File.separatorChar + file.getFilename());
 		
 		if (stop) { out.close(); return; }
 		
@@ -114,7 +115,7 @@ public class DownloadTask extends BoxTask {
 			else
 				z = new GZipper();
 			try {
-				z.decompress(in, out, filename.substring(filename.lastIndexOf("\\") + 1, filename.length()));
+				z.decompress(in, out, FilenameUtils.getName(filename));
 			} finally {
 				in.close();
 				out.close();
