@@ -2,3 +2,4 @@
 *.jardesc
 /test.db
 /credentialStore.json
+/test.properties

@@ -24,7 +24,7 @@ public class OutputStreamCounterTest {
 	public static void setUpBeforeClass() throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
 		plain = Utility.read(TestUtil.filename);
 		
-		ProgressManager.getInstance().setSpeed(ID, 1024);
+		ProgressManager.getInstance().setSpeed(ID, 1024*1024);
 	}
 	
 	@Test

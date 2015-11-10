@@ -1,16 +1,42 @@
 package it.backbox.util;
 
-import it.backbox.utility.Utility;
-
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Properties;
+
+import it.backbox.utility.Utility;
 
 public class TestUtil {
 	
-	public static String folder = "put_folder_name";
-	public static String filename = "put_file_name";
+	public static String folder;
+	public static String filename;
+	
+	static {
+		Properties prop = new Properties();
+		InputStream input = null;
+
+		try {
+			input = new FileInputStream("test.properties");
+			prop.load(input);
+
+			folder = prop.getProperty("folder");
+			filename = prop.getProperty("filename");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (input != null)
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+	}
 	
 	public static void write(byte[] content, String filename) throws IOException {
 		File file = new File(filename);
