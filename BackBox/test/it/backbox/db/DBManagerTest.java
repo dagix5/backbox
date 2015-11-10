@@ -30,7 +30,7 @@ public class DBManagerTest {
 		dbm.closeDB();
 	}
 	
-	private int insert(int i, int f, int h) throws BackBoxException {
+	private int insert(int i, int f, int h) throws SQLException {
 		List<Chunk> chunks = new ArrayList<Chunk>();
 		Chunk c = new Chunk();
 		c.setBoxid("BOXID1");
@@ -49,12 +49,12 @@ public class DBManagerTest {
 		return dbm.insert("FOLDER" + i, "FILENAME" + f, "HASH" + h, 0, 0, chunks, (short) 0, (short) 0, (short) 0);
 	}
 	
-	private int delete(int i, int f, int h) throws BackBoxException {
+	private int delete(int i, int f, int h) throws SQLException, BackBoxException {
 		return dbm.delete("FOLDER" + i, "FILENAME" + f, "HASH" + h);
 	}
 
 	@Test
-	public void testInsertDelete() throws BackBoxException {
+	public void testInsertDelete() throws SQLException, BackBoxException {
 		int r = insert(1, 1, 1);
 		assertTrue(r == 1);
 		assertTrue(dbm.isModified());
@@ -64,8 +64,8 @@ public class DBManagerTest {
 		assertTrue(dbm.isModified());
 	}
 
-	@Test(expected = BackBoxException.class)
-	public void testInsertFail() throws BackBoxException {
+	@Test(expected = SQLException.class)
+	public void testInsertFail() throws BackBoxException, SQLException {
 		int r = insert(2, 2, 2);
 		assertTrue(r > 0);
 		assertTrue(dbm.isModified());
@@ -73,7 +73,7 @@ public class DBManagerTest {
 	}
 	
 	@Test(expected = BackBoxException.class)
-	public void testDeleteFail() throws BackBoxException {
+	public void testDeleteFail() throws BackBoxException, SQLException {
 		delete(4, 4, 4);
 	}
 	

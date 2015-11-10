@@ -14,8 +14,9 @@ public interface IDBManager {
 	 * Open the jdbc connection
 	 * 
 	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
-	public void openDB() throws BackBoxException;
+	public void openDB() throws BackBoxException, SQLException;
 
 	/**
 	 * Close the jdbc connection
@@ -35,8 +36,9 @@ public interface IDBManager {
 	 *            File hash to delete
 	 * @return Row count deleted
 	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
-	public int delete(String folder, String filename, String hash) throws BackBoxException;
+	public int delete(String folder, String filename, String hash) throws BackBoxException, SQLException;
 
 	/**
 	 * Insert new file information in database
@@ -56,10 +58,10 @@ public interface IDBManager {
 	 * @param splitted
 	 * 
 	 * @return Row count added
-	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
 	public int insert(File file, String filename, String folder, String hash, List<Chunk> chunks, short encrypted,
-			short compressed, short splitted) throws BackBoxException;
+			short compressed, short splitted) throws SQLException;
 
 	/**
 	 * Edit file information in database
@@ -83,10 +85,11 @@ public interface IDBManager {
 	 * @param splitted
 	 * @returnRow count added
 	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
 	public int update(String hash, String folder, String filename, String newFolder, String newFilename,
 			long fileLastModified, long fileSize, short encrypted, short compressed, short splitted)
-					throws BackBoxException;
+					throws BackBoxException, SQLException;
 
 	/**
 	 * Get the record of a file

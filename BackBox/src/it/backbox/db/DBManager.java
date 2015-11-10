@@ -3,6 +3,7 @@ package it.backbox.db;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -23,8 +24,6 @@ import it.backbox.exception.BackBoxException;
 
 public class DBManager implements IDBManager {
 	private static final Logger _log = Logger.getLogger(DBManager.class.getCanonicalName());
-
-	private static final int QUERY_TIMEOUT = 30;
 
 	private Connection connection;
 
@@ -49,14 +48,14 @@ public class DBManager implements IDBManager {
 	}
 
 	@Override
-	public void openDB() throws BackBoxException {
+	public void openDB() throws BackBoxException, SQLException {
 		if (open)
 			return;
 
 		try {
 			Class.forName("org.sqlite.JDBC");
 			connection = DriverManager.getConnection("jdbc:sqlite:" + filename);
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (ClassNotFoundException e) {
 			throw new BackBoxException("Error opening DB", e);
 		}
 		open = true;
@@ -80,70 +79,73 @@ public class DBManager implements IDBManager {
 		if (!open)
 			openDB();
 
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		statement.executeUpdate("drop table if exists files");
-		statement.executeUpdate("drop table if exists chunks");
-		statement.executeUpdate("create table files (hash string, filename string, folder string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename, folder))");
-		statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string not null, size INTEGER, foreign key(filehash) references files(hash))");
-		statement.executeUpdate("create index chunks_filehash on chunks (filehash)");
-		statement.executeUpdate("PRAGMA journal_mode = OFF");
-		_log.info("DB created");
-
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+	
+			statement.executeUpdate("drop table if exists files");
+			statement.executeUpdate("drop table if exists chunks");
+			statement.executeUpdate("create table files (hash string, filename string, folder string, timestamp date, size INTEGER, encrypted INTEGER, compressed INTEGER, splitted INTEGER, primary key(hash, filename, folder))");
+			statement.executeUpdate("create table chunks (filehash string, chunkname string, chunkhash string, boxid string not null, size INTEGER, foreign key(filehash) references files(hash))");
+			statement.executeUpdate("create index chunks_filehash on chunks (filehash)");
+			statement.executeUpdate("PRAGMA journal_mode = OFF");
+			_log.info("DB created");
+		} finally {
+			if (statement != null)
+				statement.close();
+		}
 		modified = true;
 	}
 
 	@Override
 	public int update(String hash, String folder, String filename, String newFolder, String newFilename, long fileLastModified, long fileSize, short encrypted,
-			short compressed, short splitted) throws BackBoxException {
+			short compressed, short splitted) throws SQLException {
+		PreparedStatement statement = null;
 		StringBuilder query = null;
 		int r = 0;
-		try {
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT);
 		
+		try {
 			int c = 0;
 			query = new StringBuilder("update files set ");
 			if (StringUtils.isNotBlank(newFolder)) {
-				query.append("folder='").append(newFolder).append('\'');
+				query.append("folder = ? ");
 				c++;
 			}
 			if (StringUtils.isNotBlank(newFilename)) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("filename='").append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(newFilename))).append('\'');
+				query.append("filename = ? ");
 			}
 			if (fileLastModified >= 0) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("timestamp=").append(fileLastModified);
+				query.append("timestamp = ? ");
 			}
 			if (fileSize >= 0) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("size=").append(fileSize);
+				query.append("size = ? ");
 			}
 			if (encrypted >= 0) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("encrypted=").append(encrypted);
+				query.append("encrypted = ? ");
 			}
 			if (compressed >= 0) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("compressed=").append(compressed);
+				query.append("compressed = ? ");
 			}
 			if (splitted >= 0) {
 				if (c > 0)
 					query.append(',');
 				c++;
-				query.append("splitted=").append(splitted);
+				query.append("splitted = ? ");
 			}
 			
 			if (c == 0) {
@@ -152,25 +154,44 @@ public class DBManager implements IDBManager {
 				return 0;
 			}
 			
-			query.append(" where hash='").append(hash).append("' ");
-			query.append("and folder='").append(folder).append("' ");
-			query.append("and filename='").append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename))).append("' ");
+			query.append(" where hash = ? and folder = ?  and filename = ?");
 			
-			r = statement.executeUpdate(query.toString());
+			statement = connection.prepareStatement(query.toString());
+			int i = 0;
+			if (StringUtils.isNotBlank(newFolder))
+				statement.setString(++i, newFolder);
+			if (StringUtils.isNotBlank(newFilename))
+				statement.setString(++i, StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(newFilename)));
+			if (fileLastModified >= 0)
+				statement.setLong(++i, fileLastModified);
+			if (fileSize >= 0)
+				statement.setLong(++i, fileSize);
+			if (encrypted >= 0)
+				statement.setShort(++i, encrypted);
+			if (compressed >= 0)
+				statement.setShort(++i, compressed);
+			if (splitted >= 0)
+				statement.setShort(++i, splitted);
+			statement.setString(++i, hash);
+			statement.setString(++i, folder);
+			statement.setString(++i, StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename)));
+			
+			r = statement.executeUpdate();
 
 			if (_log.isLoggable(Level.FINE))
 				_log.fine("Query executed: " + query.toString());
 			
 			modified = true;
-		} catch (SQLException e) {
-			throw new BackBoxException(e, (query != null) ? query.toString() : "");
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 		return r;
 	}
 	
 	@Override
 	public int insert(File file, String filename, String folder, String digest, List<Chunk> chunks, short encrypted,
-			short compressed, short splitted) throws BackBoxException {
+			short compressed, short splitted) throws SQLException {
 		return insert(folder, filename, digest, file.lastModified(), file.length(), chunks, encrypted, compressed,
 				splitted);
 	}
@@ -194,121 +215,138 @@ public class DBManager implements IDBManager {
 	 * @param compressed
 	 * @param splitted
 	 * @return Row count added
-	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
 	public int insert(String folder, String filename, String hash, long fileLastModified, long fileSize,
-			List<Chunk> chunks, short encrypted, short compressed, short splitted) throws BackBoxException {
-		StringBuilder query = null;
+			List<Chunk> chunks, short encrypted, short compressed, short splitted) throws SQLException {
+		PreparedStatement statement = null;
+		String sql = "";
 		int r = 0;
+		
 		try {
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT);
+			connection.setAutoCommit(false);
+			
+			sql = "insert into files(hash, filename, folder, timestamp, size, encrypted, compressed, splitted) values(?, ?, ?, ?, ?, ?, ?, ?)";
+			statement = connection.prepareStatement(sql);
+			statement.setString(1, hash);
+			statement.setString(2, StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename)));
+			statement.setString(3, folder);
+			statement.setLong(4, fileLastModified);
+			statement.setLong(5, fileSize);
+			statement.setShort(6, encrypted);
+			statement.setShort(7, compressed);
+			statement.setShort(8, splitted);
 
-			query = new StringBuilder("insert into files values('");
-			query.append(hash).append("','");
-			query.append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename))).append("','");
-			query.append(folder).append("','");
-			query.append(fileLastModified).append("',");
-			query.append(fileSize).append(',');
-			query.append(encrypted).append(',');
-			query.append(compressed).append(',');
-			query.append(splitted).append(')');
+			r = statement.executeUpdate();
+			statement.close();
 
-			r = statement.executeUpdate(query.toString());
+			sql = "select filehash from chunks where filehash = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setString(1, hash);
 
-			if (_log.isLoggable(Level.FINE))
-				_log.fine("Query executed: " + query.toString());
-
-			query = new StringBuilder("select filehash from chunks where filehash='");
-			query.append(hash);
-			query.append('\'');
-
-			ResultSet rs = statement.executeQuery(query.toString());
-
-			if (_log.isLoggable(Level.FINE))
-				_log.fine("Query executed: " + query.toString());
+			ResultSet rs = statement.executeQuery();
 
 			if (!rs.next()) {
-				query = new StringBuilder("insert into chunks ");
+				statement.close();
+				
+				sql = "insert into chunks(filehash, chunkname, chunkhash, boxid, size) values(?, ?, ?, ?, ?)";
+				statement = connection.prepareStatement(sql);
+				
 				for (int i = 0; i < chunks.size(); i++) {
 					Chunk chunk = chunks.get(i);
-					query.append("select '");
-					query.append(hash).append("','");
-					query.append(chunk.getChunkname()).append("','");
-					query.append(chunk.getChunkhash()).append("','");
-					query.append(chunk.getBoxid()).append("',");
-					query.append(chunk.getSize());
-					if (i < (chunks.size() - 1))
-						query.append(" union ");
+					
+					statement.setString(1, hash);
+					statement.setString(2, chunk.getChunkname());
+					statement.setString(3, chunk.getChunkhash());
+					statement.setString(4, chunk.getBoxid());
+					statement.setLong(5, chunk.getSize());
+					
+					statement.addBatch();
 				}
-
-				statement.executeUpdate(query.toString());
-
-				if (_log.isLoggable(Level.FINE))
-					_log.fine("Query executed: " + query.toString());
+				
+				statement.executeBatch();
 			}
 
+			connection.commit();
 			modified = true;
-		} catch (SQLException e) {
-			throw new BackBoxException(e, (query != null) ? query.toString() : "");
+		} catch (SQLException e ) {
+			_log.severe("Insert transaction rollback");
+			connection.rollback();
+			throw e;
+		} finally {
+			if (statement != null)
+				statement.close();
+			connection.setAutoCommit(true);
 		}
 		return r;
 	}
 
 	@Override
-	public int delete(String folder, String filename, String hash) throws BackBoxException {
-		StringBuilder query = null;
+	public int delete(String folder, String filename, String hash) throws BackBoxException, SQLException {
+		PreparedStatement statement = null;
 		int r = 0;
+		int i = 0;
+		String sql = "";
+		
+		filename = StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename));
+		
 		try {
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(QUERY_TIMEOUT);
+			sql = "select count(hash) from files where hash = ? and filename = ? and folder = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setString(1, hash);
+			statement.setString(2, filename);
+			statement.setString(3, folder);
+			
+			ResultSet rs = statement.executeQuery();
+			if (rs.next())
+		        i = rs.getInt(1);
 
-			filename = StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename));
-
-			query = new StringBuilder("select * from files where hash='");
-			query.append(hash).append("' and filename='");
-			query.append(filename);
-			query.append("' and folder='").append(folder).append('\'');
-			ResultSet rs = statement.executeQuery(query.toString());
-
-			if (!rs.next()) {
+			if (i < 1) {
 				if (_log.isLoggable(Level.SEVERE))
 					_log.severe("File " + filename + " with hash " + hash + " in folder " + folder + " not found");
 				throw new BackBoxException(
 						"File " + filename + " with hash " + hash + "in folder " + folder + " not found");
 			}
-
+			statement.close();
+			
 			// find the chunks of the file we want to delete (we don't check the
 			// folder and the filename because we need to know how many files
 			// with the same hash we have)
-			query = new StringBuilder("select hash from files where hash='");
-			query.append(hash).append('\'');
-			rs = statement.executeQuery(query.toString());
+			sql = "select count(hash) from files where hash = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setString(1, hash);
+			
+			rs = statement.executeQuery();
+			if (rs.next())
+		        i = rs.getInt(1);
 
-			int i = 0;
-			while (rs.next())
-				i++;
-
+			statement.close();
+			
 			// if this is the last file with that hash, we delete the chunks
 			if (i <= 1) {
-				query = new StringBuilder("delete from chunks where filehash='");
-				query.append(hash).append('\'');
-
-				statement.executeUpdate(query.toString());
+				sql = "delete from chunks where filehash = ?";
+				statement = connection.prepareStatement(sql);
+				statement.setString(1, hash);
+				
+				statement.executeUpdate();
+				statement.close();
 			}
 
-			query = new StringBuilder("delete from files where hash='");
-			query.append(hash).append("' and filename='").append(filename);
-			query.append("' and folder='").append(folder).append('\'');
+			sql = "delete from files where hash = ? and filename = ? and folder = ?";
+			statement = connection.prepareStatement(sql);
+			statement.setString(1, hash);
+			statement.setString(2, filename);
+			statement.setString(3, folder);
 
-			r = statement.executeUpdate(query.toString());
+			r = statement.executeUpdate();
 
 			modified = true;
 
 			if (_log.isLoggable(Level.INFO))
 				_log.info(hash + "-> delete ok");
-		} catch (SQLException e) {
-			throw new BackBoxException(e, (query != null) ? query.toString() : "");
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 		return r;
 	}
@@ -316,27 +354,30 @@ public class DBManager implements IDBManager {
 	@Override
 	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder, boolean loadChunks)
 			throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		ResultSet rs = statement.executeQuery(
-				new StringBuilder("select * from files where folder='").append(folder).append('\'').toString());
-
 		Map<String, Map<String, it.backbox.bean.File>> records = new HashMap<>();
-
-		while (rs.next()) {
-			it.backbox.bean.File file = buildFile(rs);
-
-			if (loadChunks)
-				file.setChunks(getFileChunks(file.getHash()));
-
-			if (records.containsKey(file.getHash()))
-				records.get(file.getHash()).put(file.getFilename(), file);
-			else {
-				Map<String, it.backbox.bean.File> files = new HashMap<>();
-				files.put(file.getFilename(), file);
-				records.put(file.getHash(), files);
+		
+		PreparedStatement statement = connection.prepareStatement("select * from files where folder = ?");
+		statement.setString(1, folder);
+		
+		try {
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				it.backbox.bean.File file = buildFile(rs);
+	
+				if (loadChunks)
+					file.setChunks(getFileChunks(file.getHash()));
+	
+				if (records.containsKey(file.getHash()))
+					records.get(file.getHash()).put(file.getFilename(), file);
+				else {
+					Map<String, it.backbox.bean.File> files = new HashMap<>();
+					files.put(file.getFilename(), file);
+					records.put(file.getHash(), files);
+				}
 			}
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 
 		return records;
@@ -344,89 +385,110 @@ public class DBManager implements IDBManager {
 
 	@Override
 	public List<it.backbox.bean.File> getAllFiles() throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		ResultSet rs = statement.executeQuery("select * from files");
-
 		List<it.backbox.bean.File> files = new ArrayList<>();
 
-		while (rs.next()) {
-			it.backbox.bean.File file = buildFile(rs);
-			file.setChunks(getFileChunks(file.getHash()));
-			files.add(file);
-		}
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
 
+			ResultSet rs = statement.executeQuery("select * from files");
+			while (rs.next()) {
+				it.backbox.bean.File file = buildFile(rs);
+				file.setChunks(getFileChunks(file.getHash()));
+				files.add(file);
+			}
+		} finally {
+			if (statement != null)
+				statement.close();
+		}
 		return files;
 	}
 
 	@Override
 	public List<Chunk> getAllChunks() throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		ResultSet rs = statement.executeQuery("select * from chunks");
-
 		List<Chunk> chunks = new ArrayList<>();
-
-		while (rs.next()) {
-			Chunk chunk = buildChunk(rs);
-			chunks.add(chunk);
+		
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+	
+			ResultSet rs = statement.executeQuery("select * from chunks");
+			while (rs.next()) {
+				Chunk chunk = buildChunk(rs);
+				chunks.add(chunk);
+			}
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 		return chunks;
 	}
 
 	@Override
 	public it.backbox.bean.File getFileRecord(String folder, String filename, String hash) throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		StringBuilder query = new StringBuilder("select * from files where hash='");
-		query.append(hash).append("' and filename='");
-		query.append(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename)));
-		query.append("' and folder='").append(folder).append('\'');
-		ResultSet rs = statement.executeQuery(query.toString());
-
-		if (!rs.next())
-			return null;
-
-		it.backbox.bean.File file = buildFile(rs);
-		file.setChunks(getFileChunks(file.getHash()));
+		it.backbox.bean.File file;
+		PreparedStatement statement = null;
+		
+		try {
+			statement = connection.prepareStatement("select * from files where hash = ? and filename = ? and folder = ?");
+			statement.setString(1, hash);
+			statement.setString(2, StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(filename)));
+			statement.setString(3, folder);
+	
+			ResultSet rs = statement.executeQuery();
+			if (!rs.next())
+				return null;
+	
+			file = buildFile(rs);
+			file.setChunks(getFileChunks(file.getHash()));
+		} finally {
+			if (statement != null)
+				statement.close();
+		}
 
 		return file;
 	}
 
 	@Override
 	public List<it.backbox.bean.File> getFiles(String filehash) throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		ResultSet rs = statement.executeQuery("select * from files where hash='" + filehash + "'");
-
 		List<it.backbox.bean.File> files = new ArrayList<>();
-
-		while (rs.next()) {
-			it.backbox.bean.File file = buildFile(rs);
-			file.setChunks(getFileChunks(file.getHash()));
-			files.add(file);
+		PreparedStatement statement = null;
+		
+		try {
+			statement = connection.prepareStatement("select * from files where hash = ?");
+			statement.setString(1, filehash);
+	
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				it.backbox.bean.File file = buildFile(rs);
+				file.setChunks(getFileChunks(file.getHash()));
+				files.add(file);
+			}
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
-
 		return files;
 	}
 
 	@Override
 	public List<it.backbox.bean.File> getFilesInFolder(String folder) throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		ResultSet rs = statement.executeQuery("select * from files where folder='" + folder + "'");
-
 		List<it.backbox.bean.File> files = new ArrayList<>();
-
-		while (rs.next()) {
-			it.backbox.bean.File file = buildFile(rs);
-			file.setChunks(getFileChunks(file.getHash()));
-			files.add(file);
+		PreparedStatement statement = null;
+		
+		try {
+			statement = connection.prepareStatement("select * from files where folder = ?");
+			statement.setString(1, folder);
+	
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				it.backbox.bean.File file = buildFile(rs);
+				file.setChunks(getFileChunks(file.getHash()));
+				files.add(file);
+			}
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 
 		return files;
@@ -434,18 +496,21 @@ public class DBManager implements IDBManager {
 
 	@Override
 	public List<it.backbox.bean.Chunk> getFileChunks(String filehash) throws SQLException {
-		Statement statement = connection.createStatement();
-		statement.setQueryTimeout(QUERY_TIMEOUT);
-
-		StringBuilder query = new StringBuilder("select * from chunks where filehash='");
-		query.append(filehash).append('\'');
-
-		ResultSet rs = statement.executeQuery(query.toString());
-
 		List<it.backbox.bean.Chunk> chunks = new ArrayList<>();
-		while (rs.next()) {
-			Chunk c = buildChunk(rs);
-			chunks.add(c);
+		PreparedStatement statement = null;
+		
+		try {
+			statement = connection.prepareStatement("select * from chunks where filehash = ?");
+			statement.setString(1, filehash);
+	
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				Chunk c = buildChunk(rs);
+				chunks.add(c);
+			}
+		} finally {
+			if (statement != null)
+				statement.close();
 		}
 
 		return chunks;
