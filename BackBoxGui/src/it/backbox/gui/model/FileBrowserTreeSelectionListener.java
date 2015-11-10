@@ -1,6 +1,5 @@
 package it.backbox.gui.model;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.List;
@@ -49,6 +48,8 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 				String alias = (String) node.getUserObject();
 				List<File> list = helper.dbm.getFilesInFolder(alias);
 				FileBrowserTreeModel model = (FileBrowserTreeModel) tree.getModel();
+				node.removeAllChildren();
+				model.reload(node);
 
 				for (File f : list) {
 					// in DB files have always windows file separators

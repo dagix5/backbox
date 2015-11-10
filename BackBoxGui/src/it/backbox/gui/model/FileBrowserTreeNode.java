@@ -41,6 +41,13 @@ public class FileBrowserTreeNode extends DefaultMutableTreeNode {
 	    		c++;
 	    return c;
 	}
-
+	
+	@Override
+	public void removeAllChildren() {
+        for (int i = super.getChildCount()-1; i >= 0; i--) {
+            remove(i);
+        }
+    }
+	
 	public static enum TreeNodeType { FILE, FOLDER, PREV_FOLDER};
 }
