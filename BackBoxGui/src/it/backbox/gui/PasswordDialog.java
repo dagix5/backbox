@@ -115,6 +115,7 @@ public class PasswordDialog extends JDialog {
 		this.mode = mode;
 		lblPasswordErrata.setVisible(false);
 		passwordField.setText("");
+		passwordField.requestFocusInWindow();
 	}
 	
 }
