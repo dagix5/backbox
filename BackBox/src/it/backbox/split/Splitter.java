@@ -77,10 +77,6 @@ public class Splitter implements ISplitter {
 		return chunkList;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitter#splitNextChunk(java.io.InputStream, long, int)
-	 */
 	@Override
 	public byte[] splitNextChunk(InputStream inStream, long size, int bytesRead) throws IOException {
 		int csize = chunkSize;
@@ -96,20 +92,12 @@ public class Splitter implements ISplitter {
 		return buffer;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitter#split(byte[])
-	 */
 	@Override
 	public List<byte[]> split(byte[] src) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
 		return split(in, src.length);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitter#merge(java.util.List)
-	 */
 	@Override
 	public byte[] merge(List<byte[]> chunks) throws IOException {
 		ByteArrayOutputStream out = null;
@@ -128,10 +116,7 @@ public class Splitter implements ISplitter {
 
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitter#mergeNextChunk(java.io.InputStream, java.io.OutputStream)
-	 */
+	@Override
 	public void mergeNextChunk(InputStream in, OutputStream out) throws IOException {
 		byte[] buf = new byte[Utility.BUFFER];
 		int count = in.read(buf);
@@ -142,10 +127,6 @@ public class Splitter implements ISplitter {
 		in.close();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitter#merge(java.util.List, java.lang.String)
-	 */
 	@Override
 	public void merge(List<byte[]> chunks, String destfilename) throws IOException {
 		OutputStream out = null;
@@ -162,20 +143,12 @@ public class Splitter implements ISplitter {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitterChunk#splitChunk(byte[], java.lang.String)
-	 */
 	@Override
 	public List<Chunk> splitChunk(byte[] src, String chunkprefix) throws IOException {
 		List<byte[]> cs = split(src);
 		return saveChunks(cs, chunkprefix);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitterChunk#splitChunk(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public List<Chunk> splitChunk(String filename, String chunkprefix) throws IOException {
 		File file = new File(filename);
@@ -206,10 +179,6 @@ public class Splitter implements ISplitter {
 		return chunks;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ISplitterChunk#mergeChunk(java.util.List, java.lang.String)
-	 */
 	@Override
 	public void mergeChunk(List<Chunk> chunks, String destfilename) throws IOException {
 		List<byte[]> cs = new ArrayList<>();

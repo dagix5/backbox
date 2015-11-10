@@ -25,10 +25,6 @@ public class OutputStreamCounter extends FilterOutputStream {
 		manager = ProgressManager.getInstance();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.io.FilterOutputStream#write(byte[], int, int)
-     */
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
     	int speed = manager.getSpeed(id);
@@ -45,10 +41,6 @@ public class OutputStreamCounter extends FilterOutputStream {
         if (manager.getListener(id) != null) manager.getListener(id).update(id, len - plen);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.io.FilterOutputStream#write(int)
-     */
     @Override
     public void write(int b) throws IOException {
     	manager.consume(id, 1);

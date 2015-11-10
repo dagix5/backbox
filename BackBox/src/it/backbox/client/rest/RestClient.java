@@ -147,10 +147,6 @@ public class RestClient implements IRestClient {
 		return response;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#download(java.lang.String)
-	 */
 	@Override
 	public byte[] download(String fileID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "files/" + fileID + "/content");
@@ -174,10 +170,6 @@ public class RestClient implements IRestClient {
 		return baos.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#upload(java.lang.String, java.lang.String, byte[], java.lang.String, java.lang.String)
-	 */
 	@Override
 	public BoxFile upload(String name, String fileID, byte[] content, String folderID, String sha1) throws RestException, IOException {
 		StringBuilder uri = new StringBuilder(baseUriUpload);
@@ -207,10 +199,6 @@ public class RestClient implements IRestClient {
 		return file.entries.get(0);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#delete(java.lang.String, boolean)
-	 */
 	@Override
 	public void delete(String fileID, boolean isFolder) throws RestException, IOException {
 		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "folders/" : "files/") + fileID);
@@ -227,10 +215,6 @@ public class RestClient implements IRestClient {
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#search(java.lang.String)
-	 */
 	@Override
 	public BoxSearchResult search(String query) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "search");
@@ -241,10 +225,6 @@ public class RestClient implements IRestClient {
 		return response.parseAs(BoxSearchResult.class);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#mkdir(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public BoxFolder mkdir(String name, String parentFolderID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "folders");
@@ -262,10 +242,6 @@ public class RestClient implements IRestClient {
 		return response.parseAs(BoxFolder.class);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#getFolderItems(java.lang.String)
-	 */
 	@Override
 	public BoxItemCollection getFolderItems(String folderID) throws IOException, RestException {
 		BoxItemCollection toReturn = new BoxItemCollection();
@@ -293,10 +269,6 @@ public class RestClient implements IRestClient {
 		return toReturn;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#getUserInfo()
-	 */
 	@Override
 	public BoxUserInfo getUserInfo() throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "users/me");
@@ -306,10 +278,6 @@ public class RestClient implements IRestClient {
 		return response.parseAs(BoxUserInfo.class);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#getFileInfo(java.lang.String)
-	 */
 	@Override
 	public BoxFile getFileInfo(String fileID) throws IOException, RestException {
 		GenericUrl url = new GenericUrl(baseUri + "files/" + fileID);
@@ -319,10 +287,6 @@ public class RestClient implements IRestClient {
 		return response.parseAs(BoxFile.class);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IRestClient#isAccessTokenValid()
-	 */
 	@Override
 	public boolean isAccessTokenValid() {
 		// check if token will expire in 5 minutes

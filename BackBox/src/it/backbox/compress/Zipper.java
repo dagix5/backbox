@@ -21,10 +21,6 @@ import org.apache.commons.io.FilenameUtils;
 public class Zipper implements ICompress{
 	private static final Logger _log = Logger.getLogger(Zipper.class.getCanonicalName());
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#zip(java.io.InputStream, java.io.OutputStream, java.lang.String)
-	 */
 	@Override
 	public void compress(InputStream in, OutputStream out, String name) throws IOException {
 		ZipOutputStream zout = null;
@@ -48,10 +44,6 @@ public class Zipper implements ICompress{
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#decompress(java.io.InputStream, java.io.OutputStream, java.lang.String)
-	 */
 	@Override
 	public void decompress(InputStream in, OutputStream out, String name) throws IOException {
 		ZipInputStream zin = null;
@@ -76,10 +68,6 @@ public class Zipper implements ICompress{
 		}
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#compress(byte[], java.lang.String)
-	 */
 	@Override
 	public byte[] compress(byte[] src, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
@@ -90,10 +78,6 @@ public class Zipper implements ICompress{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#compress(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public byte[] compress(String filename, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new FileInputStream(filename));
@@ -107,10 +91,6 @@ public class Zipper implements ICompress{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#decompress(byte[], java.lang.String)
-	 */
 	@Override
 	public byte[] decompress(byte[] src, String name) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));
@@ -121,10 +101,6 @@ public class Zipper implements ICompress{
 		return out.toByteArray();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.ICompress#decompress(byte[], java.lang.String)
-	 */
 	@Override
 	public void decompress(byte[] src, String name, String destfilename) throws IOException {
 		InputStream in = new BufferedInputStream(new ByteArrayInputStream(src));

@@ -25,10 +25,6 @@ public class InputStreamCounter extends FilterInputStream {
 		manager = ProgressManager.getInstance();
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see java.io.FilterInputStream#read(byte[], int, int)
-	 */
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		int speed = manager.getSpeed(id);
@@ -58,10 +54,6 @@ public class InputStreamCounter extends FilterInputStream {
 		return r;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.io.FilterInputStream#read(byte[])
-	 */
 	@Override
 	public int read(byte[] b) throws IOException {
 		return read(b, 0, b.length);

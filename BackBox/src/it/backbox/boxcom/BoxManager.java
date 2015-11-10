@@ -50,19 +50,12 @@ public class BoxManager implements IBoxManager {
 		
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#setRestClient(it.backbox.IRestClient)
-	 */
 	@Override
 	public void setRestClient(IRestClient client) {
 		this.client = client;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#mkdir(java.lang.String, java.lang.String)
-	 */
+	@Override
 	public String mkdir(String folderName, String parentFolderID) throws IOException, RestException, BackBoxException {
 		BoxFolder folder;
 		try {
@@ -88,10 +81,7 @@ public class BoxManager implements IBoxManager {
 		throw new BackBoxException("Folder not created");
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#getBoxID(java.lang.String)
-	 */
+	@Override
 	public String getBoxID(String filename) throws IOException, RestException {
 		BoxSearchResult results = client.search(filename);
 		if ((results != null) && (results.entries != null) && !results.entries.isEmpty()) {
@@ -102,19 +92,11 @@ public class BoxManager implements IBoxManager {
 		return null;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String)
-	 */
 	@Override
 	public String upload(String filename, String folderID) throws IOException, RestException, BackBoxException {
 		return upload(filename, null, folderID);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#upload(java.lang.String, java.lang.String, java.lang.String)
-	 */
 	@Override
 	public String upload(String filename, String fileID, String folderID) throws IOException, RestException, BackBoxException {
 		String[] ns = filename.split("\\\\");
@@ -126,10 +108,6 @@ public class BoxManager implements IBoxManager {
 		return file.id;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#download(java.lang.String)
-	 */
 	@Override
 	public byte[] download(String fileID) throws IOException, RestException {
 		byte[] file = client.download(fileID);
@@ -137,37 +115,22 @@ public class BoxManager implements IBoxManager {
 		return file;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#deleteFolder(java.lang.String)
-	 */
+	@Override
 	public void deleteFolder(String folderID) throws IOException, RestException {
 		client.delete(folderID, true);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#delete(java.lang.String)
-	 */
 	@Override
 	public void delete(String fileID) throws IOException, RestException {
 		client.delete(fileID, false);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#deleteChunk(java.util.List)
-	 */
 	@Override
 	public void deleteChunk(List<Chunk> chunks) throws IOException, RestException {
 		for(Chunk c : chunks)
 			client.delete(c.getBoxid(), false);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManagerChunk#downloadChunk(java.util.List)
-	 */
 	@Override
 	public List<byte[]> downloadChunk(List<Chunk> chunks) throws IOException, RestException {
 		List<byte[]> result = new ArrayList<>();
@@ -176,10 +139,6 @@ public class BoxManager implements IBoxManager {
 		return result;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#downloadChunk(it.backbox.bean.Chunk)
-	 */
 	@Override
 	public byte[] downloadChunk(Chunk chunk) throws IOException, RestException {
 		return download(chunk.getBoxid());
@@ -237,10 +196,6 @@ public class BoxManager implements IBoxManager {
 		return file;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#uploadChunk(it.backbox.bean.Chunk, java.lang.String)
-	 */
 	@Override
 	public void uploadChunk(Chunk chunk, String folderID) throws IOException, RestException, BackBoxException {
 		String name = chunk.getChunkname();
@@ -252,10 +207,7 @@ public class BoxManager implements IBoxManager {
 		chunk.setBoxid(file.id);
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#getFolderChunks(java.lang.String)
-	 */
+	@Override
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException {
 		Map<String, List<Chunk>> info = new HashMap<>();
 		BoxItemCollection items = client.getFolderItems(folderID);
@@ -276,10 +228,6 @@ public class BoxManager implements IBoxManager {
 		return info;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#isAccessTokenValid()
-	 */
 	@Override
 	public boolean isAccessTokenValid() {
 		if (client == null)
@@ -287,10 +235,6 @@ public class BoxManager implements IBoxManager {
 		return client.isAccessTokenValid();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#getFreeSpace()
-	 */
 	@Override
 	public long getFreeSpace() throws IOException, RestException {
 		BoxUserInfo userInfo = client.getUserInfo();
@@ -298,10 +242,6 @@ public class BoxManager implements IBoxManager {
 		return userInfo.space_amount - userInfo.space_used;
 	}
 	
-	/*
-	 * (non-Javadoc)
-	 * @see it.backbox.IBoxManager#checkRemoteFile(java.lang.String)
-	 */
 	@Override
 	public boolean checkRemoteFile(String fileID) throws IOException, RestException {
 		try {
