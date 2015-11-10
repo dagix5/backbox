@@ -154,7 +154,7 @@ public class UploadTask extends BoxTask {
 				@Override
 				public Void call() throws Exception {
 					getBoxManager().deleteChunk(chunks);
-					getDbManager().delete(StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(relativePath)), hash);
+					getDbManager().delete(folder.getAlias(), StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(relativePath)), hash);
 					return null;
 				}
 			});

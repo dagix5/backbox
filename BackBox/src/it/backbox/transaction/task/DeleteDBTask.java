@@ -21,7 +21,7 @@ public class DeleteDBTask extends Task {
 
 	@Override
 	public void run() throws Exception {	
-		getDbManager().delete(file.getFilename(), file.getHash());
+		getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
 	}
 
 }

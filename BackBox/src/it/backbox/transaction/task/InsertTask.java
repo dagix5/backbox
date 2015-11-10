@@ -35,7 +35,7 @@ public class InsertTask extends Task {
 	public void run() throws Exception {
 		IDBManager dbm = getDbManager();
 		
-		it.backbox.bean.File f = dbm.getFileRecord(hash, otherRelativePath);
+		it.backbox.bean.File f = dbm.getFileRecord(null, hash, otherRelativePath);
 		if (f == null)
 			throw new BackBoxException("DB record not found");
 		

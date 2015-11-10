@@ -569,7 +569,7 @@ public class BackBoxHelper {
 							if (f.getChunks().size() > 1)
 								bm.deleteChunk(f.getChunks());
 						} catch (RestException e) {	}
-						dbm.delete(f.getFilename(), f.getHash());
+						dbm.delete(f.getFolder(), f.getFilename(), f.getHash());
 					}
 					deleted.add(f);
 					break;
@@ -581,21 +581,24 @@ public class BackBoxHelper {
 	/**
 	 * Download a single file
 	 * 
-	 * @param hash
-	 *            Hash of the file
+	 * @param folder
+	 *            Folder where the file is
 	 * @param filename
 	 *            Name of the file
+	 * @param hash
+	 *            Hash of the file
 	 * @param downloadPath
 	 *            Path where download
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
+	 * 
 	 * @return The created transaction
 	 * @throws SQLException
 	 */
-	public Transaction downloadFile(String hash, String filename, String downloadPath, boolean startNow) throws SQLException {
+	public Transaction downloadFile(String folder, String filename, String hash, String downloadPath, boolean startNow) throws SQLException {
 		GuiUtility.checkEDT(false);
 		
-		it.backbox.bean.File file = dbm.getFileRecord(hash, filename);
+		it.backbox.bean.File file = dbm.getFileRecord(folder, filename, hash);
 		
 		Transaction t = new Transaction();
 		t.setId(file.getHash());
@@ -832,19 +835,21 @@ public class BackBoxHelper {
 	/**
 	 * Delete a file from backup
 	 * 
-	 * @param hash
-	 *            Hash of the file to delete
+	 * @param folder
+	 *            Folder where the file is
 	 * @param filename
 	 *            Name of the file to delete
+	 * @param hash
+	 *            Hash of the file to delete
 	 * @param startNow
 	 *            true if start the transaction, false if just create it
 	 * @return The created transaction
 	 * @throws SQLException
 	 */
-	public Transaction delete(String hash, String filename, boolean startNow) throws SQLException {
+	public Transaction delete(String folder, String filename, String hash, boolean startNow) throws SQLException {
 		GuiUtility.checkEDT(false);
 		
-		it.backbox.bean.File file = dbm.getFileRecord(hash, filename);
+		it.backbox.bean.File file = dbm.getFileRecord(folder, filename, hash);
 		
 		Transaction t = new Transaction();
 		t.setId(file.getHash());

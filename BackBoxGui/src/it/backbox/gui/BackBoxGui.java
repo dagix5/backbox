@@ -953,7 +953,7 @@ public class BackBoxGui {
 						try {
 							List<File> fs = getSelectedFiles();
 							for (File f : fs)
-								tt.add(helper.delete(f.getHash(), f.getFilename(), false));
+								tt.add(helper.delete(f.getFolder(), f.getFilename(), f.getHash(), false));
 						} catch (Exception e1) {
 							loadingDialog.hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
@@ -1283,7 +1283,7 @@ public class BackBoxGui {
 					try {
 						List<File> fs = getSelectedFiles();
 						for (File f : fs)
-							tt.add(helper.downloadFile(f.getHash(), f.getFilename(), fc.getSelectedFile().getCanonicalPath(), false));
+							tt.add(helper.downloadFile(f.getFolder(), f.getFilename(), f.getHash(), fc.getSelectedFile().getCanonicalPath(), false));
 					} catch (final Exception e1) {
 						SwingUtilities.invokeLater(new Runnable() {
 							

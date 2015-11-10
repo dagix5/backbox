@@ -35,7 +35,7 @@ public class DeleteBoxTask extends BoxTask {
 			}
 		});
 		
-		getDbManager().delete(file.getFilename(), file.getHash());
+		getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
 	}
 
 	public boolean isEncryptEnabled() {
