@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +46,7 @@ import javax.swing.RowSorter;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -53,6 +54,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
+import it.backbox.bean.Chunk;
 import it.backbox.bean.File;
 import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
@@ -71,10 +73,11 @@ import it.backbox.gui.utility.GuiUtility;
 import it.backbox.gui.utility.ThreadActionListener;
 import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
-import it.backbox.transaction.TransactionManager;
-import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
+import it.backbox.transaction.DeleteBoxTask;
+import it.backbox.transaction.DeleteDBTask;
 import it.backbox.transaction.Task;
 import it.backbox.transaction.Transaction;
+import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.utility.Utility;
 import net.miginfocom.swing.MigLayout;
 
@@ -108,6 +111,8 @@ public class BackBoxGui {
 	private JMenuItem mntmCheck;
 	private JMenu mntmBackup;
 	private JMenu mntmRestore;
+	private JMenuItem mntmBuildDatabase;
+	private JProgressBar progressBar;
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
@@ -147,7 +152,7 @@ public class BackBoxGui {
 		pm.setSpeed(ProgressManager.UPLOAD_ID, uploadSpeed);
 		pm.setSpeed(ProgressManager.DOWNLOAD_ID, helper.getConfiguration().getDefaultDownloadSpeed());
 		
-		helper.getTransactionManager().addListener(new CompleteTransactionListener() {
+		helper.tm.addListener(new CompleteTransactionListener() {
 			
 			@Override
 			public void transactionCompleted(Transaction tt) {
@@ -171,12 +176,12 @@ public class BackBoxGui {
 		GuiUtility.checkEDT(false);
 		
 		try {
-			if (helper.getTransactionManager() != null) {
+			if (helper.tm != null) {
 				if (running) {
-					helper.getTransactionManager().stopTransactions();
+					helper.tm.stopTransactions();
 					pendingDone = true;
 				}
-				helper.getTransactionManager().clear();
+				helper.tm.clear();
 			}
 			
 			if (connected)
@@ -240,7 +245,7 @@ public class BackBoxGui {
 				
 				@Override
 				protected void action(ActionEvent event) {
-					helper.getTransactionManager().clear();
+					helper.tm.clear();
 					try {
 						tt = helper.backup(f, false);
 					} catch (final Exception e) {
@@ -296,7 +301,7 @@ public class BackBoxGui {
 					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					int returnVal = fc.showOpenDialog(frmBackBox);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						helper.getTransactionManager().clear();
+						helper.tm.clear();
 						try {
 							tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), f, false);
 						} catch (final Exception e) {
@@ -422,6 +427,7 @@ public class BackBoxGui {
 		mntmCheck.setEnabled(connected && !running);
 		mntmBackup.setEnabled(connected && !running);
 		mntmRestore.setEnabled(connected && !running);
+		mntmBuildDatabase.setEnabled(connected && !running);
 		
 		if (connected && !running && !pending)
 			try {
@@ -522,7 +528,7 @@ public class BackBoxGui {
 					return;
 				}
 				if (connected) {
-					helper.getTransactionManager().clear();
+					helper.tm.clear();
 					loadingDialog.showLoading();
 					Thread worker = new Thread() {
 						public void run() {
@@ -584,7 +590,7 @@ public class BackBoxGui {
 					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					int returnVal = fc.showOpenDialog(frmBackBox);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						helper.getTransactionManager().clear();
+						helper.tm.clear();
 						loadingDialog.showLoading();
 						Thread worker = new Thread() {
 							public void run() {
@@ -701,7 +707,7 @@ public class BackBoxGui {
 			public void actionPerformed(ActionEvent arg0) {
 				pending = false;
 				pendingDone = false;
-				helper.getTransactionManager().clear();
+				helper.tm.clear();
 				clearPreviewTable();
 				updateStatus();
 			}
@@ -713,7 +719,7 @@ public class BackBoxGui {
 		JLabel lblKbs = new JLabel("KB\\s");
 		pnlOp.add(lblKbs, "cell 4 2");
 
-		final JProgressBar progressBar = new JProgressBar();
+		progressBar = new JProgressBar();
 		progressBar.setStringPainted(true);
 		pnlOp.add(progressBar, "cell 5 2 2 1,grow");
 		
@@ -723,7 +729,7 @@ public class BackBoxGui {
 				Thread worker = new Thread() {
 					public void run() {
 						try {
-							helper.getTransactionManager().stopTransactions();
+							helper.tm.stopTransactions();
 						} catch (Exception e1) {
 							loadingDialog.hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error stopping transactions", e1);
@@ -745,8 +751,6 @@ public class BackBoxGui {
 		btnStart.setEnabled(false);
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				final TransactionManager tm = helper.getTransactionManager();
-				
 				ProgressListener listener = new ProgressListener() {
 					long partial = 0;
 					long subpartial = 0;
@@ -786,29 +790,29 @@ public class BackBoxGui {
 							partial += subpartial;
 							subpartial = 0;
 							
-							long b = tm.getAllTasksWeight() - partial;
+							long b = helper.tm.getAllTasksWeight() - partial;
 							lblEtaValue.setText(GuiUtility.getETAString(b, averagespeed));
 						}
 						
-						tm.weightCompleted(bytes);
+						helper.tm.weightCompleted(bytes);
 					}
 				};
 				
 				pm.setListener(ProgressManager.UPLOAD_ID, listener);
 				pm.setListener(ProgressManager.DOWNLOAD_ID, listener);
 
-				tm.runTransactions();
-				tm.shutdown();
+				helper.tm.runTransactions();
+				helper.tm.shutdown();
 				
 				running = true;
 				updateStatus();
 				Thread t = new Thread("ProgressBar") {
 					public void run() {
 						progressBar.setValue(0);
-						while (tm.isRunning()) {
-							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(tm.getCompletedTasksWeight()).append('/').append(tm.getAllTasksWeight()).toString());
-							if (tm.getAllTasksWeight() > 0) {
-								long perc = (tm.getCompletedTasksWeight() * 100) / tm.getAllTasksWeight();
+						while (helper.tm.isRunning()) {
+							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(helper.tm.getCompletedTasksWeight()).append('/').append(helper.tm.getAllTasksWeight()).toString());
+							if (helper.tm.getAllTasksWeight() > 0) {
+								long perc = (helper.tm.getCompletedTasksWeight() * 100) / helper.tm.getAllTasksWeight();
 								if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("Perc: ").append(perc).append("% - ").append("Progress: ").append(progressBar.getValue()).append('%').toString());
 								if ((perc > progressBar.getValue()) && (perc <= 99))
 									progressBar.setValue((int)perc);
@@ -821,7 +825,7 @@ public class BackBoxGui {
 						
 						updateFileBrowser();
 						
-						List<Transaction> result = tm.getResult();
+						List<Transaction> result = helper.tm.getResult();
 						if (result != null) {
 							boolean error = false;
 							for (Transaction t : result) {
@@ -1113,7 +1117,7 @@ public class BackBoxGui {
 			}
 		});
 		
-		JMenuItem mntmBuildDatabase = new JMenuItem("Build database");
+		mntmBuildDatabase = new JMenuItem("Build database");
 		mntmBuildDatabase.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (running) {
@@ -1131,36 +1135,123 @@ public class BackBoxGui {
 		
 		mntmCheck = new JMenuItem("Check database");
 		mntmCheck.setEnabled(false);
+		
 		mntmCheck.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
 				if (running) {
 					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
+				
+				if (!connected) {
+					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				loadingDialog.showLoading();
-				Thread worker = new Thread() {
-					public void run() {
+				progressBar.setValue(0);
+				
+				SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
+					List<Transaction> tt = new ArrayList<>();
+					
+					@Override
+					protected Void doInBackground() throws Exception {
 						try {
-							List<File> deleted = helper.getRemotelyDeletedFiles(true);
-							if (deleted == null)
-								JOptionPane.showMessageDialog(frmBackBox, "Error checking the database", "Check database", JOptionPane.ERROR_MESSAGE);
-							else if (deleted.isEmpty())
-								JOptionPane.showMessageDialog(frmBackBox, "That's all right!", "Check database", JOptionPane.INFORMATION_MESSAGE);
-							else {
-								StringBuilder message = new StringBuilder("Deleted ").append(deleted.size()).append(" files");
-								JOptionPane.showMessageDialog(frmBackBox, message.toString(), "Check database", JOptionPane.INFORMATION_MESSAGE);
+							int size = 0;
+							List<File> files = helper.dbm.getAllFiles();
+							Map<String, Chunk> allChunks = new HashMap<>();
+							for (File f : files) {
+								for (Chunk c : f.getChunks()) {
+									size++;
+									allChunks.put(c.getBoxid(), c);
+								}
 							}
-						} catch (Exception e1) {
-							loadingDialog.hideLoading();
-							GuiUtility.handleException(frmBackBox, "Error checking database", e1);
+							progressBar.setMaximum(size * 2);
+							
+							for (File f : files) {
+								if (!helper.existsRemotely(f)) {
+									Transaction t = new Transaction(f.getHash());
+									
+									DeleteDBTask dt = new DeleteDBTask(f);
+									dt.setDescription(f.getFolder() + "\\" + f.getFilename());
+									t.addTask(dt);
+									
+									tt.add(t);
+									helper.tm.addTransaction(t);
+								}
+								
+								publish(f.getChunks().size());
+							}
+							
+							List<Folder> folders = helper.getConfiguration().getBackupFolders();
+							
+							for (Folder f : folders) {
+								Map<String, List<Chunk>> remoteInfo = helper.bm.getFolderChunks(f.getId());
+								for (List<Chunk> cc : remoteInfo.values()) {
+									for (Chunk c : cc) {
+										if (!allChunks.containsKey(c.getBoxid())) {
+											Transaction t = new Transaction(c.getChunkhash());
+											
+											DeleteBoxTask dt = new DeleteBoxTask(c);
+											dt.setDescription(f.getAlias() + "\\" + c.getChunkname());
+											t.addTask(dt);
+											
+											tt.add(t);
+											helper.tm.addTransaction(t);
+										}
+										publish(1);
+									}
+								}
+							}
+						} catch (final Exception e) {
+							SwingUtilities.invokeLater(new Runnable() {
+								
+								@Override
+								public void run() {
+									loadingDialog.hideLoading();
+									GuiUtility.handleException(frmBackBox, "Error checking database", e);
+									
+								}
+							});
 						}
+						return null;
+					}
+
+					@Override
+					protected void process(List<Integer> ints) {
+						for (Integer i : ints)
+							progressBar.setValue(progressBar.getValue() + i);
+					}
+
+					@Override
+					protected void done() {
+						pending = false;
+						pendingDone = true;
+						progressBar.setValue(100);
 						
-		                loadingDialog.hideLoading();
+						clearPreviewTable();
+						updatePreviewTable(tt);
+						
+						if ((tt == null) ||	tt.isEmpty()) {
+							loadingDialog.hideLoading();
+							JOptionPane.showMessageDialog(frmBackBox, "That's all right!", "Info", JOptionPane.INFORMATION_MESSAGE);
+						} else {
+							pending = true;
+							pendingDone = false;
+						}
+						updateStatus();
+						
+						loadingDialog.hideLoading();
 					}
 				};
-				worker.start();
+				
+				worker.execute();
 			}
+			
+			
 		});
+		
 		mnEdit.add(mntmCheck);
 		mnEdit.add(mntmBuildDatabase);
 		mnEdit.add(mntmConfiguration);
@@ -1194,25 +1285,7 @@ public class BackBoxGui {
 		loadingDialog.showLoading();
 		Thread worker = new Thread() {
 			public void run() {
-				List<Integer> indexes = new ArrayList<>();
-				int selectedIndex = 0;
-				for (int i = 0; i < tablePreview.getRowCount(); i++) {
-					int c = tablePreview.convertRowIndexToModel(i);
-					indexes.add(c);
-					if (i == tablePreview.getSelectedRow())
-						selectedIndex = i;
-				}
-				DefaultTableModel model = (DefaultTableModel) tablePreview.getModel();
-				Vector<Vector<Object>> vv = model.getDataVector();
-				List<Transaction> transactions = new ArrayList<>();
-				List<Task> tasks = new ArrayList<>();
-				Iterator<Vector<Object>> i = vv.iterator();
-				while (i.hasNext()) {
-					Vector<Object> v = i.next();
-					transactions.add((Transaction) v.elementAt(PreviewTableModel.TRANSACTION_COLUMN_INDEX));
-					tasks.add((Task) v.elementAt(PreviewTableModel.TASK_COLUMN_INDEX));
-				}
-				detailsDialog.load(transactions, tasks, selectedIndex, indexes);
+				detailsDialog.load(tablePreview);
 				detailsDialog.setLocationRelativeTo(frmBackBox);
 				detailsDialog.setVisible(true);
 				
@@ -1321,7 +1394,7 @@ public class BackBoxGui {
 			tToDel.add((Transaction) model.getValueAt(s, PreviewTableModel.TRANSACTION_COLUMN_INDEX));
 		}
 		for (Transaction tt : tToDel) {
-			if (!helper.getTransactionManager().removeTransaction(tt))
+			if (!helper.tm.removeTransaction(tt))
 				continue;
 			for (Task t : tt.getTasks()) {
 				for (int i = 0; i < model.getRowCount(); i++) {

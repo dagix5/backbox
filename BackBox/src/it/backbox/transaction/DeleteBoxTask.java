@@ -2,17 +2,20 @@ package it.backbox.transaction;
 
 import java.util.concurrent.Callable;
 
+import it.backbox.bean.Chunk;
 import it.backbox.bean.File;
 
 public class DeleteBoxTask extends BoxTask {
 
-	private boolean encryptEnabled;
-	private boolean compressEnabled;
-	
 	private File file;
+	private Chunk chunk;
 	
 	public void setInput(File file) {
 		this.file = file;
+	}
+	
+	public void setInput(Chunk chunk) {
+		this.chunk = chunk;
 	}
 	
 	public DeleteBoxTask() {
@@ -23,6 +26,11 @@ public class DeleteBoxTask extends BoxTask {
 		super();
 		setInput(file);
 	}
+	
+	public DeleteBoxTask(Chunk chunk) {
+		super();
+		setInput(chunk);
+	}
 
 	@Override
 	public void run() throws Exception {
@@ -30,28 +38,16 @@ public class DeleteBoxTask extends BoxTask {
 			
 			@Override
 			public Void call() throws Exception {
-				getBoxManager().deleteChunk(file.getChunks());
+				if (file != null)
+					getBoxManager().deleteChunk(file.getChunks());
+				if (chunk != null)
+					getBoxManager().delete(chunk.getBoxid());
 				return null;
 			}
 		});
 		
-		getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
-	}
-
-	public boolean isEncryptEnabled() {
-		return encryptEnabled;
-	}
-
-	public void setEncryptEnabled(boolean encryptEnabled) {
-		this.encryptEnabled = encryptEnabled;
-	}
-
-	public boolean isCompressEnabled() {
-		return compressEnabled;
-	}
-
-	public void setCompressEnabled(boolean compressEnabled) {
-		this.compressEnabled = compressEnabled;
+		if (file != null)
+			getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
 	}
 
 }

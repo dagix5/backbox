@@ -47,7 +47,7 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 			// update structure
 			if (parent.isRoot() && node.isLeaf()) {
 				String alias = (String) node.getUserObject();
-				List<File> list = helper.getFiles(alias);
+				List<File> list = helper.dbm.getFilesInFolder(alias);
 				FileBrowserTreeModel model = (FileBrowserTreeModel) tree.getModel();
 
 				for (File f : list) {
@@ -84,7 +84,7 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 
 			updateTable((FileBrowserTableModel) table.getModel(), node);
 
-		} catch (IOException | SQLException ex) {
+		} catch (SQLException ex) {
 			GuiUtility.handleException(frame, "Error updating table", ex);
 		}
 
