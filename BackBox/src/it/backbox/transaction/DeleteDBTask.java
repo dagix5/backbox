@@ -1,12 +1,10 @@
 package it.backbox.transaction;
 
-import it.backbox.bean.File;
-
 public class DeleteDBTask extends Task {
 	
-	private File file;
+	private it.backbox.bean.File file;
 	
-	public void setInput(File file) {
+	public void setInput(it.backbox.bean.File file) {
 		this.file = file;
 	}
 	
@@ -14,14 +12,14 @@ public class DeleteDBTask extends Task {
 		super();
 	}
 	
-	public DeleteDBTask(File file) {
+	public DeleteDBTask(it.backbox.bean.File file) {
 		super();
 		setInput(file);
 	}
 
 	@Override
 	public void run() throws Exception {	
-		getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
+		getDbManager().delete(file.getFolderAlias(), file.getFilename(), file.getHash());
 	}
 
 }

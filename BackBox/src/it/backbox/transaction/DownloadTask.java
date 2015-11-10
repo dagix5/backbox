@@ -15,7 +15,6 @@ import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
 import it.backbox.ISplitter;
 import it.backbox.bean.Chunk;
-import it.backbox.bean.File;
 import it.backbox.compress.GZipper;
 import it.backbox.compress.Zipper;
 import it.backbox.exception.BackBoxException;
@@ -24,12 +23,12 @@ import it.backbox.utility.Utility;
 public class DownloadTask extends BoxTask {
 
 	private String path;
-	private File file;
+	private it.backbox.bean.File file;
 	
 	/** Local operation variables */
 	private byte[] chunkContent;
 	
-	public void setInput(String path, File file) {
+	public void setInput(String path, it.backbox.bean.File file) {
 		this.path = path;
 		this.file = file;
 	}
@@ -38,7 +37,7 @@ public class DownloadTask extends BoxTask {
 		super();
 	}
 	
-	public DownloadTask(String path, File file) {
+	public DownloadTask(String path, it.backbox.bean.File file) {
 		super();
 		setInput(path, file);
 	}

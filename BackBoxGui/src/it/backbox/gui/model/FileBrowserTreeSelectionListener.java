@@ -11,7 +11,6 @@ import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 
-import it.backbox.bean.File;
 import it.backbox.gui.model.FileBrowserTreeNode.TreeNodeType;
 import it.backbox.gui.utility.BackBoxHelper;
 import it.backbox.gui.utility.GuiUtility;
@@ -46,12 +45,12 @@ public class FileBrowserTreeSelectionListener implements TreeSelectionListener {
 			// update structure
 			if (parent.isRoot() && node.isLeaf()) {
 				String alias = (String) node.getUserObject();
-				List<File> list = helper.dbm.getFilesInFolder(alias);
+				List<it.backbox.bean.File> list = helper.dbm.getFilesInFolder(alias);
 				FileBrowserTreeModel model = (FileBrowserTreeModel) tree.getModel();
 				node.removeAllChildren();
 				model.reload(node);
 
-				for (File f : list) {
+				for (it.backbox.bean.File f : list) {
 					// in DB files have always windows file separators
 					String[] splitted = f.getFilename().split("\\\\");
 					FileBrowserTreeNode cnode = node;

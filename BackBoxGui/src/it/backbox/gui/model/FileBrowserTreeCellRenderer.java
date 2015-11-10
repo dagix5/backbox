@@ -8,7 +8,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.apache.commons.io.FilenameUtils;
 
-import it.backbox.bean.File;
 import it.backbox.gui.utility.FileUtility;
 import it.backbox.gui.utility.GuiUtility;
 
@@ -26,8 +25,8 @@ public class FileBrowserTreeCellRenderer extends DefaultTreeCellRenderer {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
 		Object obj = node.getUserObject();
 
-		if (obj instanceof File) {
-			File f = (File) obj;
+		if (obj instanceof it.backbox.bean.File) {
+			it.backbox.bean.File f = (it.backbox.bean.File) obj;
 			String name = FilenameUtils.getName(f.getFilename());
 			String ext = FilenameUtils.getExtension(f.getFilename());
 			setText(name);

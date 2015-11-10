@@ -55,7 +55,6 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
 import it.backbox.bean.Chunk;
-import it.backbox.bean.File;
 import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
@@ -955,9 +954,9 @@ public class BackBoxGui {
 					public void run() {
 						List<Transaction> tt = new ArrayList<Transaction>();
 						try {
-							List<File> fs = getSelectedFiles();
-							for (File f : fs)
-								tt.add(helper.delete(f.getFolder(), f.getFilename(), f.getHash(), false));
+							List<it.backbox.bean.File> fs = getSelectedFiles();
+							for (it.backbox.bean.File f : fs)
+								tt.add(helper.delete(f.getFolderAlias(), f.getFilename(), f.getHash(), false));
 						} catch (Exception e1) {
 							loadingDialog.hideLoading();
 							GuiUtility.handleException(frmBackBox, "Error building download transactions", e1);
@@ -1159,9 +1158,9 @@ public class BackBoxGui {
 					protected Void doInBackground() throws Exception {
 						try {
 							int size = 0;
-							List<File> files = helper.dbm.getAllFiles();
+							List<it.backbox.bean.File> files = helper.dbm.getAllFiles();
 							Map<String, Chunk> allChunks = new HashMap<>();
-							for (File f : files) {
+							for (it.backbox.bean.File f : files) {
 								for (Chunk c : f.getChunks()) {
 									size++;
 									allChunks.put(c.getBoxid(), c);
@@ -1169,12 +1168,12 @@ public class BackBoxGui {
 							}
 							progressBar.setMaximum(size * 2);
 							
-							for (File f : files) {
+							for (it.backbox.bean.File f : files) {
 								if (!helper.existsRemotely(f)) {
 									Transaction t = new Transaction(f.getHash());
 									
 									DeleteDBTask dt = new DeleteDBTask(f);
-									dt.setDescription(f.getFolder() + "\\" + f.getFilename());
+									dt.setDescription(f.getFolderAlias() + "\\" + f.getFilename());
 									t.addTask(dt);
 									
 									tt.add(t);
@@ -1295,7 +1294,7 @@ public class BackBoxGui {
 		worker.start();
 	}
 	
-	private void listAllFiles(FileBrowserTreeNode node, List<File> list) {
+	private void listAllFiles(FileBrowserTreeNode node, List<it.backbox.bean.File> list) {
 		GuiUtility.checkEDT(false);
 		
 		Enumeration<FileBrowserTreeNode> e = node.children();
@@ -1306,8 +1305,8 @@ public class BackBoxGui {
 			Object obj = cnode.getUserObject();
 			if (obj instanceof String)
 				listAllFiles(cnode, list);
-			else if (obj instanceof File) {
-				list.add((File) obj);
+			else if (obj instanceof it.backbox.bean.File) {
+				list.add((it.backbox.bean.File) obj);
 				if (_log.isLoggable(Level.FINE)) {
 					FileBrowserTreeNode c = (FileBrowserTreeNode) cnode.getParent();
 					StringBuilder sb = new StringBuilder("Selected files: \n");
@@ -1321,21 +1320,21 @@ public class BackBoxGui {
 		}
 	}
 	
-	private List<File> getSelectedFiles() {
+	private List<it.backbox.bean.File> getSelectedFiles() {
 		GuiUtility.checkEDT(false);
 		
 		int[] selectedRows = table.getSelectedRows();
 		FileBrowserTableModel model = (FileBrowserTableModel) table.getModel();
-		List<File> res = new ArrayList<>();
+		List<it.backbox.bean.File> res = new ArrayList<>();
 		for (int i : selectedRows) {
 			int row = table.convertRowIndexToModel(i);
 			FileBrowserTreeNode node = model.getNode(row);
 			if (node.getType() == TreeNodeType.FOLDER) {
-				List<File> list = new ArrayList<>();
+				List<it.backbox.bean.File> list = new ArrayList<>();
 				listAllFiles(node, list);
 				res.addAll(list);
 			} else if (node.getType() == TreeNodeType.FILE)
-				res.add((File) node.getUserObject());
+				res.add((it.backbox.bean.File) node.getUserObject());
 		}
 		return res;
 	}
@@ -1354,9 +1353,9 @@ public class BackBoxGui {
 				public void run() {
 					final List<Transaction> tt = new ArrayList<Transaction>();
 					try {
-						List<File> fs = getSelectedFiles();
-						for (File f : fs)
-							tt.add(helper.downloadFile(f.getFolder(), f.getFilename(), f.getHash(), fc.getSelectedFile().getCanonicalPath(), false));
+						List<it.backbox.bean.File> fs = getSelectedFiles();
+						for (it.backbox.bean.File f : fs)
+							tt.add(helper.downloadFile(f.getFolderAlias(), f.getFilename(), f.getHash(), fc.getSelectedFile().getCanonicalPath(), false));
 					} catch (final Exception e1) {
 						SwingUtilities.invokeLater(new Runnable() {
 							

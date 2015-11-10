@@ -8,7 +8,6 @@ import javax.swing.tree.TreeNode;
 
 import org.apache.commons.io.FilenameUtils;
 
-import it.backbox.bean.File;
 import it.backbox.gui.utility.GuiUtility;
 
 public class FileBrowserTreeModel extends DefaultTreeModel {
@@ -40,9 +39,9 @@ public class FileBrowserTreeModel extends DefaultTreeModel {
 					return;
 				}
 			} else {
-				String n = FilenameUtils.getName(((File) objn).getFilename());
-				if (objc instanceof File) {
-					String c = FilenameUtils.getName(((File) objc).getFilename());
+				String n = FilenameUtils.getName(((it.backbox.bean.File) objn).getFilename());
+				if (objc instanceof it.backbox.bean.File) {
+					String c = FilenameUtils.getName(((it.backbox.bean.File) objc).getFilename());
 					if (Collator.getInstance().compare(n, c) < 0) {
 						insertNodeInto(newChild, parent, i);
 						return;

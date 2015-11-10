@@ -811,7 +811,7 @@ public class BackBoxHelper {
 		t.setId(file.getHash());
 
 		DeleteBoxTask dt = new DeleteBoxTask(file);
-		dt.setDescription(new StringBuilder(file.getFolder()).append('\\').append(file.getFilename()).toString());
+		dt.setDescription(new StringBuilder(file.getFolderAlias()).append('\\').append(file.getFilename()).toString());
 
 		t.addTask(dt);
 

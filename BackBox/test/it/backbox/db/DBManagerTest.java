@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import it.backbox.bean.Chunk;
-import it.backbox.bean.File;
 import it.backbox.exception.BackBoxException;
 
 public class DBManagerTest {
@@ -88,7 +87,7 @@ public class DBManagerTest {
 		assertTrue(r == 1);
 		assertTrue(dbm.isModified());
 		
-		File file = dbm.getFileRecord("FOLDER2", "FILENAME2", "HASH1");
+		it.backbox.bean.File file = dbm.getFileRecord("FOLDER2", "FILENAME2", "HASH1");
 		assertTrue(file.getSize() == 1);
 		assertTrue(file.getEncrypted() == 1);
 		assertTrue(file.getCompressed() == 1);
@@ -107,7 +106,7 @@ public class DBManagerTest {
 	
 	@Test
 	public void testGetAllFiles() throws SQLException, BackBoxException {
-		List<File> files = dbm.getAllFiles();
+		List<it.backbox.bean.File> files = dbm.getAllFiles();
 		assertFalse(files == null);
 		assertTrue(files.isEmpty());
 		
@@ -117,8 +116,8 @@ public class DBManagerTest {
 		assertFalse(files == null);
 		assertTrue(files.size() == 1);
 		
-		File file = files.get(0);
-		assertTrue(file.getFolder().equals("FOLDER1"));
+		it.backbox.bean.File file = files.get(0);
+		assertTrue(file.getFolderAlias().equals("FOLDER1"));
 		assertTrue(file.getFilename().equals("FILENAME1"));
 		assertTrue(file.getHash().equals("HASH1"));
 		
@@ -153,7 +152,7 @@ public class DBManagerTest {
 	
 	@Test
 	public void testGetFiles() throws SQLException, BackBoxException {
-		List<File> files = dbm.getFiles("HASH1");
+		List<it.backbox.bean.File> files = dbm.getFiles("HASH1");
 		assertFalse(files == null);
 		assertTrue(files.isEmpty());
 		
@@ -163,8 +162,8 @@ public class DBManagerTest {
 		assertFalse(files == null);
 		assertTrue(files.size() == 1);
 		
-		File file = files.get(0);
-		assertTrue(file.getFolder().equals("FOLDER1"));
+		it.backbox.bean.File file = files.get(0);
+		assertTrue(file.getFolderAlias().equals("FOLDER1"));
 		assertTrue(file.getFilename().equals("FILENAME1"));
 		assertTrue(file.getHash().equals("HASH1"));
 		
@@ -202,7 +201,7 @@ public class DBManagerTest {
 	
 	@Test
 	public void testGetFilesInFolder() throws SQLException, BackBoxException {
-		List<File> files = dbm.getFilesInFolder("FOLDER1");
+		List<it.backbox.bean.File> files = dbm.getFilesInFolder("FOLDER1");
 		assertFalse(files == null);
 		assertTrue(files.isEmpty());
 		
@@ -212,8 +211,8 @@ public class DBManagerTest {
 		assertFalse(files == null);
 		assertTrue(files.size() == 1);
 		
-		File file = files.get(0);
-		assertTrue(file.getFolder().equals("FOLDER1"));
+		it.backbox.bean.File file = files.get(0);
+		assertTrue(file.getFolderAlias().equals("FOLDER1"));
 		assertTrue(file.getFilename().equals("FILENAME1"));
 		assertTrue(file.getHash().equals("HASH1"));
 		
@@ -247,14 +246,14 @@ public class DBManagerTest {
 	
 	@Test
 	public void testGetFileRecord() throws SQLException, BackBoxException {
-		File file = dbm.getFileRecord("FOLDER1", "FILENAME1", "HASH1");
+		it.backbox.bean.File file = dbm.getFileRecord("FOLDER1", "FILENAME1", "HASH1");
 		assertTrue(file == null);
 		
 		insert(1, 1, 1);
 		
 		file = dbm.getFileRecord("FOLDER1", "FILENAME1", "HASH1");
 		assertFalse(file == null);
-		assertTrue(file.getFolder().equals("FOLDER1"));
+		assertTrue(file.getFolderAlias().equals("FOLDER1"));
 		assertTrue(file.getFilename().equals("FILENAME1"));
 		assertTrue(file.getHash().equals("HASH1"));
 		

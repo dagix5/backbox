@@ -471,7 +471,7 @@ public class DBManager implements IDBManager {
 	}
 
 	/**
-	 * Build a {@link FileBox} from a {@link ResultSet}
+	 * Build a {@link it.backbox.bean.File} from a {@link ResultSet}
 	 * 
 	 * @throws SQLException
 	 */
@@ -480,7 +480,7 @@ public class DBManager implements IDBManager {
 		file.setHash(rs.getString("hash"));
 		file.setFilename(rs.getString("filename").replaceAll("''", "'"));
 		file.setTimestamp(rs.getDate("timestamp"));
-		file.setFolder(rs.getString("folder"));
+		file.setFolderAlias(rs.getString("folder"));
 		file.setSize(rs.getLong("size"));
 		file.setEncrypted(rs.getShort("encrypted"));
 		file.setCompressed(rs.getShort("compressed"));

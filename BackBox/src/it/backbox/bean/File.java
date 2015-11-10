@@ -9,7 +9,7 @@ public class File {
 
 	private String hash;
 	private String filename;
-	private String folder;
+	private String folderAlias;
 	private Date timestamp;
 	private long size;
 	private short encrypted;
@@ -59,12 +59,12 @@ public class File {
 		this.size = size;
 	}
 
-	public String getFolder() {
-		return folder;
+	public String getFolderAlias() {
+		return folderAlias;
 	}
 
-	public void setFolder(String folder) {
-		this.folder = folder;
+	public void setFolderAlias(String folderAlias) {
+		this.folderAlias = folderAlias;
 	}
 
 	public short getEncrypted() {

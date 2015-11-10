@@ -6,7 +6,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.apache.commons.io.FilenameUtils;
 
-import it.backbox.bean.File;
 import it.backbox.gui.bean.Filename;
 import it.backbox.gui.bean.Size;
 import it.backbox.gui.model.FileBrowserTreeNode.TreeNodeType;
@@ -46,7 +45,7 @@ public class FileBrowserTableModel extends DefaultTableModel {
 			addRow(new Object[] { FileUtility.getFolderIcon(), new Filename((String) o, Filename.DIRECTORY_TYPE), null,
 					null, "", "", node });
 		else if (node.getType() == TreeNodeType.FILE) {
-			File f = (File) o;
+			it.backbox.bean.File f = (it.backbox.bean.File) o;
 			String ext = FilenameUtils.getExtension(f.getFilename());
 			addRow(new Object[] { FileUtility.getIcon(ext),
 					new Filename(FilenameUtils.getName(f.getFilename()), Filename.FILE_TYPE), new Size(f.getSize()),

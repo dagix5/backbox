@@ -3,14 +3,13 @@ package it.backbox.transaction;
 import java.util.concurrent.Callable;
 
 import it.backbox.bean.Chunk;
-import it.backbox.bean.File;
 
 public class DeleteBoxTask extends BoxTask {
 
-	private File file;
+	private it.backbox.bean.File file;
 	private Chunk chunk;
 	
-	public void setInput(File file) {
+	public void setInput(it.backbox.bean.File file) {
 		this.file = file;
 	}
 	
@@ -22,7 +21,7 @@ public class DeleteBoxTask extends BoxTask {
 		super();
 	}
 	
-	public DeleteBoxTask(File file) {
+	public DeleteBoxTask(it.backbox.bean.File file) {
 		super();
 		setInput(file);
 	}
@@ -47,7 +46,7 @@ public class DeleteBoxTask extends BoxTask {
 		});
 		
 		if (file != null)
-			getDbManager().delete(file.getFolder(), file.getFilename(), file.getHash());
+			getDbManager().delete(file.getFolderAlias(), file.getFilename(), file.getHash());
 	}
 
 }
