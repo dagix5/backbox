@@ -28,7 +28,7 @@ public class GuiUtility {
 	
 	public static void handleException(Component parent, String message, Exception e) {
 		_log.log(Level.SEVERE, message, e);
-		JOptionPane.showMessageDialog(parent, new StringBuilder(message).append(": ").append(e.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(parent, message + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 	}
 	
 	private static int[] getETA(long bytes, long speed) {

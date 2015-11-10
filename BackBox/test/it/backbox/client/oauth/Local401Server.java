@@ -55,7 +55,7 @@ public class Local401Server {
 			_log.addHandler(fh);
 		}
 		
-		class TokenResponse {
+		static class TokenResponse {
 			@Key
 			public String access_token;
 			

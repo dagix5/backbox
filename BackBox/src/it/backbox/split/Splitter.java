@@ -90,9 +90,9 @@ public class Splitter implements ISplitter {
 			if (_log.isLoggable(Level.FINE)) _log.fine("Chunk size: " + csize);
 		}
 		byte[] buffer = new byte[csize];
-		inStream.read(buffer, 0, csize);
+		int br = inStream.read(buffer, 0, csize);
 
-		if (_log.isLoggable(Level.FINE)) _log.fine("Total Bytes Read: " + bytesRead);
+		if (_log.isLoggable(Level.FINE)) _log.fine("Total Bytes Read: " + br);
 		return buffer;
 	}
 	

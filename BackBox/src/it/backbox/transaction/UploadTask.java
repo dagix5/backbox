@@ -12,7 +12,6 @@ import java.util.logging.Level;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
-import org.apache.commons.lang.StringEscapeUtils;
 
 import it.backbox.ICompress;
 import it.backbox.ISecurityManager;
@@ -31,16 +30,16 @@ public class UploadTask extends BoxTask {
 	
 	private String hash;
 	private File file;
-	private String relativePath;
+	private String filename;
 	private Folder folder;
 	
 	/** Local operation variables */
 	private List<Chunk> chunks;
 	
-	public void setInput(String hash, File file, String relativePath, Folder folder) {
+	public void setInput(String hash, File file, String filename, Folder folder) {
 		this.hash = hash;
 		this.file = file;
-		this.relativePath = relativePath;
+		this.filename = filename;
 		this.folder = folder;
 	}
 	
@@ -48,9 +47,9 @@ public class UploadTask extends BoxTask {
 		super();
 	}
 	
-	public UploadTask(String hash, File file, String relativePath, Folder folder) {
+	public UploadTask(String hash, File file, String filename, Folder folder) {
 		super();
-		setInput(hash, file, relativePath, folder);
+		setInput(hash, file, filename, folder);
 	}
 	
 	public Long getSize() {
@@ -80,8 +79,7 @@ public class UploadTask extends BoxTask {
 					z = new GZipper();
 				
 				String filename = file.getCanonicalPath();
-				String name = filename.substring(filename.lastIndexOf("\\") + 1, filename.length());
-				z.compress(in, out, name);
+				z.compress(in, out, FilenameUtils.getName(filename));
 				
 				size = out.getByteCount();
 				
@@ -133,7 +131,7 @@ public class UploadTask extends BoxTask {
 				c = null;
 			}
 			
-			getDbManager().insert(file, relativePath, folder.getAlias(), hash, chunks, encryptEnabled, compressEnabled, (short) ((chunks.size() > 1) ? 1 : 0));
+			getDbManager().insert(file, filename, folder.getAlias(), hash, chunks, encryptEnabled, compressEnabled, (short) ((chunks.size() > 1) ? 1 : 0));
 		} finally {
 			in.close();
 			out.close();
@@ -154,7 +152,7 @@ public class UploadTask extends BoxTask {
 				@Override
 				public Void call() throws Exception {
 					getBoxManager().deleteChunk(chunks);
-					getDbManager().delete(folder.getAlias(), StringEscapeUtils.escapeSql(FilenameUtils.separatorsToWindows(relativePath)), hash);
+					getDbManager().delete(folder.getAlias(), filename, hash);
 					return null;
 				}
 			});

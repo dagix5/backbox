@@ -126,8 +126,9 @@ public class RestClient implements IRestClient {
 			//LOG HERE CLOSE THE RESPONSE CONTENT STREAM, DON'T DO IT
 			//if (_log.isLoggable(Level.FINE)) _log.fine("Response OK: " + response.parseAsString());
 		} catch (HttpResponseException e) {
-			_log.info("HTTP response exception throwed");
-			String message = new StringBuilder(request.getRequestMethod()).append(' ').append(request.getUrl()).append(" -> ").append(e.getStatusCode()).toString(); 
+			if (_log.isLoggable(Level.INFO))
+				_log.info("HTTP response exception throwed: " + e.getStatusCode());
+			String message = request.getRequestMethod() + ' ' + request.getUrl() + " -> " + e.getStatusCode(); 
 			BoxError error = null;
 			String content = e.getContent();
 			if (content != null) {
@@ -152,7 +153,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public byte[] download(String fileID) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("files/").append(fileID).append("/content").toString());
+		GenericUrl url = new GenericUrl(baseUri + "files/" + fileID + "/content");
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("Download: " + response.getStatusCode());
@@ -212,7 +213,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public void delete(String fileID, boolean isFolder) throws RestException, IOException {
-		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append(isFolder ? "folders/" : "files/").append(fileID).toString());
+		GenericUrl url = new GenericUrl(baseUri + (isFolder ? "folders/" : "files/") + fileID);
 		if (isFolder)
 			url.put("recursive", "true");
 		HttpRequest request = requestFactory.buildDeleteRequest(url);
@@ -273,7 +274,7 @@ public class RestClient implements IRestClient {
 		int returned = 0;
 		int total_count = 0;
 		do {
-			GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("folders/").append(folderID).append("/items").toString());
+			GenericUrl url = new GenericUrl(baseUri + "folders/" + folderID + "/items");
 			url.put("limit", limit);
 			url.put("offset", returned);
 			url.put("fields", "name,id,sha1");
@@ -311,7 +312,7 @@ public class RestClient implements IRestClient {
 	 */
 	@Override
 	public BoxFile getFileInfo(String fileID) throws IOException, RestException {
-		GenericUrl url = new GenericUrl(new StringBuilder(baseUri).append("files/").append(fileID).toString());
+		GenericUrl url = new GenericUrl(baseUri + "files/" + fileID);
 		HttpRequest request = requestFactory.buildGetRequest(url);
 		HttpResponse response = execute(request);
 		if (_log.isLoggable(Level.FINE)) _log.fine("getFileInfo: " + response.getStatusCode());
@@ -336,7 +337,7 @@ public class RestClient implements IRestClient {
 	/**
 	 * Custom BackOff Policy to include the status 429 - TOO MANY REQUEST in the policy
 	 */
-	public class CustomBackOffPolicy extends ExponentialBackOffPolicy {
+	public static class CustomBackOffPolicy extends ExponentialBackOffPolicy {
 		@Override
 		public boolean isBackOffRequired(int statusCode) {
 			return super.isBackOffRequired(statusCode) || (statusCode == 429);

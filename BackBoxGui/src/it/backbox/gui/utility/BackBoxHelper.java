@@ -70,7 +70,7 @@ public class BackBoxHelper {
 
 	private static BackBoxHelper instance;
 
-	private static Configuration configuration;
+	private Configuration configuration;
 
 	public ISecurityManager sm;
 	public IDBManager dbm;
@@ -728,6 +728,7 @@ public class BackBoxHelper {
 			Transaction t = new Transaction();
 			t.setId(hash);
 			String firstPath = null;
+			// TODO check if the same file is in another folder
 			for (String path : toUpload.get(hash).keySet()) {
 				if ((c.getRecords().containsKey(hash) && !c.getRecords().get(hash).containsKey(path))
 						|| (!c.getRecords().containsKey(hash) && (firstPath != null))) {

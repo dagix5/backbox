@@ -93,7 +93,7 @@ public class DetailsDialog extends JDialog {
 		txtTaskId.setText(task.getId());
 		String fn = task.getDescription();
 		if (fn.length() > 53)
-			fn = new StringBuilder(fn.substring(0, 24)).append("...").append(fn.substring(fn.length() - 25)).toString();
+			fn = fn.substring(0, 24) + "..." + fn.substring(fn.length() - 25);
 		txtFilename.setText(fn);
 		txtOperation.setText(GuiUtility.getTaskType(task));
 		txtSize.setText(GuiUtility.getTaskSize(task).getHsize());

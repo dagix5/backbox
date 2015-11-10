@@ -10,15 +10,15 @@ public class InsertTask extends Task {
 
 	private String hash;
 	private File file;
-	private String relativePath;
-	private String otherRelativePath;
+	private String filename;
+	private String otherFilename;
 	private Folder folder;
 	
-	public void setInput(String hash, File file, String relativePath, String otherRelativePath, Folder folder) {
+	public void setInput(String hash, File file, String relativePath, String otherFilename, Folder folder) {
 		this.hash = hash;
 		this.file = file;
-		this.relativePath = relativePath;
-		this.otherRelativePath = otherRelativePath;
+		this.filename = relativePath;
+		this.otherFilename = otherFilename;
 		this.folder = folder;
 	}
 	
@@ -26,20 +26,20 @@ public class InsertTask extends Task {
 		super();
 	}
 	
-	public InsertTask(String hash, File file, String relativePath, String otherRelativePath, Folder folder) {
+	public InsertTask(String hash, File file, String relativePath, String otherFilename, Folder folder) {
 		super();
-		setInput(hash, file, relativePath, otherRelativePath, folder);
+		setInput(hash, file, relativePath, otherFilename, folder);
 	}
 
 	@Override
 	public void run() throws Exception {
 		IDBManager dbm = getDbManager();
 		
-		it.backbox.bean.File f = dbm.getFileRecord(null, hash, otherRelativePath);
+		it.backbox.bean.File f = dbm.getFileRecord(null, otherFilename, hash);
 		if (f == null)
 			throw new BackBoxException("DB record not found");
 		
-		dbm.insert(file, relativePath, folder.getAlias(), hash, f.getChunks(), f.getEncrypted(), f.getCompressed(), f.getSplitted());
+		dbm.insert(file, filename, folder.getAlias(), hash, f.getChunks(), f.getEncrypted(), f.getCompressed(), f.getSplitted());
 		
 	}
 

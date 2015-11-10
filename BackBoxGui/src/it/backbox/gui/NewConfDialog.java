@@ -87,7 +87,7 @@ public class NewConfDialog extends JDialog {
 		contentPanel.add(lblChunksize, "cell 0 5,alignx right");
 		
 		final JSpinner spinnerChunksize = new JSpinner();
-		spinnerChunksize.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(0), null, new Integer(1)));
+		spinnerChunksize.setModel(new SpinnerNumberModel(Integer.valueOf(1024), Integer.valueOf(0), null, Integer.valueOf(1)));
 		contentPanel.add(spinnerChunksize, "cell 1 5,growx");
 		
 		JLabel lblKb = new JLabel("KB");

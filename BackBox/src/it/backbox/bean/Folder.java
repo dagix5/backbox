@@ -47,7 +47,7 @@ public class Folder {
 
 	@Override
 	public String toString() {
-		return new StringBuilder(alias).append(" (").append(path).append(')').toString();
+		return alias + " (" + path + ')';
 	}
 	
 }

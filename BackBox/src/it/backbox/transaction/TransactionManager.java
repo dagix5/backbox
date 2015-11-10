@@ -168,7 +168,7 @@ public class TransactionManager {
 	 * 
 	 * @return The weight of completed tasks
 	 */
-	public long getCompletedTasksWeight() {
+	public synchronized long getCompletedTasksWeight() {
 		return completedTasksWeight;
 	}
 	
@@ -215,7 +215,7 @@ public class TransactionManager {
 	/**
 	 * Clear all pending transactions
 	 */
-	public void clear() {
+	public synchronized void clear() {
 		allTasksWeight = 0;
 		completedTasksWeight = 0;
 		getTransactions().clear();
@@ -286,7 +286,7 @@ public class TransactionManager {
 	 * @param listener
 	 *            Listener to call
 	 */
-	public void addListener(CompleteTransactionListener listener) {
+	public synchronized void addListener(CompleteTransactionListener listener) {
 		if (listeners == null)
 			listeners = new ArrayList<>();
 		listeners.add(listener);

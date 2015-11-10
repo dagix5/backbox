@@ -443,6 +443,8 @@ public class BackBoxGui {
 	 * Create the application.
 	 */
 	public BackBoxGui() {
+		initializeFrame();
+		
 		helper = BackBoxHelper.getInstance();
 		pm = ProgressManager.getInstance();
 		
@@ -452,7 +454,6 @@ public class BackBoxGui {
 			GuiUtility.handleException(frmBackBox, "Error loading configuration file, using default configuration...", e);
 		}
 		
-		initializeFrame();
 		initializeMenu();
 		Component up = initializeFileBrowser();
 		Component down = initializeOp();
@@ -809,10 +810,12 @@ public class BackBoxGui {
 					public void run() {
 						progressBar.setValue(0);
 						while (helper.tm.isRunning()) {
-							if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("TaskCompleted/AllTask: ").append(helper.tm.getCompletedTasksWeight()).append('/').append(helper.tm.getAllTasksWeight()).toString());
+							if (_log.isLoggable(Level.FINE)) 
+								_log.fine("TaskCompleted/AllTask: " + helper.tm.getCompletedTasksWeight() + '/' + helper.tm.getAllTasksWeight());
 							if (helper.tm.getAllTasksWeight() > 0) {
 								long perc = (helper.tm.getCompletedTasksWeight() * 100) / helper.tm.getAllTasksWeight();
-								if (_log.isLoggable(Level.FINE)) _log.fine(new StringBuilder("Perc: ").append(perc).append("% - ").append("Progress: ").append(progressBar.getValue()).append('%').toString());
+								if (_log.isLoggable(Level.FINE)) 
+									_log.fine("Perc: " + perc + "% - " + "Progress: " + progressBar.getValue() + '%');
 								if ((perc > progressBar.getValue()) && (perc <= 99))
 									progressBar.setValue((int)perc);
 							}
@@ -1156,63 +1159,51 @@ public class BackBoxGui {
 					
 					@Override
 					protected Void doInBackground() throws Exception {
-						try {
-							int size = 0;
-							List<it.backbox.bean.File> files = helper.dbm.getAllFiles();
-							Map<String, Chunk> allChunks = new HashMap<>();
-							for (it.backbox.bean.File f : files) {
-								for (Chunk c : f.getChunks()) {
-									size++;
-									allChunks.put(c.getBoxid(), c);
-								}
+						int size = 0;
+						List<it.backbox.bean.File> files = helper.dbm.getAllFiles();
+						Map<String, Chunk> allChunks = new HashMap<>();
+						for (it.backbox.bean.File f : files) {
+							for (Chunk c : f.getChunks()) {
+								size++;
+								allChunks.put(c.getBoxid(), c);
 							}
-							progressBar.setMaximum(size * 2);
-							
-							for (it.backbox.bean.File f : files) {
-								if (!helper.existsRemotely(f)) {
-									Transaction t = new Transaction(f.getHash());
-									
-									DeleteDBTask dt = new DeleteDBTask(f);
-									dt.setDescription(f.getFolderAlias() + "\\" + f.getFilename());
-									t.addTask(dt);
-									
-									tt.add(t);
-									helper.tm.addTransaction(t);
-								}
+						}
+						progressBar.setMaximum(size * 2);
+						
+						for (it.backbox.bean.File f : files) {
+							if (!helper.existsRemotely(f)) {
+								Transaction t = new Transaction(f.getHash());
 								
-								publish(f.getChunks().size());
+								DeleteDBTask dt = new DeleteDBTask(f);
+								dt.setDescription(f.getFolderAlias() + "\\" + f.getFilename());
+								t.addTask(dt);
+								
+								tt.add(t);
+								helper.tm.addTransaction(t);
 							}
 							
-							List<Folder> folders = helper.getConfiguration().getBackupFolders();
-							
-							for (Folder f : folders) {
-								Map<String, List<Chunk>> remoteInfo = helper.bm.getFolderChunks(f.getId());
-								for (List<Chunk> cc : remoteInfo.values()) {
-									for (Chunk c : cc) {
-										if (!allChunks.containsKey(c.getBoxid())) {
-											Transaction t = new Transaction(c.getChunkhash());
-											
-											DeleteBoxTask dt = new DeleteBoxTask(c);
-											dt.setDescription(f.getAlias() + "\\" + c.getChunkname());
-											t.addTask(dt);
-											
-											tt.add(t);
-											helper.tm.addTransaction(t);
-										}
-										publish(1);
+							publish(f.getChunks().size());
+						}
+						
+						List<Folder> folders = helper.getConfiguration().getBackupFolders();
+						
+						for (Folder f : folders) {
+							Map<String, List<Chunk>> remoteInfo = helper.bm.getFolderChunks(f.getId());
+							for (List<Chunk> cc : remoteInfo.values()) {
+								for (Chunk c : cc) {
+									if (!allChunks.containsKey(c.getBoxid())) {
+										Transaction t = new Transaction(c.getChunkhash());
+										
+										DeleteBoxTask dt = new DeleteBoxTask(c);
+										dt.setDescription(f.getAlias() + "\\" + c.getChunkname());
+										t.addTask(dt);
+										
+										tt.add(t);
+										helper.tm.addTransaction(t);
 									}
+									publish(1);
 								}
 							}
-						} catch (final Exception e) {
-							SwingUtilities.invokeLater(new Runnable() {
-								
-								@Override
-								public void run() {
-									loadingDialog.hideLoading();
-									GuiUtility.handleException(frmBackBox, "Error checking database", e);
-									
-								}
-							});
 						}
 						return null;
 					}

@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class SecurityManagerTest {
 
-	private static SecurityManager sm;
+	private SecurityManager sm;
 	private static byte[] plain;
 	
 	@BeforeClass

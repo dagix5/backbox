@@ -169,9 +169,9 @@ public class DBManager implements IDBManager {
 	}
 	
 	@Override
-	public int insert(File file, String relativePath, String folder, String digest, List<Chunk> chunks, short encrypted,
+	public int insert(File file, String filename, String folder, String digest, List<Chunk> chunks, short encrypted,
 			short compressed, short splitted) throws BackBoxException {
-		return insert(folder, relativePath, digest, file.lastModified(), file.length(), chunks, encrypted, compressed,
+		return insert(folder, filename, digest, file.lastModified(), file.length(), chunks, encrypted, compressed,
 				splitted);
 	}
 

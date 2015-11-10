@@ -178,8 +178,8 @@ public class PreferencesDialog extends JDialog {
 	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, boolean autoUpload) {
 		GuiUtility.checkEDT(true);
 		
-		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, new Integer(0), null, new Integer(1)));
-		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, new Integer(0), null, new Integer(1)));
+		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, Integer.valueOf(0), null, Integer.valueOf(1)));
+		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, Integer.valueOf(0), null, Integer.valueOf(1)));
 		
 		chckbxAutoUpload.setSelected(autoUpload);
 		
@@ -196,7 +196,7 @@ public class PreferencesDialog extends JDialog {
 		
 	}
 	
-	class DocumentInputFilter extends DocumentFilter {
+	static class DocumentInputFilter extends DocumentFilter {
 		public void insertString(FilterBypass fb, int offset, String text,
 				AttributeSet as) throws BadLocationException {
 			int len = text.length();

@@ -2,12 +2,12 @@ package it.backbox.transaction;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 
@@ -51,8 +51,7 @@ public class DownloadTask extends BoxTask {
 	@Override
 	public void run() throws Exception {
 		OutputStream out = new DeferredFileOutputStream(THRESHOLD, PREFIX, SUFFIX, getTempDir());
-		String filename = new StringBuilder(path).append('\\').append(file.getFilename()).toString();
-		filename = FilenameUtils.separatorsToSystem(filename);
+		String filename = path + File.separatorChar + file.getFilename();
 		
 		if (stop) { out.close(); return; }
 		
