@@ -1,3 +1,4 @@
 /target/
 *.jardesc
 /test.db
+/credentialStore.json
