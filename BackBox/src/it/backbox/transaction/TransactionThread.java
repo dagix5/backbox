@@ -3,6 +3,8 @@ package it.backbox.transaction;
 import it.backbox.exception.BackBoxException;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,12 +30,19 @@ public class TransactionThread implements Runnable {
 	}
 
 	/**
-	 * Run all the tasks in a transaction
+	 * Run all the tasks in a transaction, sorted by priority
 	 */
 	@Override
 	public void run() {
 		boolean inError = false;
 		ArrayList<Task> tasks = t.getTasks();
+		Collections.sort(tasks, new Comparator<Task>() {
+
+			@Override
+			public int compare(Task t1, Task t2) {
+				return Short.compare(t1.getPriority(), t2.getPriority());
+			}
+		});
 		for (int i = 0; i < tasks.size(); i++) {
 			currentTask = tasks.get(i);
 			if (_log.isLoggable(Level.INFO)) _log.info("[" + t.getId() + "] [" + currentTask.getId() + "] " + currentTask.getDescription() + " started");

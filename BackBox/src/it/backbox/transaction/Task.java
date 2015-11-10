@@ -20,7 +20,8 @@ public abstract class Task {
 	private boolean countWeight = true;
 	protected boolean stop = false;
 	private long totalTime = 0;
-
+	private short priority;
+	
 	private IBoxManager boxManager;
 	private IDBManager dbManager;
 	private ISplitter splitter;
@@ -138,6 +139,14 @@ public abstract class Task {
 
 	void setTempDir(File tempDir) {
 		this.tempDir = tempDir;
+	}
+	
+	public short getPriority() {
+		return priority;
+	}
+
+	public void setPriority(short priority) {
+		this.priority = priority;
 	}
 
 	public abstract void run() throws Exception;

@@ -1,8 +1,8 @@
 package it.backbox.transaction;
 
-import it.backbox.utility.Utility;
-
 import java.util.ArrayList;
+
+import it.backbox.utility.Utility;
 
 public class Transaction {
 
@@ -12,18 +12,18 @@ public class Transaction {
 		public static final short NO_RESULT = 0;
 		public static final short ROLLBACK = -2;
 	}
-	
+
 	private ArrayList<Task> tasks;
 	private short resultCode;
 	private String resultDescription;
 	private String id;
-	
+
 	public Transaction() {
-		setId(Utility.genID());
+		this(Utility.genID());
 	}
 
-	public void addTask(Task task, int position) {
-		getTasks().add(position, task);
+	public Transaction(String id) {
+		setId(id);
 	}
 
 	public void addTask(Task task) {
@@ -63,13 +63,30 @@ public class Transaction {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
 		if (!(obj instanceof Transaction))
-			return super.equals(obj);
-		Transaction t = (Transaction) obj;
-		return t.id.equals(id);
+			return false;
+		Transaction other = (Transaction) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		return true;
 	}
 
 }
