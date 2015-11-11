@@ -514,10 +514,14 @@ public class BackBoxHelper {
 	 */
 	public boolean existsRemotely(it.backbox.bean.File f) throws IOException, RestException {
 		for (Chunk c : f.getChunks())
-			if ((c.getBoxid() == null) || c.getBoxid().isEmpty() || c.getBoxid().equals("null")
-					|| !bm.checkRemoteFile(c.getBoxid())) {
+			if ((c.getBoxid() == null) || c.getBoxid().isEmpty() || c.getBoxid().equals("null")) {
 				if (_log.isLoggable(Level.INFO))
-					_log.info(f.getFilename() + " " + f.getHash() + " not found on box");
+					_log.info("[" + f.getFilename() + "] [" + f.getHash() + "] [] not found on box");
+
+				return false;
+			} else if (!bm.checkRemoteFile(c.getBoxid())) {
+				if (_log.isLoggable(Level.INFO))
+					_log.info("[" + f.getFilename() + "] [" + f.getHash() + "] [" + c.getBoxid() + "] not found on box");
 
 				return false;
 			} else if (_log.isLoggable(Level.FINE))

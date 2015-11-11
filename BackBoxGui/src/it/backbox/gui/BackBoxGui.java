@@ -72,8 +72,8 @@ import it.backbox.gui.utility.GuiUtility;
 import it.backbox.gui.utility.ThreadActionListener;
 import it.backbox.progress.ProgressListener;
 import it.backbox.progress.ProgressManager;
-import it.backbox.transaction.DeleteBoxTask;
 import it.backbox.transaction.DeleteDBTask;
+import it.backbox.transaction.DeleteRemoteTask;
 import it.backbox.transaction.Task;
 import it.backbox.transaction.Transaction;
 import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
@@ -1194,7 +1194,7 @@ public class BackBoxGui {
 									if (!allChunks.containsKey(c.getBoxid())) {
 										Transaction t = new Transaction(c.getChunkhash());
 										
-										DeleteBoxTask dt = new DeleteBoxTask(c);
+										DeleteRemoteTask dt = new DeleteRemoteTask(c);
 										dt.setDescription(f.getAlias() + "\\" + c.getChunkname());
 										t.addTask(dt);
 										
