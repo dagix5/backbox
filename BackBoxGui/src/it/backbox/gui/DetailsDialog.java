@@ -141,15 +141,13 @@ public class DetailsDialog extends JDialog {
 		super(parent);
 		
 		GuiUtility.checkEDT(true);
-		
-		setResizable(false);
 		setModalityType(ModalityType.APPLICATION_MODAL);
 		setTitle("Details");
-		setBounds(100, 100, 450, 302);
+		setBounds(100, 100, 450, 335);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new MigLayout("", "[125.00:125.00][:322.00:322.00]", "[][][][][][][][][grow]"));
+		contentPanel.setLayout(new MigLayout("", "[125.00:125.00][322.00,grow]", "[][][][][][][][][grow]"));
 		
 		JLabel lblTransactionId = new JLabel("Transaction ID: ");
 		contentPanel.add(lblTransactionId, "cell 0 0,alignx right,growy");
