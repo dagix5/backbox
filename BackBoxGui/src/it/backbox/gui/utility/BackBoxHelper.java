@@ -247,21 +247,24 @@ public class BackBoxHelper {
 	 * 
 	 * @param index
 	 *            Configuration index of the folder to remove
-	 * @param folderID
-	 *            ID of the folder to remove
+	 * @param folder
+	 *            Folder to remove
 	 * @throws RestException
 	 * @throws IOException
 	 * @throws BackBoxException
+	 * @throws SQLException 
 	 */
-	private void removeBackupFolder(int index, String folderID) throws IOException, RestException, BackBoxException {
-		if (bm == null)
-			throw new BackBoxException("BoxManager null");
-
-		// TODO remove folder from DB
-		bm.deleteFolder(folderID);
-
+	private void removeBackupFolder(int index, Folder folder) throws IOException, RestException, BackBoxException, SQLException {
 		getConfiguration().getBackupFolders().remove(index);
 		saveConfiguration();
+		
+		List<it.backbox.bean.File> files = dbm.getFilesInFolder(folder.getAlias());
+		for (it.backbox.bean.File f : files) {
+			dbm.delete(folder.getAlias(), f.getFilename(), f.getHash());
+			List<it.backbox.bean.File> ofs = dbm.getFiles(f.getHash());
+			if ((ofs == null) || ofs.isEmpty())
+				bm.deleteChunk(f.getChunks());
+		}
 	}
 
 	/**
@@ -288,26 +291,28 @@ public class BackBoxHelper {
 	 * @throws IOException
 	 * @throws BackBoxException
 	 * @throws RestException
+	 * @throws SQLException 
 	 */
-	public void updateBackupFolders(List<Folder> folders) throws IOException, BackBoxException, RestException {
+	public void updateBackupFolders(List<Folder> folders) throws IOException, BackBoxException, RestException, SQLException {
 		GuiUtility.checkEDT(false);
 
-		for (int i = 0; i < folders.size(); i++) {
-			Folder f1 = folders.get(i);
+		for (Folder f1 : folders) {
 			boolean found = false;
-			for (Folder f2 : getConfiguration().getBackupFolders()) {
+			for (int i = 0; i < getConfiguration().getBackupFolders().size(); i++) {
+				Folder f2 = getConfiguration().getBackupFolders().get(i);
 				if (f1.getAlias().equals(f2.getAlias())) {
+					editBackupFolder(i, f1);
 					found = true;
 					break;
 				}
 			}
 
-			if (found)
-				editBackupFolder(i, f1);
-			else
+			if (!found)
 				addBackupFolder(f1);
 		}
 
+		loadConfiguration();
+		
 		for (int i = 0; i < getConfiguration().getBackupFolders().size(); i++) {
 			Folder f1 = getConfiguration().getBackupFolders().get(i);
 			boolean found = false;
@@ -319,7 +324,7 @@ public class BackBoxHelper {
 			}
 
 			if (!found)
-				removeBackupFolder(i, f1.getId());
+				removeBackupFolder(i, f1);
 		}
 	}
 

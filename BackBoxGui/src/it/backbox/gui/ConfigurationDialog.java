@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -77,7 +78,7 @@ public class ConfigurationDialog extends JDialog {
 							
 						}
 					});
-				} catch (IOException | RestException | BackBoxException e) {
+				} catch (IOException | RestException | BackBoxException | SQLException e) {
 					SwingUtilities.invokeLater(new Runnable() {
 						
 						@Override
