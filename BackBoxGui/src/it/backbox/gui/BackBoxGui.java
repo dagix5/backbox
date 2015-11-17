@@ -426,7 +426,7 @@ public class BackBoxGui {
 		mntmCheck.setEnabled(connected && !running);
 		mntmBackup.setEnabled(connected && !running);
 		mntmRestore.setEnabled(connected && !running);
-		mntmBuildDatabase.setEnabled(connected && !running);
+		mntmBuildDatabase.setEnabled(!connected);
 		
 		if (connected && !running && !pending)
 			try {
@@ -1010,6 +1010,26 @@ public class BackBoxGui {
 		mntmNewConfiguration.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
 		mnFile.add(mntmNewConfiguration);
 		
+		mntmBuildDatabase = new JMenuItem("Build database...");
+		mnFile.add(mntmBuildDatabase);
+		mntmBuildDatabase.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (running) {
+					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local database.", "Build database", JOptionPane.YES_NO_OPTION);
+				if (s != JOptionPane.OK_OPTION)
+					return;
+				pwdDialog.setLocationRelativeTo(frmBackBox);
+				pwdDialog.load(GuiConstant.BUILDDB_MODE);
+				pwdDialog.setVisible(true);
+			}
+		});
+		
+		JSeparator separator = new JSeparator();
+		mnFile.add(separator);
+		
 		mntmBackup = new JMenu("Backup");
 		mntmBackup.setEnabled(false);
 		mnFile.add(mntmBackup);
@@ -1018,8 +1038,8 @@ public class BackBoxGui {
 		mntmRestore.setEnabled(false);
 		mnFile.add(mntmRestore);
 		
-		JSeparator separator = new JSeparator();
-		mnFile.add(separator);
+		JSeparator separator2 = new JSeparator();
+		mnFile.add(separator2);
 		
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mntmExit.addActionListener(new ActionListener() {
@@ -1090,8 +1110,8 @@ public class BackBoxGui {
 		mntmDownloadDb.setEnabled(connected);
 		mnFile.add(mntmDownloadDb);
 		
-		JSeparator separator_1 = new JSeparator();
-		mnFile.add(separator_1);
+		JSeparator separator3 = new JSeparator();
+		mnFile.add(separator3);
 		mntmExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_MASK));
 		mnFile.add(mntmExit);
 		
@@ -1116,22 +1136,6 @@ public class BackBoxGui {
 					}
 				} else
 					JOptionPane.showMessageDialog(frmBackBox, "Not connected", "Error", JOptionPane.ERROR_MESSAGE);
-			}
-		});
-		
-		mntmBuildDatabase = new JMenuItem("Build database");
-		mntmBuildDatabase.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (running) {
-					JOptionPane.showMessageDialog(frmBackBox, "Transactions running", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				int s = JOptionPane.showConfirmDialog(frmBackBox, "Are you sure? This will overwrite local database.", "Build database", JOptionPane.YES_NO_OPTION);
-				if (s != JOptionPane.OK_OPTION)
-					return;
-				pwdDialog.setLocationRelativeTo(frmBackBox);
-				pwdDialog.load(GuiConstant.BUILDDB_MODE);
-				pwdDialog.setVisible(true);
 			}
 		});
 		
@@ -1243,7 +1247,6 @@ public class BackBoxGui {
 		});
 		
 		mnEdit.add(mntmCheck);
-		mnEdit.add(mntmBuildDatabase);
 		mnEdit.add(mntmConfiguration);
 		
 		JMenuItem mntmPreferences = new JMenuItem("Preferences...");
