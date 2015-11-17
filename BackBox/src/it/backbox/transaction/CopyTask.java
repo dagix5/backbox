@@ -27,9 +27,10 @@ public class CopyTask extends Task {
 	public void run() throws Exception {
 		File dest = new File(destPath);
 		File parent = dest.getParentFile();
-		if((parent != null) && !parent.exists() && !parent.mkdirs()){
-		    throw new IllegalStateException("Couldn't create dir: " + parent);
-		}
+		if (parent == null)
+		    throw new IllegalStateException("Couldn't create dir: " + dest);
+		if (!parent.exists())
+			parent.mkdirs();
 		dest.createNewFile();
 		Utility.copy(new File(srcPath), dest);
 	}
