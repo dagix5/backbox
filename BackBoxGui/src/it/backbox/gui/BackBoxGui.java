@@ -3,6 +3,7 @@ package it.backbox.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -496,6 +497,7 @@ public class BackBoxGui {
 		GuiUtility.checkEDT(true);
 		
 		frmBackBox = new JFrame();
+		frmBackBox.setIconImage(Toolkit.getDefaultToolkit().getImage(Thread.currentThread().getContextClassLoader().getResource("icon.png")));
 		frmBackBox.setLocationRelativeTo(null);
 		frmBackBox.setSize(750, 700);
 		frmBackBox.setTitle("BackBox");
