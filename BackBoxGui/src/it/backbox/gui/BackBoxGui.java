@@ -14,12 +14,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -1160,11 +1162,10 @@ public class BackBoxGui {
 				loadingDialog.showLoading();
 				progressBar.setValue(0);
 				
-				SwingWorker<Void, Integer> worker = new SwingWorker<Void, Integer>() {
-					List<Transaction> tt = new ArrayList<>();
-					
+				SwingWorker<List<Transaction>, Integer> worker = new SwingWorker<List<Transaction>, Integer>() {
 					@Override
-					protected Void doInBackground() throws Exception {
+					protected List<Transaction> doInBackground() throws SQLException, IOException, RestException {
+						List<Transaction> tt = new ArrayList<>();
 						int size = 0;
 						List<it.backbox.bean.File> files = helper.dbm.getAllFiles();
 						Map<String, Chunk> allChunks = new HashMap<>();
@@ -1211,7 +1212,8 @@ public class BackBoxGui {
 								}
 							}
 						}
-						return null;
+						
+						return tt;
 					}
 
 					@Override
@@ -1227,17 +1229,23 @@ public class BackBoxGui {
 						progressBar.setValue(100);
 						
 						clearPreviewTable();
-						updatePreviewTable(tt);
-						
-						if ((tt == null) ||	tt.isEmpty()) {
+						try {
+							List<Transaction> tt = get();
+							updatePreviewTable(tt);
+							
+							if (tt.isEmpty()) {
+								loadingDialog.hideLoading();
+								JOptionPane.showMessageDialog(frmBackBox, "That's all right!", "Info", JOptionPane.INFORMATION_MESSAGE);
+							} else {
+								pending = true;
+								pendingDone = false;
+							}
+						} catch (InterruptedException | ExecutionException e) {
 							loadingDialog.hideLoading();
-							JOptionPane.showMessageDialog(frmBackBox, "That's all right!", "Info", JOptionPane.INFORMATION_MESSAGE);
-						} else {
-							pending = true;
-							pendingDone = false;
+							GuiUtility.handleException(frmBackBox, "Error checking database", e);
 						}
-						updateStatus();
 						
+						updateStatus();
 						loadingDialog.hideLoading();
 					}
 				};
