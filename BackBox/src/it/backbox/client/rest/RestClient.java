@@ -71,6 +71,7 @@ public class RestClient implements IRestClient {
 			request.setParser(new JsonObjectParser(JSON_FACTORY));
 //			request.setReadTimeout(60*60*1000);
 			request.setBackOffPolicy(new CustomBackOffPolicy());
+			request.setLoggingEnabled(true);
 		}
 		
 	}
@@ -301,10 +302,14 @@ public class RestClient implements IRestClient {
 	/**
 	 * Custom BackOff Policy to include the status 429 - TOO MANY REQUEST in the policy
 	 */
+	//TODO read Retry-After header from Box.com
 	public static class CustomBackOffPolicy extends ExponentialBackOffPolicy {
+		
 		@Override
 		public boolean isBackOffRequired(int statusCode) {
-			return super.isBackOffRequired(statusCode) || (statusCode == 429);
+			boolean res = super.isBackOffRequired(statusCode) || (statusCode == 429);
+			if (_log.isLoggable(Level.FINE)) _log.fine("isBackOffRequired with status " + statusCode + ": " + res);
+			return res;
 		}
 	}
 
