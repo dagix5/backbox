@@ -3,7 +3,6 @@ package it.backbox.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -16,6 +15,8 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -82,6 +83,7 @@ import it.backbox.transaction.Transaction;
 import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.utility.Utility;
 import net.miginfocom.swing.MigLayout;
+import java.awt.Toolkit;
 
 public class BackBoxGui {
 	private static final Logger _log = Logger.getLogger("it.backbox");
@@ -249,7 +251,7 @@ public class BackBoxGui {
 				protected void action(ActionEvent event) {
 					helper.tm.clear();
 					try {
-						tt = helper.backup(f, false);
+						tt = helper.backup(Arrays.asList(f));
 					} catch (final Exception e) {
 						SwingUtilities.invokeLater(new Runnable() {
 							
@@ -305,7 +307,7 @@ public class BackBoxGui {
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
 						helper.tm.clear();
 						try {
-							tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), f, false);
+							tt = helper.restore(fc.getSelectedFile().getCanonicalPath(), Arrays.asList(f));
 						} catch (final Exception e) {
 							SwingUtilities.invokeLater(new Runnable() {
 								

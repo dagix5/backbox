@@ -8,9 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -224,7 +222,7 @@ public class DBManager implements IDBManager {
 		int r = 0;
 		
 		try {
-			connection.setAutoCommit(false);
+//			connection.setAutoCommit(false);
 			
 			sql = "insert into files(hash, filename, folder, timestamp, size, encrypted, compressed, splitted) values(?, ?, ?, ?, ?, ?, ?, ?)";
 			statement = connection.prepareStatement(sql);
@@ -267,16 +265,16 @@ public class DBManager implements IDBManager {
 				statement.executeBatch();
 			}
 
-			connection.commit();
+//			connection.commit();
 			modified = true;
 		} catch (SQLException e ) {
 			_log.severe("Insert transaction rollback");
-			connection.rollback();
+//			connection.rollback();
 			throw e;
 		} finally {
 			if (statement != null)
 				statement.close();
-			connection.setAutoCommit(true);
+//			connection.setAutoCommit(true);
 		}
 		return r;
 	}
@@ -352,39 +350,8 @@ public class DBManager implements IDBManager {
 	}
 
 	@Override
-	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder, boolean loadChunks)
-			throws SQLException {
-		Map<String, Map<String, it.backbox.bean.File>> records = new HashMap<>();
-		
-		PreparedStatement statement = connection.prepareStatement("select * from files where folder = ?");
-		statement.setString(1, folder);
-		
-		try {
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()) {
-				it.backbox.bean.File file = buildFile(rs);
-	
-				if (loadChunks)
-					file.setChunks(getFileChunks(file.getHash()));
-	
-				if (records.containsKey(file.getHash()))
-					records.get(file.getHash()).put(file.getFilename(), file);
-				else {
-					Map<String, it.backbox.bean.File> files = new HashMap<>();
-					files.put(file.getFilename(), file);
-					records.put(file.getHash(), files);
-				}
-			}
-		} finally {
-			if (statement != null)
-				statement.close();
-		}
-
-		return records;
-	}
-
-	@Override
 	public List<it.backbox.bean.File> getAllFiles() throws SQLException {
+		// TODO Paginate
 		List<it.backbox.bean.File> files = new ArrayList<>();
 
 		Statement statement = null;
@@ -448,7 +415,7 @@ public class DBManager implements IDBManager {
 
 		return file;
 	}
-
+	
 	@Override
 	public List<it.backbox.bean.File> getFiles(String filehash) throws SQLException {
 		List<it.backbox.bean.File> files = new ArrayList<>();

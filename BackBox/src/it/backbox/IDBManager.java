@@ -3,7 +3,6 @@ package it.backbox;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 import it.backbox.bean.Chunk;
 import it.backbox.exception.BackBoxException;
@@ -135,21 +134,6 @@ public interface IDBManager {
 	 * @throws SQLException
 	 */
 	public List<it.backbox.bean.File> getFilesInFolder(String folder) throws SQLException;
-
-	/**
-	 * Load all the files information from database
-	 * 
-	 * @param folder
-	 *            Folder to load
-	 * @param loadChunks
-	 *            True if chunks are loaded, false otherwise
-	 * 
-	 * @return Map with < Hash, < Filename, it.backbox.bean.File >> with files
-	 *         informations in database
-	 * @throws SQLException
-	 */
-	public Map<String, Map<String, it.backbox.bean.File>> getFolderRecords(String folder, boolean loadChunks)
-			throws SQLException;
 
 	/**
 	 * Reset or create the database and open the connection

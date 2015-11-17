@@ -5,20 +5,19 @@ import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
 
 import java.io.File;
+import java.util.List;
 
 public class InsertTask extends Task {
 
 	private String hash;
 	private File file;
 	private String filename;
-	private String otherFilename;
 	private Folder folder;
 	
-	public void setInput(String hash, File file, String relativePath, String otherFilename, Folder folder) {
+	public void setInput(String hash, File file, String relativePath, Folder folder) {
 		this.hash = hash;
 		this.file = file;
 		this.filename = relativePath;
-		this.otherFilename = otherFilename;
 		this.folder = folder;
 	}
 	
@@ -26,19 +25,20 @@ public class InsertTask extends Task {
 		super();
 	}
 	
-	public InsertTask(String hash, File file, String relativePath, String otherFilename, Folder folder) {
+	public InsertTask(String hash, File file, String relativePath, Folder folder) {
 		super();
-		setInput(hash, file, relativePath, otherFilename, folder);
+		setInput(hash, file, relativePath, folder);
 	}
 
 	@Override
 	public void run() throws Exception {
 		IDBManager dbm = getDbManager();
 		
-		it.backbox.bean.File f = dbm.getFileRecord(null, otherFilename, hash);
-		if (f == null)
+		List<it.backbox.bean.File> files = dbm.getFiles(hash);
+		if ((files == null) || files.isEmpty())
 			throw new BackBoxException("DB record not found");
-		
+
+		it.backbox.bean.File f = files.get(0);
 		dbm.insert(file, filename, folder.getAlias(), hash, f.getChunks(), f.getEncrypted(), f.getCompressed(), f.getSplitted());
 		
 	}

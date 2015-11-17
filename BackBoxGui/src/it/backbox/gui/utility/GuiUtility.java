@@ -5,6 +5,7 @@ import it.backbox.gui.bean.Size;
 import it.backbox.transaction.CopyTask;
 import it.backbox.transaction.DeleteBoxTask;
 import it.backbox.transaction.DeleteDBTask;
+import it.backbox.transaction.DeleteRemoteTask;
 import it.backbox.transaction.DeleteTask;
 import it.backbox.transaction.DownloadTask;
 import it.backbox.transaction.InsertTask;
@@ -81,6 +82,8 @@ public class GuiUtility {
 		if (t instanceof CopyTask)
 			return "Local copy";
 		if (t instanceof DeleteBoxTask)
+			return "Delete";
+		if (t instanceof DeleteRemoteTask)
 			return "Remote delete";
 		if (t instanceof DeleteDBTask)
 			return "DB delete";

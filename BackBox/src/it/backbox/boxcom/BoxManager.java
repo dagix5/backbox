@@ -209,6 +209,7 @@ public class BoxManager implements IBoxManager {
 	
 	@Override
 	public Map<String, List<Chunk>> getFolderChunks(String folderID) throws IOException, RestException {
+		//TODO paginate
 		Map<String, List<Chunk>> info = new HashMap<>();
 		BoxItemCollection items = client.getFolderItems(folderID);
 		List<BoxFile> files = items.entries;
