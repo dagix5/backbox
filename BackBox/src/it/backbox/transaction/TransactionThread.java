@@ -40,7 +40,7 @@ public class TransactionThread implements Runnable {
 
 			@Override
 			public int compare(Task t1, Task t2) {
-				return Short.compare(t1.getPriority(), t2.getPriority());
+				return Short.compare(t2.getPriority(), t1.getPriority());
 			}
 		});
 		for (int i = 0; i < tasks.size(); i++) {
