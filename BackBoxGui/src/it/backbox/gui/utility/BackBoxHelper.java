@@ -47,6 +47,7 @@ import it.backbox.compress.Zipper;
 import it.backbox.db.DBManager;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
+import it.backbox.progress.ProgressManager;
 import it.backbox.security.SecurityManager;
 import it.backbox.split.Splitter;
 import it.backbox.transaction.TransactionManager;
@@ -501,6 +502,9 @@ public class BackBoxHelper {
 		}
 		if (tm != null)
 			tm.close();
+		ProgressManager pm = ProgressManager.getInstance();
+		pm.setListener(ProgressManager.UPLOAD_ID, null);
+		pm.setListener(ProgressManager.UPLOAD_ID, null);
 
 		dbm = null;
 		sm = null;
