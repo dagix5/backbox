@@ -138,6 +138,11 @@ public class DownloadTask extends BoxTask {
 			in.close();
 			out.close();
 		}
+		
+		if (file.getTimestamp() != null) {
+			File df = new File(filename);
+			df.setLastModified(file.getTimestamp().getTime());
+		}
 	}
 
 }
