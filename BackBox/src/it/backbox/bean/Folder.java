@@ -47,7 +47,7 @@ public class Folder {
 
 	@Override
 	public String toString() {
-		return alias + " (" + path + ')';
+		return "Folder [path=" + path + ", id=" + id + ", alias=" + alias + "]";
 	}
-	
+
 }

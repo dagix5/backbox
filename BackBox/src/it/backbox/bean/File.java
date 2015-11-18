@@ -91,4 +91,9 @@ public class File {
 		this.splitted = splitted;
 	}
 
+	@Override
+	public String toString() {
+		return "File [hash=" + hash + ", filename=" + filename + ", folderAlias=" + folderAlias + "]";
+	}
+
 }
