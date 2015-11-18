@@ -3,6 +3,7 @@ package it.backbox.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -59,6 +59,7 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
 import it.backbox.bean.Chunk;
+import it.backbox.bean.File;
 import it.backbox.bean.Folder;
 import it.backbox.exception.BackBoxException;
 import it.backbox.exception.RestException;
@@ -83,7 +84,6 @@ import it.backbox.transaction.Transaction;
 import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.utility.Utility;
 import net.miginfocom.swing.MigLayout;
-import java.awt.Toolkit;
 
 public class BackBoxGui {
 	private static final Logger _log = Logger.getLogger("it.backbox");
@@ -1168,48 +1168,72 @@ public class BackBoxGui {
 					@Override
 					protected List<Transaction> doInBackground() throws SQLException, IOException, RestException {
 						List<Transaction> tt = new ArrayList<>();
-						int size = 0;
-						List<it.backbox.bean.File> files = helper.dbm.getAllFiles();
-						Map<String, Chunk> allChunks = new HashMap<>();
-						for (it.backbox.bean.File f : files) {
-							for (Chunk c : f.getChunks()) {
-								size++;
-								allChunks.put(c.getBoxid(), c);
-							}
-						}
-						progressBar.setMaximum(size * 2);
+						List<Chunk> localChunks = helper.dbm.getAllChunks();
+						progressBar.setMaximum(localChunks.size() * 3);
 						
-						for (it.backbox.bean.File f : files) {
-							if (!helper.existsRemotely(f)) {
-								Transaction t = new Transaction(f.getHash());
-								
-								DeleteDBTask dt = new DeleteDBTask(f);
-								dt.setDescription(f.getFolderAlias() + "\\" + f.getFilename());
-								t.addTask(dt);
-								
-								tt.add(t);
-								helper.tm.addTransaction(t);
-							}
-							
-							publish(f.getChunks().size());
-						}
-						
+						// TODO if we delete a folder from configuration, the
+						// file in that folder won't be checked and the local chunks won't be found
 						List<Folder> folders = helper.getConfiguration().getBackupFolders();
+						Map<String, Map<String, List<Chunk>>> remoteInfo = new HashMap<>();
+						for (Folder f : folders) {
+						    Map<String, List<Chunk>> folderChunks = helper.bm.getFolderChunks(f.getId());
+						    remoteInfo.put(f.getAlias(), folderChunks);
+						    publish(folderChunks.values().size());
+						}
+						
+						for (Chunk lc : localChunks) {
+							boolean found = false;
+							for (Folder f : folders) {
+								for (List<Chunk> cc : remoteInfo.get(f.getAlias()).values()) {
+									for (Chunk rc : cc) {
+										if (lc.getBoxid().equals(rc.getBoxid())) {
+											found = true;
+											break;
+										}
+									}
+									if (found)
+										break;
+								}
+								if (found)
+									break;
+							}
+							if (!found) {
+								List<File> files = helper.dbm.getFiles(lc.getFilehash());
+								for (it.backbox.bean.File f : files) {
+									Transaction t = new Transaction(f.getHash());
+									
+									DeleteDBTask dt = new DeleteDBTask(f);
+									dt.setDescription(f.getFolderAlias() + "\\" + f.getFilename());
+									t.addTask(dt);
+									
+									tt.add(t);
+									helper.tm.addTransaction(t);
+								}
+							}
+							publish(1);
+						}
 						
 						for (Folder f : folders) {
-							Map<String, List<Chunk>> remoteInfo = helper.bm.getFolderChunks(f.getId());
-							for (List<Chunk> cc : remoteInfo.values()) {
-								for (Chunk c : cc) {
-									if (!allChunks.containsKey(c.getBoxid())) {
-										Transaction t = new Transaction(c.getChunkhash());
+							for (List<Chunk> cc : remoteInfo.get(f.getAlias()).values()) {
+								for (Chunk rc : cc) {
+									boolean found = false;
+									for (Chunk lc : localChunks) {
+										if (lc.getBoxid().equals(rc.getBoxid())) {
+											found = true;
+											break;
+										}
+									}
+									if (!found) {
+										Transaction t = new Transaction(rc.getChunkhash());
 										
-										DeleteRemoteTask dt = new DeleteRemoteTask(c);
-										dt.setDescription(f.getAlias() + "\\" + c.getChunkname());
+										DeleteRemoteTask dt = new DeleteRemoteTask(rc);
+										dt.setDescription(f.getAlias() + "\\" + rc.getChunkname());
 										t.addTask(dt);
 										
 										tt.add(t);
 										helper.tm.addTransaction(t);
 									}
+									
 									publish(1);
 								}
 							}

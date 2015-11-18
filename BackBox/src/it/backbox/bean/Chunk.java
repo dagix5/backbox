@@ -7,6 +7,7 @@ public class Chunk {
 	private String boxid;
 	private byte[] content;
 	private long size;
+	private String filehash;
 
 	public String getChunkname() {
 		return chunkname;
@@ -46,6 +47,14 @@ public class Chunk {
 
 	public void setSize(long size) {
 		this.size = size;
+	}
+
+	public String getFilehash() {
+		return filehash;
+	}
+
+	public void setFilehash(String filehash) {
+		this.filehash = filehash;
 	}
 
 }

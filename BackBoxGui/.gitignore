@@ -5,3 +5,4 @@ backbox.log.*
 config.json
 credentialStore.json
 *.jardesc
+/logs/

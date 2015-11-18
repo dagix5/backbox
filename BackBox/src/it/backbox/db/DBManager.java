@@ -499,6 +499,7 @@ public class DBManager implements IDBManager {
 		c.setBoxid(rs.getString("boxid"));
 		c.setChunkhash(rs.getString("chunkhash"));
 		c.setSize(rs.getLong("size"));
+		c.setFilehash(rs.getString("filehash"));
 		return c;
 	}
 
