@@ -92,9 +92,6 @@ public class ConfigurationDialog extends JDialog {
 				
 			}
 		});
-		okButton.setActionCommand("OK");
-		buttonPane.add(okButton);
-		getRootPane().setDefaultButton(okButton);
 		
 		JButton btnCancel = new JButton("Cancel");
 		btnCancel.addActionListener(new ActionListener() {
@@ -103,6 +100,9 @@ public class ConfigurationDialog extends JDialog {
 			}
 		});
 		buttonPane.add(btnCancel);
+		okButton.setActionCommand("OK");
+		buttonPane.add(okButton);
+		getRootPane().setDefaultButton(okButton);
 		
 		foldersPanel = new FoldersPanel(getContentPane());
 		lblFoldersToBackup.setLabelFor(foldersPanel);
