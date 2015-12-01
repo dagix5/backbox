@@ -54,7 +54,7 @@ public class UploadTask extends BoxTask {
 	
 	public Long getSize() {
 		if (file != null)
-			return file.length();
+			return Long.valueOf(file.length());
 		return null;
 	}
 

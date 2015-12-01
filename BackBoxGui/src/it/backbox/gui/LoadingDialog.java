@@ -23,7 +23,7 @@ public class LoadingDialog extends JDialog {
 		return loadingDialog;
 	}
 	
-	public LoadingDialog(Frame owner) {
+	LoadingDialog(Frame owner) {
 		super(owner, false);
 		
 		GuiUtility.checkEDT(true);

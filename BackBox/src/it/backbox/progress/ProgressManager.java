@@ -98,7 +98,7 @@ public class ProgressManager {
 	 */
 	public int getSpeed(String id) {
 		if ((id != null) && speed.containsKey(id))
-			return speed.get(id);
+			return speed.get(id).intValue();
 		return 0;
 	}
 
@@ -113,7 +113,7 @@ public class ProgressManager {
 	public void setSpeed(String id, int speed) {
 		if (id == null)
 			return;
-		this.speed.put(id, speed);
+		this.speed.put(id, Integer.valueOf(speed));
 		bucket.put(id, TokenBuckets.newFixedIntervalRefill(getSpeed(id), getSpeed(id), 1, TimeUnit.SECONDS));
 	}
 }

@@ -57,7 +57,7 @@ public class DetailsDialog extends JDialog {
 		selectedIndex = 0;
 		for (int i = 0; i < tablePreview.getRowCount(); i++) {
 			int c = tablePreview.convertRowIndexToModel(i);
-			allIndexes.add(c);
+			allIndexes.add(Integer.valueOf(c));
 			if (i == tablePreview.getSelectedRow())
 				selectedIndex = i;
 		}
@@ -87,8 +87,9 @@ public class DetailsDialog extends JDialog {
 	}
 	
 	private void updateDetails(int selectedIndex) {
-		Transaction transaction = transactions.get(allIndexes.get(selectedIndex));
-		Task task = tasks.get(allIndexes.get(selectedIndex));
+		final int index = allIndexes.get(selectedIndex).intValue();
+		Transaction transaction = transactions.get(index);
+		Task task = tasks.get(index);
 		txtTransactionId.setText(transaction.getId());
 		txtTaskId.setText(task.getId());
 		String fn = task.getDescription();

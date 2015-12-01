@@ -104,7 +104,7 @@ public class NewConfDialog extends JDialog {
 			@Override
 			protected void action(ActionEvent event) {
 				try {
-					BackBoxHelper.getInstance().register(new String(passwordField.getPassword()), folders, (int) spinnerChunksize.getValue() * 1024);
+					BackBoxHelper.getInstance().register(new String(passwordField.getPassword()), folders, ((Integer) spinnerChunksize.getValue()).intValue() * 1024);
 					
 					SwingUtilities.invokeLater(new Runnable() {
 						

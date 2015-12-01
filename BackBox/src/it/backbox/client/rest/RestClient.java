@@ -252,8 +252,8 @@ public class RestClient implements IRestClient {
 		int total_count = 0;
 		do {
 			GenericUrl url = new GenericUrl(baseUri + "folders/" + folderID + "/items");
-			url.put("limit", limit);
-			url.put("offset", returned);
+			url.put("limit", Integer.valueOf(limit));
+			url.put("offset", Integer.valueOf(returned));
 			url.put("fields", "name,id,sha1");
 			HttpRequest request = requestFactory.buildGetRequest(url);
 			HttpResponse response = execute(request);
@@ -294,7 +294,7 @@ public class RestClient implements IRestClient {
 		if ((credential == null)
 				|| (credential.getAccessToken() == null)
 				|| (credential.getExpiresInSeconds() == null)
-				|| (credential.getExpiresInSeconds() <= 300))
+				|| (credential.getExpiresInSeconds().longValue() <= 300))
 			return false;
 		return true;
 	}

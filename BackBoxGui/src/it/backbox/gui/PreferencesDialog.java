@@ -134,8 +134,8 @@ public class PreferencesDialog extends JDialog {
 			@Override
 			protected void action(ActionEvent event) {
 				try {
-					int upSpeed = ((int) defaultUploadSpeed.getValue()) * 1024;
-					int downSpeed = ((int) defaultDownloadSpeed.getValue()) * 1024;
+					int upSpeed = ((Integer) defaultUploadSpeed.getValue()).intValue() * 1024;
+					int downSpeed = ((Integer) defaultDownloadSpeed.getValue()).intValue() * 1024;
 					
 					BackBoxHelper helper = BackBoxHelper.getInstance();
 					helper.getConfiguration().setDefaultUploadSpeed(upSpeed);
@@ -178,8 +178,8 @@ public class PreferencesDialog extends JDialog {
 	public void load(int uploadSpeed, int downloadSpeed, ProxyConfiguration pc, boolean proxyChcbxEnabled, boolean autoUpload) {
 		GuiUtility.checkEDT(true);
 		
-		defaultUploadSpeed.setModel(new SpinnerNumberModel(uploadSpeed / 1024, Integer.valueOf(0), null, Integer.valueOf(1)));
-		defaultDownloadSpeed.setModel(new SpinnerNumberModel(downloadSpeed / 1024, Integer.valueOf(0), null, Integer.valueOf(1)));
+		defaultUploadSpeed.setModel(new SpinnerNumberModel(Integer.valueOf(uploadSpeed / 1024), Integer.valueOf(0), null, Integer.valueOf(1)));
+		defaultDownloadSpeed.setModel(new SpinnerNumberModel(Integer.valueOf(downloadSpeed / 1024), Integer.valueOf(0), null, Integer.valueOf(1)));
 		
 		chckbxAutoUpload.setSelected(autoUpload);
 		

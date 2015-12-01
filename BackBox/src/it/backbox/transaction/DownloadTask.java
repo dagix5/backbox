@@ -45,7 +45,7 @@ public class DownloadTask extends BoxTask {
 
 	public Long getSize() {
 		if (file != null)
-			return file.getSize();
+			return Long.valueOf(file.getSize());
 		return null;
 	}
 	

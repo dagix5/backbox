@@ -102,12 +102,12 @@ public class GuiUtility {
 		if (t instanceof DownloadTask) {
 			DownloadTask dt = (DownloadTask) t;
 			if (dt.getSize() != null)
-				return new Size(dt.getSize());
+				return new Size(dt.getSize().longValue());
 		}
 		if (t instanceof UploadTask) {
 			UploadTask ut = (UploadTask) t;
 			if (ut.getSize() != null)
-				return new Size(ut.getSize());
+				return new Size(ut.getSize().longValue());
 		}
 		return new Size(-1);
 	}

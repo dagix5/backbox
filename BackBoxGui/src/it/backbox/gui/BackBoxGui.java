@@ -168,7 +168,7 @@ public class BackBoxGui {
 			
 			@Override
 			public void run() {
-				spnCurrentUploadSpeed.setValue(uploadSpeed / 1024);
+				spnCurrentUploadSpeed.setValue(Integer.valueOf(uploadSpeed / 1024));
 				updateFileBrowser();
 				updateMenu();
 				updateStatus();
@@ -700,8 +700,8 @@ public class BackBoxGui {
 		spnCurrentUploadSpeed = new JSpinner();
 		spnCurrentUploadSpeed.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
-				pm.setSpeed(ProgressManager.UPLOAD_ID, ((int) spnCurrentUploadSpeed.getValue()) * 1024);
-				pm.setSpeed(ProgressManager.DOWNLOAD_ID, ((int) spnCurrentUploadSpeed.getValue()) * 1024);
+				pm.setSpeed(ProgressManager.UPLOAD_ID, ((Integer) spnCurrentUploadSpeed.getValue()).intValue() * 1024);
+				pm.setSpeed(ProgressManager.DOWNLOAD_ID, ((Integer) spnCurrentUploadSpeed.getValue()).intValue() * 1024);
 			}
 		});
 		
@@ -1178,7 +1178,7 @@ public class BackBoxGui {
 						for (Folder f : folders) {
 						    Map<String, List<Chunk>> folderChunks = helper.bm.getFolderChunks(f.getId());
 						    remoteInfo.put(f.getAlias(), folderChunks);
-						    publish(folderChunks.values().size());
+						    publish(Integer.valueOf(folderChunks.values().size()));
 						}
 						
 						for (Chunk lc : localChunks) {
@@ -1210,7 +1210,7 @@ public class BackBoxGui {
 									helper.tm.addTransaction(t);
 								}
 							}
-							publish(1);
+							publish(Integer.valueOf(1));
 						}
 						
 						for (Folder f : folders) {
@@ -1234,7 +1234,7 @@ public class BackBoxGui {
 										helper.tm.addTransaction(t);
 									}
 									
-									publish(1);
+									publish(Integer.valueOf(1));
 								}
 							}
 						}
@@ -1245,7 +1245,7 @@ public class BackBoxGui {
 					@Override
 					protected void process(List<Integer> ints) {
 						for (Integer i : ints)
-							progressBar.setValue(progressBar.getValue() + i);
+							progressBar.setValue(progressBar.getValue() + i.intValue());
 					}
 
 					@Override
