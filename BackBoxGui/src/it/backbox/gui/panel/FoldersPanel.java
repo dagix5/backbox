@@ -1,8 +1,6 @@
 package it.backbox.gui.panel;
 
-import it.backbox.bean.Folder;
-import it.backbox.gui.utility.GuiUtility;
-
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -23,6 +22,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import it.backbox.bean.Folder;
+import it.backbox.gui.utility.GuiUtility;
 import net.miginfocom.swing.MigLayout;
 
 public class FoldersPanel extends JPanel {
@@ -55,6 +56,23 @@ public class FoldersPanel extends JPanel {
 			}
 		});
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		list.setCellRenderer(new DefaultListCellRenderer() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+					boolean cellHasFocus) {
+				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				
+				if (value instanceof Folder)
+					setText(((Folder) value).getPath());
+				
+				return this;
+			}
+
+		});
+		
 		add(new JScrollPane(list), "cell 0 0 3 1,grow");
 		
 		btnEdit.addActionListener(new ActionListener() {
