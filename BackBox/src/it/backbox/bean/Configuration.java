@@ -6,6 +6,8 @@ import java.util.List;
 import com.google.api.client.util.Key;
 
 public class Configuration {
+	
+	public static final String DEFAULT_DB_FILENAME = "backbox.db";
 
 	@Key
 	private String pwdDigest;
@@ -31,9 +33,11 @@ public class Configuration {
 	@Key
 	private String dbFileID;
 	@Key
+	private String dbFilename;
+	@Key
 	private String confFileID;
 	
-	private boolean modified = false;;
+	private boolean modified = false;
 
 	public String getPwdDigest() {
 		return pwdDigest;
@@ -144,6 +148,16 @@ public class Configuration {
 
 	public boolean isModified() {
 		return modified;
+	}
+
+	public String getDbFilename() {
+		if ((dbFilename == null) || dbFilename.isEmpty())
+			dbFilename = DEFAULT_DB_FILENAME;
+		return dbFilename;
+	}
+
+	public void setDbFilename(String dbFilename) {
+		this.dbFilename = dbFilename;
 	}
 
 }

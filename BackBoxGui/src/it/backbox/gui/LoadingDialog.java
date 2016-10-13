@@ -38,7 +38,7 @@ public class LoadingDialog extends JDialog {
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(label, "cell 0 1,growx,aligny top");
 		
-		Image image = this.getToolkit().createImage(Thread.currentThread().getContextClassLoader().getResource("loader.gif"));
+		Image image = this.getToolkit().createImage(Thread.currentThread().getContextClassLoader().getResource("images/loader.gif"));
 		ImagePanel imgPanel = new ImagePanel(image);
 		imgPanel.setMaximumSize(new Dimension(66, 66));
 		imgPanel.setMinimumSize(new Dimension(66, 66));

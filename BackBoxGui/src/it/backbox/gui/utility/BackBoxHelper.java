@@ -72,15 +72,15 @@ import it.backbox.transaction.UploadTask;
 public class BackBoxHelper {
 	private static final Logger _log = Logger.getLogger(BackBoxHelper.class.getCanonicalName());
 
-	public static final String DB_FILE = "backbox.db";
 	public static final String DB_FILE_TEMP = "backbox.db.temp";
-	public static final String CONFIG_FILE = "config.json";
+	public static final String DEFAULT_CONFIG_FILE = "config.json";
 	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 	private static final Set<String> ex = new HashSet<>();
 
 	private static BackBoxHelper instance;
 
 	private Configuration configuration;
+	private String configFile = DEFAULT_CONFIG_FILE;
 
 	public ISecurityManager sm;
 	public IDBManager dbm;
@@ -96,6 +96,10 @@ public class BackBoxHelper {
 	private BackBoxHelper() {
 
 	}
+	
+	public void setConfFile(String confFile) {
+		this.configFile = confFile;
+	}
 
 	// -----------START CONFIGURATION HELPER---------------
 
@@ -110,9 +114,10 @@ public class BackBoxHelper {
 
 		if (configuration == null) {
 			try {
-				if (Files.exists(Paths.get(CONFIG_FILE))) {
+				if (Files.exists(Paths.get(configFile))) {
 					JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
-					configuration = parser.parseAndClose(new FileReader(CONFIG_FILE), Configuration.class);
+					configuration = parser.parseAndClose(new FileReader(configFile), Configuration.class);
+					_log.log(Level.INFO, "Configuration file loaded: " + configFile);
 					return;
 				}
 			} catch (FileNotFoundException e) {
@@ -134,7 +139,7 @@ public class BackBoxHelper {
 	public void saveConfiguration() throws IOException {
 		GuiUtility.checkEDT(false);
 
-		Files.write(Paths.get(CONFIG_FILE), JSON_FACTORY.toByteArray(configuration));
+		Files.write(Paths.get(configFile), JSON_FACTORY.toByteArray(configuration));
 	}
 
 	/**
@@ -143,7 +148,7 @@ public class BackBoxHelper {
 	 * @return true if it exists, false otherwise
 	 */
 	public boolean confExists() {
-		return Files.exists(Paths.get(CONFIG_FILE)) && dbExists();
+		return Files.exists(Paths.get(configFile));// && dbExists();
 	}
 
 	/**
@@ -157,7 +162,7 @@ public class BackBoxHelper {
 				_log.info("Decrypted DB found");
 			return true;
 		}
-		return Files.exists(Paths.get(DB_FILE));
+		return Files.exists(Paths.get(getConfiguration().getDbFilename()));
 	}
 
 	/**
@@ -186,12 +191,12 @@ public class BackBoxHelper {
 			rootFolderID = bm.getBoxID(BoxManager.ROOT_FOLDER_NAME);
 
 		if (uploadDB) {
-			String id = bm.upload(DB_FILE, getConfiguration().getDbFileID(), rootFolderID);
+			String id = bm.upload(getConfiguration().getDbFilename(), getConfiguration().getDbFileID(), rootFolderID);
 			getConfiguration().setDbFileID(id);
 		}
 		if (uploadConf) {
 			// TODO save conf file id in a different file
-			String id = bm.upload(CONFIG_FILE, getConfiguration().getConfFileID(), rootFolderID);
+			String id = bm.upload(configFile, getConfiguration().getConfFileID(), rootFolderID);
 			getConfiguration().setConfFileID(id);
 			saveConfiguration();
 		}
@@ -210,24 +215,25 @@ public class BackBoxHelper {
 		if (bm == null)
 			bm = new BoxManager(new RestClient(getConfiguration().getProxyConfiguration()));
 
-		String name = DB_FILE + ".new";
-		String id = bm.getBoxID(DB_FILE);
-		if (id == null)
-			throw new BackBoxException("DB file not found");
-		Files.write(Paths.get(name), bm.download(id));
-		File f = new File(name);
-		if (f.exists() && (f.length() > 0))
-			Files.move(Paths.get(name), Paths.get(DB_FILE), StandardCopyOption.REPLACE_EXISTING);
-		else
-			throw new BackBoxException("DB file empty");
-
-		byte[] conf = bm.download(bm.getBoxID(CONFIG_FILE));
+		byte[] conf = bm.download(bm.getBoxID(configFile));
 		if (conf.length == 0)
 			throw new BackBoxException("Configuration file empty");
 
 		JsonObjectParser parser = new JsonObjectParser(JSON_FACTORY);
 		configuration = parser.parseAndClose(new ByteArrayInputStream(conf), null, Configuration.class);
 		saveConfiguration();
+		
+		String dbFileName = configuration.getDbFilename();
+		String name = dbFileName + ".new";
+		String id = bm.getBoxID(dbFileName);
+		if (id == null)
+			throw new BackBoxException("DB file not found");
+		Files.write(Paths.get(name), bm.download(id));
+		File f = new File(name);
+		if (f.exists() && (f.length() > 0))
+			Files.move(Paths.get(name), Paths.get(dbFileName), StandardCopyOption.REPLACE_EXISTING);
+		else
+			throw new BackBoxException("DB file empty");
 	}
 
 	/**
@@ -388,18 +394,19 @@ public class BackBoxHelper {
 
 		ICompress z = new Zipper();
 
-		// if something goes wrong you could have (only) the decrypted db file
+		// if something went wrong, we could have (only) the decrypted db file
 		if (Files.exists(Paths.get(DB_FILE_TEMP))) {
 			if (_log.isLoggable(Level.WARNING))
 				_log.warning("Something went wrong, decrypted DB found. Trying to open it...");
 		} else {
-			if (!Files.exists(Paths.get(DB_FILE)))
+			String dbFileName = getConfiguration().getDbFilename();
+			if (!Files.exists(Paths.get(dbFileName)))
 				throw new BackBoxException("DB not found");
 
 			if (_log.isLoggable(Level.INFO))
 				_log.info("DB found");
-			byte[] dbContent = sm.decrypt(DB_FILE);
-			z.decompress(dbContent, DB_FILE, DB_FILE_TEMP);
+			byte[] dbContent = sm.decrypt(dbFileName);
+			z.decompress(dbContent, null, DB_FILE_TEMP);
 			dbContent = null;
 		}
 
@@ -431,8 +438,8 @@ public class BackBoxHelper {
 
 		logout();
 
-		if (Files.exists(Paths.get(DB_FILE)))
-			Files.delete(Paths.get(DB_FILE));
+//		if (Files.exists(Paths.get(DEFAULT_DB_FILE)))
+//			Files.delete(Paths.get(DEFAULT_DB_FILE));
 		if (Files.exists(Paths.get(DB_FILE_TEMP)))
 			Files.delete(Paths.get(DB_FILE_TEMP));
 
@@ -502,10 +509,10 @@ public class BackBoxHelper {
 			dbm.closeDB();
 		if ((sm != null) && Files.exists(Paths.get(DB_FILE_TEMP))) {
 			ICompress z = new Zipper();
-			byte[] dbZip = z.compress(DB_FILE_TEMP, DB_FILE);
+			byte[] dbZip = z.compress(DB_FILE_TEMP, null);
 			byte[] dbContent = sm.encrypt(dbZip);
 			dbZip = null;
-			Files.write(Paths.get(DB_FILE), dbContent);
+			Files.write(Paths.get(getConfiguration().getDbFilename()), dbContent);
 			dbContent = null;
 			Files.delete(Paths.get(DB_FILE_TEMP));
 		}

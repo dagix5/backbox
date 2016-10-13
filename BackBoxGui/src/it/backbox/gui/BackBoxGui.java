@@ -81,6 +81,7 @@ import it.backbox.transaction.DeleteDBTask;
 import it.backbox.transaction.DeleteRemoteTask;
 import it.backbox.transaction.Task;
 import it.backbox.transaction.Transaction;
+import it.backbox.transaction.Transaction.Result;
 import it.backbox.transaction.TransactionManager.CompleteTransactionListener;
 import it.backbox.utility.Utility;
 import net.miginfocom.swing.MigLayout;
@@ -117,6 +118,7 @@ public class BackBoxGui {
 	private JMenu mntmRestore;
 	private JMenuItem mntmBuildDatabase;
 	private JProgressBar progressBar;
+	private JMenuItem mntmRetry;
 	
 	protected BackBoxHelper helper;
 	private ProgressManager pm;
@@ -133,7 +135,7 @@ public class BackBoxGui {
 			public void run() {
 				try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-					BackBoxGui window = new BackBoxGui();
+					BackBoxGui window = new BackBoxGui(args);
 					window.frmBackBox.setVisible(true);
 					if (window.helper.confExists()) {
 						window.pwdDialog.setLocationRelativeTo(window.frmBackBox);
@@ -432,6 +434,7 @@ public class BackBoxGui {
 		mntmBackup.setEnabled(connected && !running);
 		mntmRestore.setEnabled(connected && !running);
 		mntmBuildDatabase.setEnabled(!connected);
+		mntmRetry.setEnabled(!running);
 		
 		if (connected && !running && !pending)
 			try {
@@ -447,13 +450,15 @@ public class BackBoxGui {
 	/**
 	 * Create the application.
 	 */
-	public BackBoxGui() {
+	public BackBoxGui(String[] args) {
 		initializeFrame();
 		
 		helper = BackBoxHelper.getInstance();
 		pm = ProgressManager.getInstance();
 		
 		try {
+			if (args.length > 0)
+				helper.setConfFile(args[0]);
 			helper.loadConfiguration();
 		} catch (IOException e) {
 			GuiUtility.handleException(frmBackBox, "Error loading configuration file, using default configuration...", e);
@@ -493,7 +498,7 @@ public class BackBoxGui {
             loadingDialog.hideLoading();
 		}
 	};
-	
+
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -501,7 +506,7 @@ public class BackBoxGui {
 		GuiUtility.checkEDT(true);
 		
 		frmBackBox = new JFrame();
-		frmBackBox.setIconImage(Toolkit.getDefaultToolkit().getImage(Thread.currentThread().getContextClassLoader().getResource("icon.png")));
+		frmBackBox.setIconImage(Toolkit.getDefaultToolkit().getImage(Thread.currentThread().getContextClassLoader().getResource("images/icon.png")));
 		frmBackBox.setLocationRelativeTo(null);
 		frmBackBox.setSize(750, 700);
 		frmBackBox.setTitle("BackBox");
@@ -694,8 +699,16 @@ public class BackBoxGui {
 				deleteTransactions();
 			}
 		});
+		mntmRetry = new JMenuItem("Retry");
+		mntmRetry.setEnabled(false);
+		mntmRetry.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				retryTransactions();
+			}
+		});
 		popupPreviewMenu.add(mntmDetails);
 		popupPreviewMenu.add(mntmDelete);
+		popupPreviewMenu.add(mntmRetry);
 		
 		spnCurrentUploadSpeed = new JSpinner();
 		spnCurrentUploadSpeed.addChangeListener(new ChangeListener() {
@@ -1433,6 +1446,26 @@ public class BackBoxGui {
 				}
 			}
 		}
+	}
+	
+	private void retryTransactions() {
+		int[] ss = tablePreview.getSelectedRows();
+		helper.tm.clear();
+		PreviewTableModel model = (PreviewTableModel) tablePreview.getModel();
+		List<Transaction> tToRetry = new ArrayList<>();
+		for (int s : ss) {
+			s = tablePreview.convertRowIndexToModel(s);
+			Transaction t = (Transaction) model.getValueAt(s, PreviewTableModel.TRANSACTION_COLUMN_INDEX);
+			if (t.getResultCode() < 0) {
+				t.setResultCode(Result.NO_RESULT);
+				tToRetry.add(t);
+				helper.tm.addTransaction(t);
+			}
+		}
+		pendingDone = false;
+		clearPreviewTable();
+		updatePreviewTable(tToRetry);
+		updateStatus();
 	}
 
 }
