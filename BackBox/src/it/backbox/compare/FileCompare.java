@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -69,7 +70,7 @@ public class FileCompare {
 	
 				@Override
 				public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
-					String filename = folderPath.relativize(filePath).toString();
+					String filename = FilenameUtils.separatorsToWindows(folderPath.relativize(filePath).toString());
 					String hash;
 					File file = filePath.toFile();
 					
@@ -179,7 +180,7 @@ public class FileCompare {
 			
 			List<it.backbox.bean.File> filesDB = dbm.getFilesInFolder(folder.getAlias());
 			for (it.backbox.bean.File fileDB : filesDB) {
-				Path filePath = Paths.get(folderPath.toString(), fileDB.getFilename());
+				Path filePath = Paths.get(folderPath.toString(), FilenameUtils.separatorsToSystem(fileDB.getFilename()));
 				if (Files.exists(filePath)) {
 					File file = filePath.toFile();
 					String hash = hashCache.getIfPresent(filePath.toAbsolutePath().toString());
