@@ -70,7 +70,8 @@ public class FileCompare {
 	
 				@Override
 				public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
-					String filename = FilenameUtils.separatorsToWindows(folderPath.relativize(filePath).toString());
+					String realFilename = folderPath.relativize(filePath).toString();
+					String filename = FilenameUtils.separatorsToWindows(realFilename);
 					String hash;
 					File file = filePath.toFile();
 					
@@ -127,7 +128,7 @@ public class FileCompare {
 									"[" + folder.getAlias() + "] [" + filename + "] [" + hash + "] Not found in DB");
 	
 						it.backbox.bean.File f = new it.backbox.bean.File();
-						f.setFilename(filename);
+						f.setFilename(realFilename);
 						f.setFolderAlias(folder.getAlias());
 						f.setHash(hash);
 						f.setTimestamp(new Date(file.lastModified()));
